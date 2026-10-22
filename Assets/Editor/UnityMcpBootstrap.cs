@@ -15,18 +15,17 @@ namespace KomputerGrafis.Editor
 
             // Match Codex's stdio connection for this project without changing global preferences.
             EditorConfigurationCache.Instance.PinStdioForSession();
-            EditorApplication.delayCall += StartWhenReady;
+            EditorApplication.update += StartWhenReady;
         }
 
         private static void StartWhenReady()
         {
             if (EditorApplication.isCompiling || EditorApplication.isUpdating)
-            {
-                EditorApplication.delayCall += StartWhenReady;
                 return;
-            }
 
-            StdioBridgeHost.StartAutoConnect();
+            EditorApplication.update -= StartWhenReady;
+            if (!StdioBridgeHost.IsRunning)
+                StdioBridgeHost.StartAutoConnect();
         }
     }
 }

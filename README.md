@@ -4,7 +4,7 @@ Project Unity 3D dengan Universal Render Pipeline (URP).
 
 ## Membuka project
 
-1. Install **Unity 6.3 LTS (6000.3.9f1)** melalui Unity Hub.
+1. Install **Unity 6.3 LTS (6000.3.27f1)** melalui Unity Hub.
 2. Clone repository ini menggunakan Git.
 3. Di Unity Hub, pilih **Add project from disk**, lalu pilih folder hasil clone yang berisi `Assets`, `Packages`, dan `ProjectSettings`.
 4. Buka project dan tunggu proses import package selesai. Scene awal ada di `Assets/Scenes/SampleScene.unity`.
