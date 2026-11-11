@@ -51,4 +51,4 @@ Jika urutan salah, cahaya pilar padam dan rangkaian aktivasi diulang dari awal. 
 
 Bentuk keempat simbol, urutan spesifik, jarak interaksi, tombol, durasi animasi, suara, dan bentuk segel belum dirinci. Penentuan detail tersebut mengikuti keterbacaan visual dan playtest tanpa mengubah aturan inti di atas.
 
-Puzzle kedua dan exploration challenge tetap menjadi keputusan desain yang terpisah. Rotasi objek atau penyambungan jalur baru merupakan kandidat untuk puzzle kedua.
+Puzzle kedua telah ditetapkan sebagai [Jalur Energi](puzzle-02-jalur-energi.md), menggunakan rotasi panel dan penyambungan jalur. Exploration challenge untuk artefak ketiga belum ditetapkan.

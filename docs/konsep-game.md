@@ -30,7 +30,13 @@ Proyeksi kamera belum final. Camera3D pada scene fondasi hanya dipakai untuk pre
 
 Petunjuk tetap dapat dilihat, simbol dibedakan melalui bentuk, dan musuh tidak mengganggu pengerjaan puzzle. Status selesai bertahan setelah respawn selama sesi. Generator menempatkan satu modul reruntuhan yang terkontrol pada lokasi valid. Rincian aturan dan kriteria penerimaan tersedia pada [desain Pilar Simbol](desain/puzzle-01-pilar-simbol.md).
 
-Puzzle kedua dan exploration challenge belum diputuskan.
+## Puzzle kedua
+
+**Jalur Energi** telah ditetapkan sebagai puzzle kedua. Di reruntuhan Forest, pemain memutar tiga panel batu berukiran jalur lurus atau siku sebesar 90° per interaksi. Energi mengalir mengikuti sambungan dari kristal sumber; hubungan lengkap menuju altar membuka segel satu artefak.
+
+Pemain bebas mencoba tanpa damage, timer, atau batas percobaan. Ukiran dan arah aliran membantu keterbacaan, sementara cahaya dan audio menunjukkan sambungan yang benar. Status selesai bertahan setelah respawn selama sesi. Modul ditempatkan secara terkontrol agar perubahan seed tidak merusak solusi. Rincian aturan dan kriteria penerimaan tersedia pada [desain Jalur Energi](desain/puzzle-02-jalur-energi.md).
+
+Exploration challenge untuk memperoleh artefak ketiga belum diputuskan.
 
 ## Combat
 
@@ -58,7 +64,7 @@ Aktivasi checkpoint belum ditetapkan sebagai sumber healing. Aturan reset musuh 
 
 ## Keputusan untuk finalisasi
 
-1. Mekanik puzzle kedua dan bentuk exploration challenge; detail visual Pilar Simbol mengikuti desain puzzle pertama yang sudah ditetapkan.
+1. Bentuk exploration challenge; detail produksi kedua puzzle mengikuti desain Pilar Simbol dan Jalur Energi yang telah ditetapkan.
 2. Identitas boss, pola serangan yang terbaca, serta aturan reset dan retry.
 3. Ukuran area permainan, panjang rute, distribusi encounter, dan durasi sesi.
 4. Proyeksi serta framing kamera yang mendukung eksplorasi dan mouse aiming.
