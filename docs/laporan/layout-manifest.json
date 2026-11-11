@@ -1,0 +1,6976 @@
+{
+  "pdf": "output/pdf/the-lost-island-laporan-proyek.pdf",
+  "pages": 19,
+  "text_blocks": [
+    {
+      "page": 1,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  DOKUMEN PROYEK",
+      "lines": [
+        "THE LOST ISLAND / DOKUMEN PROYEK"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "01",
+      "lines": [
+        "01"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        422,
+        43,
+        545,
+        52.625
+      ],
+      "text": "ILUSTRASI KONSEP",
+      "lines": [
+        "ILUSTRASI KONSEP"
+      ],
+      "size": 7.7,
+      "font": "bold",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.1
+    },
+    {
+      "page": 1,
+      "rect": [
+        38,
+        350,
+        548,
+        361.25
+      ],
+      "text": "KOMPUTER GRAFIS / DOKUMEN PROYEK GIM",
+      "lines": [
+        "KOMPUTER GRAFIS / DOKUMEN PROYEK GIM"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 1,
+      "rect": [
+        38,
+        376,
+        388,
+        487.84000000000003
+      ],
+      "text": "THE LOST\nISLAND",
+      "lines": [
+        "THE LOST",
+        "ISLAND"
+      ],
+      "size": 48,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 1,
+      "rect": [
+        38,
+        524,
+        243,
+        541.5
+      ],
+      "text": "Tim The Lost Island",
+      "lines": [
+        "Tim The Lost Island"
+      ],
+      "size": 14,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        38,
+        558,
+        243,
+        568.875
+      ],
+      "text": "Dosen pengampu",
+      "lines": [
+        "Dosen pengampu"
+      ],
+      "size": 8.7,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        38,
+        574,
+        243,
+        586.5
+      ],
+      "text": "[Nama dosen pengampu]",
+      "lines": [
+        "[Nama dosen pengampu]"
+      ],
+      "size": 10,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        38,
+        609,
+        243,
+        619.875
+      ],
+      "text": "Tahun ajaran",
+      "lines": [
+        "Tahun ajaran"
+      ],
+      "size": 8.7,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        38,
+        625,
+        243,
+        637.5
+      ],
+      "text": "[Tahun ajaran]",
+      "lines": [
+        "[Tahun ajaran]"
+      ],
+      "size": 10,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        274,
+        524,
+        557,
+        535.25
+      ],
+      "text": "ANGGOTA TIM",
+      "lines": [
+        "ANGGOTA TIM"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        274,
+        550,
+        557,
+        562.125
+      ],
+      "text": "MUHAMMAD GHAZY HUMAIDI",
+      "lines": [
+        "MUHAMMAD GHAZY HUMAIDI"
+      ],
+      "size": 9.7,
+      "font": "bold",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        274,
+        566,
+        557,
+        577.875
+      ],
+      "text": "245150200111071",
+      "lines": [
+        "245150200111071"
+      ],
+      "size": 9.5,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        274,
+        597,
+        557,
+        609.125
+      ],
+      "text": "ALIF KUSUMA FAUZAN",
+      "lines": [
+        "ALIF KUSUMA FAUZAN"
+      ],
+      "size": 9.7,
+      "font": "bold",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        274,
+        613,
+        557,
+        624.875
+      ],
+      "text": "245150201111051",
+      "lines": [
+        "245150201111051"
+      ],
+      "size": 9.5,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        274,
+        644,
+        557,
+        656.125
+      ],
+      "text": "AULIYA RAHMAN ARIANTO",
+      "lines": [
+        "AULIYA RAHMAN ARIANTO"
+      ],
+      "size": 9.7,
+      "font": "bold",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        274,
+        660,
+        557,
+        671.875
+      ],
+      "text": "245150207111093",
+      "lines": [
+        "245150207111093"
+      ],
+      "size": 9.5,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        274,
+        691,
+        557,
+        703.125
+      ],
+      "text": "ALKHWARIZMI WIDYA BAGASKARA",
+      "lines": [
+        "ALKHWARIZMI WIDYA BAGASKARA"
+      ],
+      "size": 9.7,
+      "font": "bold",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        274,
+        707,
+        557,
+        718.875
+      ],
+      "text": "245150200111068",
+      "lines": [
+        "245150200111068"
+      ],
+      "size": 9.5,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 1,
+      "rect": [
+        274,
+        755,
+        554,
+        780.175
+      ],
+      "text": "Fakultas Ilmu Komputer\nUniversitas Brawijaya",
+      "lines": [
+        "Fakultas Ilmu Komputer",
+        "Universitas Brawijaya"
+      ],
+      "size": 9.5,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 2,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  DISCLAIMER PENGGUNAAN AI",
+      "lines": [
+        "THE LOST ISLAND / DISCLAIMER PENGGUNAAN AI"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 2,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "02",
+      "lines": [
+        "02"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 2,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "PERNYATAAN PENGGUNAAN ALAT",
+      "lines": [
+        "PERNYATAAN PENGGUNAAN ALAT"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 2,
+      "rect": [
+        38,
+        72,
+        553,
+        162.87
+      ],
+      "text": "Disclaimer\npenggunaan AI",
+      "lines": [
+        "Disclaimer",
+        "penggunaan AI"
+      ],
+      "size": 39,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 2,
+      "rect": [
+        38,
+        177,
+        506,
+        225.6
+      ],
+      "text": "Proyek ini menggunakan AI dalam perencanaan, persiapan development, dan penyusunan materi visual. Kontribusi setiap alat dicatat sesuai pekerjaan yang telah dilakukan.",
+      "lines": [
+        "Proyek ini menggunakan AI dalam perencanaan, persiapan development, dan",
+        "penyusunan materi visual. Kontribusi setiap alat dicatat sesuai pekerjaan yang telah",
+        "dilakukan."
+      ],
+      "size": 12,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 2,
+      "rect": [
+        55,
+        294,
+        333,
+        309.0
+      ],
+      "text": "Perencanaan dan dokumen",
+      "lines": [
+        "Perencanaan dan dokumen"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 2,
+      "rect": [
+        55,
+        318.0,
+        333,
+        376.86
+      ],
+      "text": "ChatGPT membantu brainstorming konsep, membahas alternatif desain, dan menyusun draft dokumen. Codex membantu konsolidasi spesifikasi dan penyusunan laporan visual.",
+      "lines": [
+        "ChatGPT membantu brainstorming konsep, membahas",
+        "alternatif desain, dan menyusun draft dokumen. Codex",
+        "membantu konsolidasi spesifikasi dan penyusunan",
+        "laporan visual."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 2,
+      "rect": [
+        55,
+        397.86,
+        333,
+        412.86
+      ],
+      "text": "Persiapan development",
+      "lines": [
+        "Persiapan development"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 2,
+      "rect": [
+        55,
+        421.86,
+        333,
+        480.72
+      ],
+      "text": "Codex membantu setup project, migrasi dari Unity ke Godot, konfigurasi MCP, serta pengelolaan repository Git. Sistem gameplay yang dijelaskan masih merupakan rancangan.",
+      "lines": [
+        "Codex membantu setup project, migrasi dari Unity ke",
+        "Godot, konfigurasi MCP, serta pengelolaan repository Git.",
+        "Sistem gameplay yang dijelaskan masih merupakan",
+        "rancangan."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 2,
+      "rect": [
+        55,
+        501.72,
+        333,
+        516.72
+      ],
+      "text": "Visual berbantuan AI",
+      "lines": [
+        "Visual berbantuan AI"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 2,
+      "rect": [
+        55,
+        525.72,
+        333,
+        584.58
+      ],
+      "text": "Canva AI digunakan pada draft visual awal. Imagegen digunakan untuk menghasilkan logo gim dan ilustrasi pulau pada laporan ini. Ilustrasi bukan screenshot gameplay.",
+      "lines": [
+        "Canva AI digunakan pada draft visual awal. Imagegen",
+        "digunakan untuk menghasilkan logo gim dan ilustrasi",
+        "pulau pada laporan ini. Ilustrasi bukan screenshot",
+        "gameplay."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 2,
+      "rect": [
+        389,
+        293,
+        540,
+        338.05
+      ],
+      "text": "Tanggung jawab tim",
+      "lines": [
+        "Tanggung jawab",
+        "tim"
+      ],
+      "size": 17,
+      "font": "title",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 2,
+      "rect": [
+        389,
+        357,
+        540,
+        447.75
+      ],
+      "text": "Tim bertanggung jawab atas keputusan desain, pemahaman kode, pemeriksaan hasil, pengujian, serta materi yang dikumpulkan.",
+      "lines": [
+        "Tim bertanggung jawab atas",
+        "keputusan desain,",
+        "pemahaman kode,",
+        "pemeriksaan hasil, pengujian,",
+        "serta materi yang",
+        "dikumpulkan."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 2,
+      "rect": [
+        389,
+        508,
+        540,
+        524.25
+      ],
+      "text": "Sumber dan lisensi",
+      "lines": [
+        "Sumber dan lisensi"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 2,
+      "rect": [
+        389,
+        544,
+        540,
+        617.98
+      ],
+      "text": "Asset pihak ketiga dicatat sesuai penggunaan aktual. Hasil AI harus diperiksa dan disesuaikan sebelum dipakai dalam produk akhir.",
+      "lines": [
+        "Asset pihak ketiga dicatat",
+        "sesuai penggunaan aktual.",
+        "Hasil AI harus diperiksa dan",
+        "disesuaikan sebelum dipakai",
+        "dalam produk akhir."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 2,
+      "rect": [
+        38,
+        747,
+        548,
+        758.25
+      ],
+      "text": "Logo FILKOM disediakan oleh anggota tim. Rincian asset dan teknologi tercantum pada halaman sumber.",
+      "lines": [
+        "Logo FILKOM disediakan oleh anggota tim. Rincian asset dan teknologi tercantum pada halaman sumber."
+      ],
+      "size": 9,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  GAMBARAN GAME",
+      "lines": [
+        "THE LOST ISLAND / GAMBARAN GAME"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "03",
+      "lines": [
+        "03"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "GAME OVERVIEW",
+      "lines": [
+        "GAME OVERVIEW"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 3,
+      "rect": [
+        38,
+        65,
+        553,
+        153.54000000000002
+      ],
+      "text": "Petualangan\ndi pulau kuno",
+      "lines": [
+        "Petualangan",
+        "di pulau kuno"
+      ],
+      "size": 38,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 3,
+      "rect": [
+        38,
+        183,
+        280,
+        257.75
+      ],
+      "text": "Petualangan 3D single-player tentang awak kapal yang terdampar, tiga artefak kuno, dan golem yang menjaga gerbang menuju dermaga.",
+      "lines": [
+        "Petualangan 3D single-player tentang",
+        "awak kapal yang terdampar, tiga artefak",
+        "kuno, dan golem yang menjaga gerbang",
+        "menuju dermaga."
+      ],
+      "size": 13,
+      "font": "serif",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.5
+    },
+    {
+      "page": 3,
+      "rect": [
+        51,
+        366,
+        191,
+        376.0
+      ],
+      "text": "PLATFORM",
+      "lines": [
+        "PLATFORM"
+      ],
+      "size": 8,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        51,
+        385,
+        191,
+        403.75
+      ],
+      "text": "PC",
+      "lines": [
+        "PC"
+      ],
+      "size": 15,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        227,
+        366,
+        367,
+        376.0
+      ],
+      "text": "MODE",
+      "lines": [
+        "MODE"
+      ],
+      "size": 8,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        227,
+        385,
+        367,
+        403.75
+      ],
+      "text": "Single-player",
+      "lines": [
+        "Single-player"
+      ],
+      "size": 15,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        403,
+        366,
+        543,
+        376.0
+      ],
+      "text": "KONEKSI",
+      "lines": [
+        "KONEKSI"
+      ],
+      "size": 8,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        403,
+        385,
+        543,
+        403.75
+      ],
+      "text": "Fully offline",
+      "lines": [
+        "Fully offline"
+      ],
+      "size": 15,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        38,
+        458,
+        553,
+        486.75
+      ],
+      "text": "Pilar desain",
+      "lines": [
+        "Pilar desain"
+      ],
+      "size": 23,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        38,
+        506,
+        80,
+        534.75
+      ],
+      "text": "01",
+      "lines": [
+        "01"
+      ],
+      "size": 23,
+      "font": "title",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        93,
+        506,
+        547,
+        522.25
+      ],
+      "text": "Eksplorasi terarah",
+      "lines": [
+        "Eksplorasi terarah"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        93,
+        530,
+        547,
+        558.62
+      ],
+      "text": "Landmark, percabangan jalur, dan shortcut membantu pemain menemukan objektif dengan urutan fleksibel.",
+      "lines": [
+        "Landmark, percabangan jalur, dan shortcut membantu pemain menemukan objektif dengan",
+        "urutan fleksibel."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        38,
+        582,
+        80,
+        610.75
+      ],
+      "text": "02",
+      "lines": [
+        "02"
+      ],
+      "size": 23,
+      "font": "title",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        93,
+        582,
+        547,
+        598.25
+      ],
+      "text": "Tantangan yang terbaca",
+      "lines": [
+        "Tantangan yang terbaca"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        93,
+        606,
+        547,
+        619.5
+      ],
+      "text": "Puzzle memakai petunjuk visual; musuh dan boss memiliki telegraph sebelum serangan.",
+      "lines": [
+        "Puzzle memakai petunjuk visual; musuh dan boss memiliki telegraph sebelum serangan."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        38,
+        658,
+        80,
+        686.75
+      ],
+      "text": "03",
+      "lines": [
+        "03"
+      ],
+      "size": 23,
+      "font": "title",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        93,
+        658,
+        547,
+        674.25
+      ],
+      "text": "Dunia stylized",
+      "lines": [
+        "Dunia stylized"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        93,
+        682,
+        547,
+        695.5
+      ],
+      "text": "Pulau low-poly dengan elevasi moderat dan tiga biome menjadi ruang eksplorasi Level 1.",
+      "lines": [
+        "Pulau low-poly dengan elevasi moderat dan tiga biome menjadi ruang eksplorasi Level 1."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 3,
+      "rect": [
+        38,
+        752,
+        553,
+        763.625
+      ],
+      "text": "Target pengalaman: pemain yang menikmati eksplorasi, puzzle ringan, dan pertarungan melee.",
+      "lines": [
+        "Target pengalaman: pemain yang menikmati eksplorasi, puzzle ringan, dan pertarungan melee."
+      ],
+      "size": 9.3,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 4,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  CERITA DAN DUNIA",
+      "lines": [
+        "THE LOST ISLAND / CERITA DAN DUNIA"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.7176470588235294,
+        0.803921568627451,
+        0.7411764705882353
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 4,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "04",
+      "lines": [
+        "04"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 4,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "STORY / LEVEL 1",
+      "lines": [
+        "STORY / LEVEL 1"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.7176470588235294,
+        0.803921568627451,
+        0.7411764705882353
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 4,
+      "rect": [
+        38,
+        65,
+        553,
+        151.21
+      ],
+      "text": "Pulau penjagaan\nyang terlupakan",
+      "lines": [
+        "Pulau penjagaan",
+        "yang terlupakan"
+      ],
+      "size": 37,
+      "font": "serif",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 4,
+      "rect": [
+        38,
+        189,
+        548,
+        242.125
+      ],
+      "text": "Setelah badai merusak kapalnya, seorang awak terdampar di bekas pulau penjagaan jalur pelayaran. Sebuah dermaga terlindung berada di sisi lain pulau, tetapi jalan menuju ke sana tertutup gerbang kuno.",
+      "lines": [
+        "Setelah badai merusak kapalnya, seorang awak terdampar di bekas pulau penjagaan jalur",
+        "pelayaran. Sebuah dermaga terlindung berada di sisi lain pulau, tetapi jalan menuju ke sana",
+        "tertutup gerbang kuno."
+      ],
+      "size": 12.5,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.5
+    },
+    {
+      "page": 4,
+      "rect": [
+        397,
+        569,
+        534,
+        578.625
+      ],
+      "text": "ILUSTRASI KONSEP",
+      "lines": [
+        "ILUSTRASI KONSEP"
+      ],
+      "size": 7.7,
+      "font": "bold",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.1
+    },
+    {
+      "page": 4,
+      "rect": [
+        38,
+        626,
+        280,
+        644.75
+      ],
+      "text": "Tiga kunci energi",
+      "lines": [
+        "Tiga kunci energi"
+      ],
+      "size": 15,
+      "font": "bold",
+      "color": [
+        0.7176470588235294,
+        0.803921568627451,
+        0.7411764705882353
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 4,
+      "rect": [
+        38,
+        656,
+        280,
+        699.335
+      ],
+      "text": "Artefak tersebar di reruntuhan, instalasi energi, dan menara pengamatan. Ketiganya mengaktifkan kembali sistem gerbang.",
+      "lines": [
+        "Artefak tersebar di reruntuhan, instalasi energi,",
+        "dan menara pengamatan. Ketiganya mengaktifkan",
+        "kembali sistem gerbang."
+      ],
+      "size": 10.7,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 4,
+      "rect": [
+        314,
+        626,
+        557,
+        644.75
+      ],
+      "text": "Penjaga yang terbangun",
+      "lines": [
+        "Penjaga yang terbangun"
+      ],
+      "size": 15,
+      "font": "bold",
+      "color": [
+        0.7176470588235294,
+        0.803921568627451,
+        0.7411764705882353
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 4,
+      "rect": [
+        314,
+        656,
+        557,
+        699.335
+      ],
+      "text": "Golem masih menolak penyusup sesuai perintah lama. Pemain harus mengalahkannya untuk mencapai dermaga.",
+      "lines": [
+        "Golem masih menolak penyusup sesuai perintah",
+        "lama. Pemain harus mengalahkannya untuk",
+        "mencapai dermaga."
+      ],
+      "size": 10.7,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 4,
+      "rect": [
+        38,
+        759,
+        557,
+        769.875
+      ],
+      "text": "Penyampaian: pembukaan singkat, relief lingkungan, dan penutup; tanpa kebutuhan dialog panjang.",
+      "lines": [
+        "Penyampaian: pembukaan singkat, relief lingkungan, dan penutup; tanpa kebutuhan dialog panjang."
+      ],
+      "size": 8.7,
+      "font": "body",
+      "color": [
+        0.7176470588235294,
+        0.803921568627451,
+        0.7411764705882353
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 5,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  CORE LOOP",
+      "lines": [
+        "THE LOST ISLAND / CORE LOOP"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 5,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "05",
+      "lines": [
+        "05"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 5,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "GAMEPLAY FLOW",
+      "lines": [
+        "GAMEPLAY FLOW"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 5,
+      "rect": [
+        38,
+        65,
+        553,
+        155.87
+      ],
+      "text": "Progres artefak\ndan gerbang akhir",
+      "lines": [
+        "Progres artefak",
+        "dan gerbang akhir"
+      ],
+      "size": 39,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 5,
+      "rect": [
+        38,
+        179,
+        548,
+        210.8
+      ],
+      "text": "Pemain membaca lingkungan, memilih tujuan, menyelesaikan tantangan, lalu kembali ke jalur utama. Ketiga artefak diperlukan untuk memulai pertarungan akhir.",
+      "lines": [
+        "Pemain membaca lingkungan, memilih tujuan, menyelesaikan tantangan, lalu kembali ke jalur",
+        "utama. Ketiga artefak diperlukan untuk memulai pertarungan akhir."
+      ],
+      "size": 12,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 5,
+      "rect": [
+        274,
+        283,
+        329,
+        294.25
+      ],
+      "text": "MULAI",
+      "lines": [
+        "MULAI"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 5,
+      "rect": [
+        54,
+        397,
+        185,
+        412.0
+      ],
+      "text": "Pilar Simbol",
+      "lines": [
+        "Pilar Simbol"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 5,
+      "rect": [
+        54,
+        424,
+        185,
+        452.09
+      ],
+      "text": "Grassland\nPuzzle urutan simbol",
+      "lines": [
+        "Grassland",
+        "Puzzle urutan simbol"
+      ],
+      "size": 10.6,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 5,
+      "rect": [
+        232,
+        397,
+        363,
+        412.0
+      ],
+      "text": "Jalur Energi",
+      "lines": [
+        "Jalur Energi"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 5,
+      "rect": [
+        232,
+        424,
+        363,
+        452.09
+      ],
+      "text": "Forest\nPuzzle sambungan energi",
+      "lines": [
+        "Forest",
+        "Puzzle sambungan energi"
+      ],
+      "size": 10.6,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 5,
+      "rect": [
+        410,
+        397,
+        541,
+        412.0
+      ],
+      "text": "Menuju Puncak",
+      "lines": [
+        "Menuju Puncak"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 5,
+      "rect": [
+        410,
+        424,
+        541,
+        452.09
+      ],
+      "text": "Rocky Highlands\nTraversal dan penjaga",
+      "lines": [
+        "Rocky Highlands",
+        "Traversal dan penjaga"
+      ],
+      "size": 10.6,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 5,
+      "rect": [
+        156,
+        634,
+        441,
+        647.75
+      ],
+      "text": "Pasang artefak dan bangunkan penjaga",
+      "lines": [
+        "Pasang artefak dan bangunkan penjaga"
+      ],
+      "size": 11,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 5,
+      "rect": [
+        137,
+        705,
+        462,
+        725.0
+      ],
+      "text": "Kalahkan boss, lewati gerbang",
+      "lines": [
+        "Kalahkan boss, lewati gerbang"
+      ],
+      "size": 16,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 5,
+      "rect": [
+        137,
+        736,
+        462,
+        749.125
+      ],
+      "text": "Level 1 selesai setelah pemain menuju dermaga.",
+      "lines": [
+        "Level 1 selesai setelah pemain menuju dermaga."
+      ],
+      "size": 10.5,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 6,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  DUNIA DAN LEVEL DESIGN",
+      "lines": [
+        "THE LOST ISLAND / DUNIA DAN LEVEL DESIGN"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 6,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "06",
+      "lines": [
+        "06"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 6,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "WORLD / BASELINE BLOCKOUT",
+      "lines": [
+        "WORLD / BASELINE BLOCKOUT"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 6,
+      "rect": [
+        38,
+        65,
+        553,
+        160.53
+      ],
+      "text": "Pulau dan\ntiga biome",
+      "lines": [
+        "Pulau dan",
+        "tiga biome"
+      ],
+      "size": 41,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 6,
+      "rect": [
+        399,
+        72,
+        550,
+        81.625
+      ],
+      "text": "BASELINE 250 × 250 M",
+      "lines": [
+        "BASELINE 250 × 250 M"
+      ],
+      "size": 7.7,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.1
+    },
+    {
+      "page": 6,
+      "rect": [
+        88,
+        374,
+        178,
+        383.625
+      ],
+      "text": "FOREST",
+      "lines": [
+        "FOREST"
+      ],
+      "size": 7.7,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.1
+    },
+    {
+      "page": 6,
+      "rect": [
+        309,
+        209,
+        471,
+        218.625
+      ],
+      "text": "ROCKY HIGHLANDS",
+      "lines": [
+        "ROCKY HIGHLANDS"
+      ],
+      "size": 7.7,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.1
+    },
+    {
+      "page": 6,
+      "rect": [
+        183,
+        483,
+        288,
+        492.625
+      ],
+      "text": "GRASSLAND",
+      "lines": [
+        "GRASSLAND"
+      ],
+      "size": 7.7,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.1
+    },
+    {
+      "page": 6,
+      "rect": [
+        57,
+        523,
+        540,
+        533.0
+      ],
+      "text": "Skema hubungan area; posisi, proporsi biome, dan jalur belum merupakan map final.",
+      "lines": [
+        "Skema hubungan area; posisi, proporsi biome, dan jalur belum merupakan map final."
+      ],
+      "size": 8,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 6,
+      "rect": [
+        54,
+        593,
+        271,
+        608.0
+      ],
+      "text": "Orientasi",
+      "lines": [
+        "Orientasi"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 6,
+      "rect": [
+        54,
+        620,
+        271,
+        663.335
+      ],
+      "text": "Grassland mengenalkan kontrol. Forest dan Rocky Highlands bercabang dari jalur penghubung. Gerbang menjadi landmark.",
+      "lines": [
+        "Grassland mengenalkan kontrol. Forest dan",
+        "Rocky Highlands bercabang dari jalur",
+        "penghubung. Gerbang menjadi landmark."
+      ],
+      "size": 10.7,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 6,
+      "rect": [
+        323,
+        593,
+        541,
+        608.0
+      ],
+      "text": "Perjalanan kembali",
+      "lines": [
+        "Perjalanan kembali"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 6,
+      "rect": [
+        323,
+        620,
+        541,
+        663.335
+      ],
+      "text": "Shortcut mengurangi pengulangan rute. Lokasi objektif dan ruang traversal dipertahankan valid pada setiap seed.",
+      "lines": [
+        "Shortcut mengurangi pengulangan rute.",
+        "Lokasi objektif dan ruang traversal",
+        "dipertahankan valid pada setiap seed."
+      ],
+      "size": 10.7,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 6,
+      "rect": [
+        38,
+        733,
+        557,
+        760.295
+      ],
+      "text": "Durasi boleh lebih panjang dari usulan 15–20 menit. Target akhir ditentukan melalui playtest, bukan luas map saja.",
+      "lines": [
+        "Durasi boleh lebih panjang dari usulan 15–20 menit. Target akhir ditentukan melalui playtest, bukan luas map",
+        "saja."
+      ],
+      "size": 10.3,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 7,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  KAMERA DAN INPUT",
+      "lines": [
+        "THE LOST ISLAND / KAMERA DAN INPUT"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 7,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "07",
+      "lines": [
+        "07"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 7,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "PERSPECTIVE / ELEVATED FOLLOW",
+      "lines": [
+        "PERSPECTIVE / ELEVATED FOLLOW"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 7,
+      "rect": [
+        38,
+        65,
+        553,
+        148.88
+      ],
+      "text": "Kamera mengikuti\nperjalanan pemain",
+      "lines": [
+        "Kamera mengikuti",
+        "perjalanan pemain"
+      ],
+      "size": 36,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 7,
+      "rect": [
+        64,
+        198,
+        254,
+        210.5
+      ],
+      "text": "Perspective camera",
+      "lines": [
+        "Perspective camera"
+      ],
+      "size": 10,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 7,
+      "rect": [
+        377,
+        302,
+        528,
+        314.5
+      ],
+      "text": "Karakter",
+      "lines": [
+        "Karakter"
+      ],
+      "size": 10,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 7,
+      "rect": [
+        67,
+        393,
+        527,
+        403.625
+      ],
+      "text": "Skema posisi kamera; jarak, FOV, dan sudut ditentukan lewat prototype.",
+      "lines": [
+        "Skema posisi kamera; jarak, FOV, dan sudut ditentukan lewat prototype."
+      ],
+      "size": 8.5,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 7,
+      "rect": [
+        54,
+        470,
+        271,
+        485.0
+      ],
+      "text": "Mouse bebas",
+      "lines": [
+        "Mouse bebas"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 7,
+      "rect": [
+        54,
+        497,
+        271,
+        541.55
+      ],
+      "text": "Posisi mouse di dunia menentukan arah serangan. Kamera tidak otomatis mengikuti arah karakter menyerang.",
+      "lines": [
+        "Posisi mouse di dunia menentukan arah",
+        "serangan. Kamera tidak otomatis mengikuti",
+        "arah karakter menyerang."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 7,
+      "rect": [
+        323,
+        470,
+        541,
+        485.0
+      ],
+      "text": "Tahan tombol tengah",
+      "lines": [
+        "Tahan tombol tengah"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 7,
+      "rect": [
+        323,
+        497,
+        541,
+        541.55
+      ],
+      "text": "Mouse mengatur orbit 360° horizontal. Orbit vertikal dibatasi. Lepaskan tombol untuk kembali aiming.",
+      "lines": [
+        "Mouse mengatur orbit 360° horizontal. Orbit",
+        "vertikal dibatasi. Lepaskan tombol untuk",
+        "kembali aiming."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 7,
+      "rect": [
+        53,
+        620,
+        557,
+        633.5
+      ],
+      "text": "Smooth damping mengikuti movement dan lompatan tanpa hentakan.",
+      "lines": [
+        "Smooth damping mengikuti movement dan lompatan tanpa hentakan."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 7,
+      "rect": [
+        53,
+        643.5,
+        557,
+        657.0
+      ],
+      "text": "Camera collision mendekatkan kamera ketika terhalang, lalu kembali secara mulus.",
+      "lines": [
+        "Camera collision mendekatkan kamera ketika terhalang, lalu kembali secara mulus."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 7,
+      "rect": [
+        53,
+        667.0,
+        557,
+        680.5
+      ],
+      "text": "Analog kanan mengatur orbit; mapping gamepad lainnya belum dirinci.",
+      "lines": [
+        "Analog kanan mengatur orbit; mapping gamepad lainnya belum dirinci."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 7,
+      "rect": [
+        38,
+        757,
+        557,
+        768.25
+      ],
+      "text": "Keterbacaan puzzle, lompatan, dan telegraph boss menjadi kriteria framing.",
+      "lines": [
+        "Keterbacaan puzzle, lompatan, dan telegraph boss menjadi kriteria framing."
+      ],
+      "size": 9,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 8,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  PUZZLE / PILAR SIMBOL",
+      "lines": [
+        "THE LOST ISLAND / PUZZLE / PILAR SIMBOL"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 8,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "08",
+      "lines": [
+        "08"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 8,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "ARTEFAK / GRASSLAND",
+      "lines": [
+        "ARTEFAK / GRASSLAND"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 8,
+      "rect": [
+        38,
+        65,
+        553,
+        122.5
+      ],
+      "text": "Pilar Simbol",
+      "lines": [
+        "Pilar Simbol"
+      ],
+      "size": 46,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 8,
+      "rect": [
+        38,
+        131,
+        548,
+        148.5
+      ],
+      "text": "Baca relief, lalu aktifkan empat pilar dalam urutan yang ditunjukkan.",
+      "lines": [
+        "Baca relief, lalu aktifkan empat pilar dalam urutan yang ditunjukkan."
+      ],
+      "size": 14,
+      "font": "serif",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 8,
+      "rect": [
+        99,
+        330,
+        115,
+        346.25
+      ],
+      "text": "1",
+      "lines": [
+        "1"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 8,
+      "rect": [
+        228,
+        330,
+        244,
+        346.25
+      ],
+      "text": "2",
+      "lines": [
+        "2"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 8,
+      "rect": [
+        357,
+        330,
+        373,
+        346.25
+      ],
+      "text": "3",
+      "lines": [
+        "3"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 8,
+      "rect": [
+        486,
+        330,
+        502,
+        346.25
+      ],
+      "text": "4",
+      "lines": [
+        "4"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 8,
+      "rect": [
+        57,
+        406,
+        537,
+        416.25
+      ],
+      "text": "Skema mekanik; bentuk simbol dan urutan contoh belum menjadi pilihan visual final.",
+      "lines": [
+        "Skema mekanik; bentuk simbol dan urutan contoh belum menjadi pilihan visual final."
+      ],
+      "size": 8.2,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 8,
+      "rect": [
+        53,
+        470,
+        557,
+        483.75
+      ],
+      "text": "Relief urutan tetap terlihat selama puzzle dikerjakan.",
+      "lines": [
+        "Relief urutan tetap terlihat selama puzzle dikerjakan."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 8,
+      "rect": [
+        53,
+        493.75,
+        557,
+        507.5
+      ],
+      "text": "Pemain mendekati pilar lalu berinteraksi. Cahaya dan audio pendek memberi feedback.",
+      "lines": [
+        "Pemain mendekati pilar lalu berinteraksi. Cahaya dan audio pendek memberi feedback."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 8,
+      "rect": [
+        53,
+        517.5,
+        557,
+        546.65
+      ],
+      "text": "Urutan benar membuka segel artefak. Urutan salah mereset rangkaian tanpa damage atau kehilangan item.",
+      "lines": [
+        "Urutan benar membuka segel artefak. Urutan salah mereset rangkaian tanpa damage atau kehilangan",
+        "item."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 8,
+      "rect": [
+        53,
+        556.65,
+        557,
+        570.4
+      ],
+      "text": "Simbol dapat dibedakan melalui bentuk; warna hanya membantu keterbacaan.",
+      "lines": [
+        "Simbol dapat dibedakan melalui bentuk; warna hanya membantu keterbacaan."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 8,
+      "rect": [
+        53,
+        580.4,
+        557,
+        594.15
+      ],
+      "text": "Musuh tidak mengganggu puzzle pertama. Status selesai bertahan setelah respawn selama sesi.",
+      "lines": [
+        "Musuh tidak mengganggu puzzle pertama. Status selesai bertahan setelah respawn selama sesi."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 8,
+      "rect": [
+        45,
+        749,
+        257,
+        758.625
+      ],
+      "text": "MODUL TERKONTROL, SOLUSI VALID",
+      "lines": [
+        "MODUL TERKONTROL, SOLUSI VALID"
+      ],
+      "size": 7.7,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.1
+    },
+    {
+      "page": 9,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  PUZZLE / JALUR ENERGI",
+      "lines": [
+        "THE LOST ISLAND / PUZZLE / JALUR ENERGI"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "09",
+      "lines": [
+        "09"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "ARTEFAK / FOREST",
+      "lines": [
+        "ARTEFAK / FOREST"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 9,
+      "rect": [
+        38,
+        65,
+        553,
+        122.5
+      ],
+      "text": "Jalur Energi",
+      "lines": [
+        "Jalur Energi"
+      ],
+      "size": 46,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 9,
+      "rect": [
+        38,
+        133,
+        548,
+        150.5
+      ],
+      "text": "Putar tiga panel batu untuk menyambungkan kristal sumber ke altar artefak.",
+      "lines": [
+        "Putar tiga panel batu untuk menyambungkan kristal sumber ke altar artefak."
+      ],
+      "size": 14,
+      "font": "serif",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        159,
+        356,
+        217,
+        376.0
+      ],
+      "text": "90°",
+      "lines": [
+        "90°"
+      ],
+      "size": 16,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        279,
+        356,
+        337,
+        376.0
+      ],
+      "text": "90°",
+      "lines": [
+        "90°"
+      ],
+      "size": 16,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        399,
+        356,
+        457,
+        376.0
+      ],
+      "text": "90°",
+      "lines": [
+        "90°"
+      ],
+      "size": 16,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        55,
+        220,
+        523,
+        230.0
+      ],
+      "text": "SUMBER",
+      "lines": [
+        "SUMBER"
+      ],
+      "size": 8,
+      "font": "bold",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        475,
+        220,
+        540,
+        230.0
+      ],
+      "text": "ALTAR",
+      "lines": [
+        "ALTAR"
+      ],
+      "size": 8,
+      "font": "bold",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        55,
+        393,
+        535,
+        403.25
+      ],
+      "text": "Skema kondisi tersambung; layout dan orientasi awal akan dirinci saat produksi.",
+      "lines": [
+        "Skema kondisi tersambung; layout dan orientasi awal akan dirinci saat produksi."
+      ],
+      "size": 8.2,
+      "font": "body",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        54,
+        476,
+        271,
+        491.0
+      ],
+      "text": "Interaksi",
+      "lines": [
+        "Interaksi"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        54,
+        503,
+        271,
+        547.145
+      ],
+      "text": "Setiap interaksi memutar panel 90°. Panel menggunakan ukiran jalur lurus atau siku. Energi mengikuti sambungan dari sumber.",
+      "lines": [
+        "Setiap interaksi memutar panel 90°. Panel",
+        "menggunakan ukiran jalur lurus atau siku.",
+        "Energi mengikuti sambungan dari sumber."
+      ],
+      "size": 10.9,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        323,
+        476,
+        541,
+        491.0
+      ],
+      "text": "Solusi",
+      "lines": [
+        "Solusi"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        323,
+        503,
+        541,
+        547.145
+      ],
+      "text": "Hubungan lengkap ke altar membuka segel artefak. Cahaya, ukiran, arah aliran, dan audio membantu membaca sambungan.",
+      "lines": [
+        "Hubungan lengkap ke altar membuka segel",
+        "artefak. Cahaya, ukiran, arah aliran, dan",
+        "audio membantu membaca sambungan."
+      ],
+      "size": 10.9,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        53,
+        633,
+        557,
+        646.75
+      ],
+      "text": "Tanpa timer, damage, atau batas percobaan.",
+      "lines": [
+        "Tanpa timer, damage, atau batas percobaan."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        53,
+        656.75,
+        557,
+        670.5
+      ],
+      "text": "Status selesai bertahan setelah respawn selama sesi.",
+      "lines": [
+        "Status selesai bertahan setelah respawn selama sesi."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        53,
+        680.5,
+        557,
+        694.25
+      ],
+      "text": "Sistem menggunakan konektivitas jalur, bukan simulasi cahaya fisik.",
+      "lines": [
+        "Sistem menggunakan konektivitas jalur, bukan simulasi cahaya fisik."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 9,
+      "rect": [
+        38,
+        757,
+        557,
+        768.25
+      ],
+      "text": "Generator menempatkan modul puzzle pada lokasi yang dapat diakses dan tetap dapat diselesaikan.",
+      "lines": [
+        "Generator menempatkan modul puzzle pada lokasi yang dapat diakses dan tetap dapat diselesaikan."
+      ],
+      "size": 9,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  EXPLORATION CHALLENGE",
+      "lines": [
+        "THE LOST ISLAND / EXPLORATION CHALLENGE"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "10",
+      "lines": [
+        "10"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "ARTEFAK / ROCKY HIGHLANDS",
+      "lines": [
+        "ARTEFAK / ROCKY HIGHLANDS"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 10,
+      "rect": [
+        38,
+        65,
+        553,
+        165.19
+      ],
+      "text": "Jalur Menuju\nPuncak",
+      "lines": [
+        "Jalur Menuju",
+        "Puncak"
+      ],
+      "size": 43,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 10,
+      "rect": [
+        38,
+        178,
+        548,
+        193.625
+      ],
+      "text": "Cari rute naik, lewati penjaga, lalu capai altar di reruntuhan dataran tinggi.",
+      "lines": [
+        "Cari rute naik, lewati penjaga, lalu capai altar di reruntuhan dataran tinggi."
+      ],
+      "size": 12.5,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        61,
+        257,
+        81,
+        270.75
+      ],
+      "text": "1",
+      "lines": [
+        "1"
+      ],
+      "size": 11,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        99,
+        252,
+        547,
+        273.25
+      ],
+      "text": "Kaki bukit",
+      "lines": [
+        "Kaki bukit"
+      ],
+      "size": 17,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        99,
+        282,
+        544,
+        311.15
+      ],
+      "text": "Checkpoint sebelum pendakian. Satu musuh melee menjaga area combat yang cukup luas.",
+      "lines": [
+        "Checkpoint sebelum pendakian. Satu musuh melee menjaga area combat yang cukup",
+        "luas."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        61,
+        365,
+        81,
+        378.75
+      ],
+      "text": "2",
+      "lines": [
+        "2"
+      ],
+      "size": 11,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        99,
+        360,
+        547,
+        381.25
+      ],
+      "text": "Jalur tebing",
+      "lines": [
+        "Jalur tebing"
+      ],
+      "size": 17,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        99,
+        390,
+        544,
+        419.15
+      ],
+      "text": "Jalur berkelok dengan satu atau dua lompatan pendek. Area lompatan memberi ruang membaca jarak.",
+      "lines": [
+        "Jalur berkelok dengan satu atau dua lompatan pendek. Area lompatan memberi ruang",
+        "membaca jarak."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        61,
+        473,
+        81,
+        486.75
+      ],
+      "text": "3",
+      "lines": [
+        "3"
+      ],
+      "size": 11,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        99,
+        468,
+        547,
+        489.25
+      ],
+      "text": "Pelataran penjaga",
+      "lines": [
+        "Pelataran penjaga"
+      ],
+      "size": 17,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        99,
+        498,
+        544,
+        527.15
+      ],
+      "text": "Satu melee dan satu ranged. Batu menjadi perlindungan, dengan jalur pendekatan dari samping.",
+      "lines": [
+        "Satu melee dan satu ranged. Batu menjadi perlindungan, dengan jalur pendekatan dari",
+        "samping."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        61,
+        581,
+        81,
+        594.75
+      ],
+      "text": "4",
+      "lines": [
+        "4"
+      ],
+      "size": 11,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        99,
+        576,
+        547,
+        597.25
+      ],
+      "text": "Altar puncak",
+      "lines": [
+        "Altar puncak"
+      ],
+      "size": 17,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        99,
+        606,
+        544,
+        619.75
+      ],
+      "text": "Ambil artefak, nikmati viewpoint, dan aktifkan jembatan shortcut dari sisi puncak.",
+      "lines": [
+        "Ambil artefak, nikmati viewpoint, dan aktifkan jembatan shortcut dari sisi puncak."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 10,
+      "rect": [
+        54,
+        721,
+        541,
+        749.09
+      ],
+      "text": "Pemain boleh melawan atau melewati musuh. Artefak tidak mensyaratkan semua penjaga dikalahkan. Musuh rute yang sudah kalah tetap mati selama sesi.",
+      "lines": [
+        "Pemain boleh melawan atau melewati musuh. Artefak tidak mensyaratkan semua penjaga dikalahkan.",
+        "Musuh rute yang sudah kalah tetap mati selama sesi."
+      ],
+      "size": 10.6,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 11,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  COMBAT PEMAIN",
+      "lines": [
+        "THE LOST ISLAND / COMBAT PEMAIN"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.7176470588235294,
+        0.803921568627451,
+        0.7411764705882353
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 11,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "11",
+      "lines": [
+        "11"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 11,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "MELEE / MOUSE-WORLD AIMING",
+      "lines": [
+        "MELEE / MOUSE-WORLD AIMING"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.7176470588235294,
+        0.803921568627451,
+        0.7411764705882353
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 11,
+      "rect": [
+        38,
+        65,
+        553,
+        165.19
+      ],
+      "text": "Sistem combat\nmelee",
+      "lines": [
+        "Sistem combat",
+        "melee"
+      ],
+      "size": 43,
+      "font": "title",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 11,
+      "rect": [
+        55,
+        227,
+        185,
+        282.0
+      ],
+      "text": "01",
+      "lines": [
+        "01"
+      ],
+      "size": 44,
+      "font": "title",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 11,
+      "rect": [
+        55,
+        300,
+        185,
+        317.5
+      ],
+      "text": "Hit cepat",
+      "lines": [
+        "Hit cepat"
+      ],
+      "size": 14,
+      "font": "bold",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 11,
+      "rect": [
+        233,
+        227,
+        363,
+        282.0
+      ],
+      "text": "02",
+      "lines": [
+        "02"
+      ],
+      "size": 44,
+      "font": "title",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 11,
+      "rect": [
+        233,
+        300,
+        363,
+        317.5
+      ],
+      "text": "Hit cepat",
+      "lines": [
+        "Hit cepat"
+      ],
+      "size": 14,
+      "font": "bold",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 11,
+      "rect": [
+        411,
+        227,
+        541,
+        282.0
+      ],
+      "text": "03",
+      "lines": [
+        "03"
+      ],
+      "size": 44,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 11,
+      "rect": [
+        411,
+        300,
+        541,
+        317.5
+      ],
+      "text": "Finisher",
+      "lines": [
+        "Finisher"
+      ],
+      "size": 14,
+      "font": "bold",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 11,
+      "rect": [
+        38,
+        387,
+        557,
+        418.8
+      ],
+      "text": "Satu tombol attack mengatur combo tiga hit. Input berikutnya harus masuk pada timing window; early input tidak disimpan dan menahan tombol tidak menjalankan combo otomatis.",
+      "lines": [
+        "Satu tombol attack mengatur combo tiga hit. Input berikutnya harus masuk pada timing window;",
+        "early input tidak disimpan dan menahan tombol tidak menjalankan combo otomatis."
+      ],
+      "size": 12,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 11,
+      "rect": [
+        53,
+        489,
+        557,
+        503.25
+      ],
+      "text": "Animasi attack yang sudah dimulai diselesaikan sebelum block atau dodge.",
+      "lines": [
+        "Animasi attack yang sudah dimulai diselesaikan sebelum block atau dodge."
+      ],
+      "size": 11.4,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 11,
+      "rect": [
+        53,
+        513.25,
+        557,
+        527.5
+      ],
+      "text": "Pemain tetap dapat bergerak dengan kecepatan berkurang saat menyerang.",
+      "lines": [
+        "Pemain tetap dapat bergerak dengan kecepatan berkurang saat menyerang."
+      ],
+      "size": 11.4,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 11,
+      "rect": [
+        53,
+        537.5,
+        557,
+        551.75
+      ],
+      "text": "Arah dikunci selama satu hit. Aiming dibaca kembali saat hit berikutnya dimulai.",
+      "lines": [
+        "Arah dikunci selama satu hit. Aiming dibaca kembali saat hit berikutnya dimulai."
+      ],
+      "size": 11.4,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 11,
+      "rect": [
+        53,
+        561.75,
+        557,
+        576.0
+      ],
+      "text": "Attack dan combo tidak menghabiskan stamina.",
+      "lines": [
+        "Attack dan combo tidak menghabiskan stamina."
+      ],
+      "size": 11.4,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 11,
+      "rect": [
+        38,
+        733,
+        557,
+        745.5
+      ],
+      "text": "Timing window, hitbox, damage, dan recovery disusun sebagai baseline lalu diuji melalui prototype.",
+      "lines": [
+        "Timing window, hitbox, damage, dan recovery disusun sebagai baseline lalu diuji melalui prototype."
+      ],
+      "size": 10,
+      "font": "body",
+      "color": [
+        0.7176470588235294,
+        0.803921568627451,
+        0.7411764705882353
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 12,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  MUSUH BIASA",
+      "lines": [
+        "THE LOST ISLAND / MUSUH BIASA"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 12,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "12",
+      "lines": [
+        "12"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 12,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "ENCOUNTER / TIGA TIPE",
+      "lines": [
+        "ENCOUNTER / TIGA TIPE"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 12,
+      "rect": [
+        38,
+        65,
+        553,
+        162.86
+      ],
+      "text": "Musuh dan\nperan encounter",
+      "lines": [
+        "Musuh dan",
+        "peran encounter"
+      ],
+      "size": 42,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 12,
+      "rect": [
+        162,
+        242,
+        533,
+        265.75
+      ],
+      "text": "01  Melee biasa",
+      "lines": [
+        "01 Melee biasa"
+      ],
+      "size": 19,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 12,
+      "rect": [
+        162,
+        278,
+        533,
+        307.945
+      ],
+      "text": "Mendekat dan melakukan satu swing singkat. Recovery pendek memberi tekanan jarak dekat.",
+      "lines": [
+        "Mendekat dan melakukan satu swing singkat. Recovery pendek memberi",
+        "tekanan jarak dekat."
+      ],
+      "size": 11.3,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 12,
+      "rect": [
+        162,
+        395,
+        533,
+        418.75
+      ],
+      "text": "02  Heavy melee",
+      "lines": [
+        "02 Heavy melee"
+      ],
+      "size": 19,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 12,
+      "rect": [
+        162,
+        431,
+        533,
+        460.945
+      ],
+      "text": "Bergerak lebih lambat, mengangkat senjata sebelum hantaman kuat, lalu recovery panjang.",
+      "lines": [
+        "Bergerak lebih lambat, mengangkat senjata sebelum hantaman kuat, lalu",
+        "recovery panjang."
+      ],
+      "size": 11.3,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 12,
+      "rect": [
+        162,
+        548,
+        533,
+        571.75
+      ],
+      "text": "03  Ranged",
+      "lines": [
+        "03 Ranged"
+      ],
+      "size": 19,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 12,
+      "rect": [
+        162,
+        584,
+        533,
+        613.945
+      ],
+      "text": "Menembakkan proyektil lurus setelah persiapan yang terbaca. Pemain dapat menghindar atau memakai perlindungan.",
+      "lines": [
+        "Menembakkan proyektil lurus setelah persiapan yang terbaca. Pemain",
+        "dapat menghindar atau memakai perlindungan."
+      ],
+      "size": 11.3,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 12,
+      "rect": [
+        38,
+        714,
+        557,
+        742.62
+      ],
+      "text": "Rancangan awal tidak memakai proyektil homing atau combo heavy yang panjang. Detection, chase/leash, stagger, dan distribusi encounter dirinci saat prototype.",
+      "lines": [
+        "Rancangan awal tidak memakai proyektil homing atau combo heavy yang panjang. Detection, chase/leash,",
+        "stagger, dan distribusi encounter dirinci saat prototype."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 12,
+      "rect": [
+        38,
+        765,
+        557,
+        775.75
+      ],
+      "text": "Simbol senjata menunjukkan peran; penampilan karakter dan jenis senjata spesifik belum final.",
+      "lines": [
+        "Simbol senjata menunjukkan peran; penampilan karakter dan jenis senjata spesifik belum final."
+      ],
+      "size": 8.6,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 13,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  RESOURCE DAN RETRY",
+      "lines": [
+        "THE LOST ISLAND / RESOURCE DAN RETRY"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 13,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "13",
+      "lines": [
+        "13"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 13,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "HP / STAMINA / POTION",
+      "lines": [
+        "HP / STAMINA / POTION"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 13,
+      "rect": [
+        38,
+        65,
+        553,
+        146.55
+      ],
+      "text": "Resource dan\nkesempatan mencoba lagi.",
+      "lines": [
+        "Resource dan",
+        "kesempatan mencoba lagi."
+      ],
+      "size": 35,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 13,
+      "rect": [
+        54,
+        197,
+        271,
+        212.0
+      ],
+      "text": "Block dan dodge",
+      "lines": [
+        "Block dan dodge"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 13,
+      "rect": [
+        54,
+        224,
+        271,
+        297.295
+      ],
+      "text": "Keduanya memakai satu pool stamina. Block mengurangi damage dari semua arah dan menguras stamina selama ditahan. Dodge memakai biaya tetap dan memberi i-frames singkat.",
+      "lines": [
+        "Keduanya memakai satu pool stamina. Block",
+        "mengurangi damage dari semua arah dan",
+        "menguras stamina selama ditahan. Dodge",
+        "memakai biaya tetap dan memberi i-frames",
+        "singkat."
+      ],
+      "size": 10.7,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 13,
+      "rect": [
+        323,
+        197,
+        541,
+        212.0
+      ],
+      "text": "Regenerasi",
+      "lines": [
+        "Regenerasi"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 13,
+      "rect": [
+        323,
+        224,
+        541,
+        282.315
+      ],
+      "text": "Stamina pulih setelah jeda singkat sejak block atau dodge berhenti. Jika stamina kurang, defense ditolak; movement dan attack tetap tersedia.",
+      "lines": [
+        "Stamina pulih setelah jeda singkat sejak",
+        "block atau dodge berhenti. Jika stamina",
+        "kurang, defense ditolak; movement dan",
+        "attack tetap tersedia."
+      ],
+      "size": 10.7,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 13,
+      "rect": [
+        38,
+        372,
+        557,
+        399.5
+      ],
+      "text": "Potion dipakai setelah animasi selesai",
+      "lines": [
+        "Potion dipakai setelah animasi selesai"
+      ],
+      "size": 22,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 13,
+      "rect": [
+        38,
+        414,
+        557,
+        460.98
+      ],
+      "text": "Saat minum, pemain berjalan lebih lambat dan tidak dapat menyerang. Terkena serangan membatalkan animasi. HP baru pulih dan potion baru berkurang setelah animasi selesai; pembatalan tidak menghabiskan item.",
+      "lines": [
+        "Saat minum, pemain berjalan lebih lambat dan tidak dapat menyerang. Terkena serangan",
+        "membatalkan animasi. HP baru pulih dan potion baru berkurang setelah animasi selesai;",
+        "pembatalan tidak menghabiskan item."
+      ],
+      "size": 11.6,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 13,
+      "rect": [
+        38,
+        528,
+        287,
+        548.0
+      ],
+      "text": "Respawn eksplorasi",
+      "lines": [
+        "Respawn eksplorasi"
+      ],
+      "size": 16,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 13,
+      "rect": [
+        38,
+        565,
+        287,
+        609.55
+      ],
+      "text": "HP kembali penuh di checkpoint. Healing terpakai tidak dikembalikan. Artefak dan puzzle selesai tetap tercatat selama sesi.",
+      "lines": [
+        "HP kembali penuh di checkpoint. Healing terpakai",
+        "tidak dikembalikan. Artefak dan puzzle selesai",
+        "tetap tercatat selama sesi."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 13,
+      "rect": [
+        307,
+        528,
+        557,
+        548.0
+      ],
+      "text": "Retry boss: snapshot",
+      "lines": [
+        "Retry boss: snapshot"
+      ],
+      "size": 16,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 13,
+      "rect": [
+        307,
+        565,
+        557,
+        609.55
+      ],
+      "text": "HP, stamina, dan jumlah potion kembali ke kondisi sebelum pertarungan pertama. Boss direset; progres pulau tetap tersimpan.",
+      "lines": [
+        "HP, stamina, dan jumlah potion kembali ke kondisi",
+        "sebelum pertarungan pertama. Boss direset;",
+        "progres pulau tetap tersimpan."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 13,
+      "rect": [
+        54,
+        685,
+        541,
+        713.62
+      ],
+      "text": "Contoh jumlah item: masuk boss dengan 5 potion, memakai 3 lalu mati, retry kembali membawa 5. Setelah menang, resource yang tersisa dipertahankan.",
+      "lines": [
+        "Contoh jumlah item: masuk boss dengan 5 potion, memakai 3 lalu mati, retry kembali membawa 5.",
+        "Setelah menang, resource yang tersisa dipertahankan."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 13,
+      "rect": [
+        38,
+        758,
+        557,
+        769.0
+      ],
+      "text": "Angka pada contoh bukan kapasitas inventory final. Snapshot tidak menggandakan potion.",
+      "lines": [
+        "Angka pada contoh bukan kapasitas inventory final. Snapshot tidak menggandakan potion."
+      ],
+      "size": 8.8,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  BOSS / PENJAGA GERBANG",
+      "lines": [
+        "THE LOST ISLAND / BOSS / PENJAGA GERBANG"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "14",
+      "lines": [
+        "14"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "PERTARUNGAN AKHIR LEVEL 1",
+      "lines": [
+        "PERTARUNGAN AKHIR LEVEL 1"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 14,
+      "rect": [
+        38,
+        65,
+        553,
+        115.0
+      ],
+      "text": "Penjaga Gerbang",
+      "lines": [
+        "Penjaga Gerbang"
+      ],
+      "size": 40,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 14,
+      "rect": [
+        38,
+        131,
+        557,
+        164.125
+      ],
+      "text": "Golem batu dengan inti energi. Aktif setelah tiga artefak dipasang dan pemain memulai pertarungan.",
+      "lines": [
+        "Golem batu dengan inti energi. Aktif setelah tiga artefak dipasang dan pemain memulai",
+        "pertarungan."
+      ],
+      "size": 12.5,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        51,
+        330,
+        188,
+        346.25
+      ],
+      "text": "Sapuan lengan",
+      "lines": [
+        "Sapuan lengan"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        51,
+        375,
+        188,
+        417.525
+      ],
+      "text": "Lengan ditarik ke belakang. Pemain mundur atau dodge keluar jangkauan.",
+      "lines": [
+        "Lengan ditarik ke belakang.",
+        "Pemain mundur atau dodge",
+        "keluar jangkauan."
+      ],
+      "size": 10.5,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        229,
+        330,
+        366,
+        346.25
+      ],
+      "text": "Hantaman tanah",
+      "lines": [
+        "Hantaman tanah"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        229,
+        375,
+        366,
+        417.525
+      ],
+      "text": "Kedua tangan diangkat. Lingkaran tanah menandai area damage.",
+      "lines": [
+        "Kedua tangan diangkat.",
+        "Lingkaran tanah menandai",
+        "area damage."
+      ],
+      "size": 10.5,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        407,
+        330,
+        544,
+        346.25
+      ],
+      "text": "Terjangan lurus",
+      "lines": [
+        "Terjangan lurus"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        407,
+        375,
+        544,
+        417.525
+      ],
+      "text": "Badan direndahkan. Garis menandai arah terjangan sebelum target dikunci.",
+      "lines": [
+        "Badan direndahkan. Garis",
+        "menandai arah terjangan",
+        "sebelum target dikunci."
+      ],
+      "size": 10.5,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        38,
+        516,
+        557,
+        543.5
+      ],
+      "text": "Dua fase, telegraph tetap terbaca",
+      "lines": [
+        "Dua fase, telegraph tetap terbaca"
+      ],
+      "size": 22,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        38,
+        591,
+        282,
+        607.25
+      ],
+      "text": "HP di atas 50%",
+      "lines": [
+        "HP di atas 50%"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        38,
+        620,
+        282,
+        649.15
+      ],
+      "text": "Satu serangan lalu recovery. Pemain mempelajari tanda dan celah serangan.",
+      "lines": [
+        "Satu serangan lalu recovery. Pemain mempelajari",
+        "tanda dan celah serangan."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        313,
+        591,
+        557,
+        607.25
+      ],
+      "text": "HP 50% atau kurang",
+      "lines": [
+        "HP 50% atau kurang"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        313,
+        620,
+        557,
+        649.15
+      ],
+      "text": "Sesekali dua serangan berurutan sebelum recovery panjang. Timing dasar dipertahankan.",
+      "lines": [
+        "Sesekali dua serangan berurutan sebelum",
+        "recovery panjang. Timing dasar dipertahankan."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        38,
+        698,
+        557,
+        727.15
+      ],
+      "text": "Recovery hantaman memungkinkan combo tiga hit dengan posisi dan timing yang sesuai. Arena rata, tanpa musuh tambahan; semua serangan mengikuti aturan block dan i-frames.",
+      "lines": [
+        "Recovery hantaman memungkinkan combo tiga hit dengan posisi dan timing yang sesuai. Arena rata,",
+        "tanpa musuh tambahan; semua serangan mengikuti aturan block dan i-frames."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 14,
+      "rect": [
+        38,
+        764,
+        557,
+        775.25
+      ],
+      "text": "Setelah menang, gerbang terbuka. Pemain melewatinya untuk menyelesaikan Level 1.",
+      "lines": [
+        "Setelah menang, gerbang terbuka. Pemain melewatinya untuk menyelesaikan Level 1."
+      ],
+      "size": 9,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  VISUAL AUDIO DAN INTERFACE",
+      "lines": [
+        "THE LOST ISLAND / VISUAL AUDIO DAN INTERFACE"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "15",
+      "lines": [
+        "15"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "ART DIRECTION / UX",
+      "lines": [
+        "ART DIRECTION / UX"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 15,
+      "rect": [
+        38,
+        65,
+        553,
+        160.53
+      ],
+      "text": "Arah visual,\naudio, dan UI",
+      "lines": [
+        "Arah visual,",
+        "audio, dan UI"
+      ],
+      "size": 41,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 15,
+      "rect": [
+        200,
+        333,
+        336,
+        342.625
+      ],
+      "text": "ILUSTRASI KONSEP",
+      "lines": [
+        "ILUSTRASI KONSEP"
+      ],
+      "size": 7.7,
+      "font": "bold",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.1
+    },
+    {
+      "page": 15,
+      "rect": [
+        428,
+        181,
+        551,
+        193.25
+      ],
+      "text": "Ink",
+      "lines": [
+        "Ink"
+      ],
+      "size": 9.8,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        428,
+        218,
+        551,
+        230.25
+      ],
+      "text": "Sea teal",
+      "lines": [
+        "Sea teal"
+      ],
+      "size": 9.8,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        428,
+        255,
+        551,
+        267.25
+      ],
+      "text": "Sage",
+      "lines": [
+        "Sage"
+      ],
+      "size": 9.8,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        428,
+        292,
+        551,
+        304.25
+      ],
+      "text": "Cream",
+      "lines": [
+        "Cream"
+      ],
+      "size": 9.8,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        428,
+        329,
+        551,
+        341.25
+      ],
+      "text": "Coral",
+      "lines": [
+        "Coral"
+      ],
+      "size": 9.8,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        38,
+        390,
+        557,
+        415.0
+      ],
+      "text": "Stylized low-poly dengan warna cerah",
+      "lines": [
+        "Stylized low-poly dengan warna cerah"
+      ],
+      "size": 20,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        38,
+        429,
+        557,
+        459.475
+      ],
+      "text": "Bentuk medan, landmark, simbol puzzle, dan telegraph menjadi sumber informasi utama. Bentuk serta arah tetap terbaca tanpa bergantung pada warna saja.",
+      "lines": [
+        "Bentuk medan, landmark, simbol puzzle, dan telegraph menjadi sumber informasi utama. Bentuk",
+        "serta arah tetap terbaca tanpa bergantung pada warna saja."
+      ],
+      "size": 11.5,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        54,
+        517,
+        270,
+        535.75
+      ],
+      "text": "Rancangan HUD",
+      "lines": [
+        "Rancangan HUD"
+      ],
+      "size": 15,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        210,
+        549,
+        268,
+        560.25
+      ],
+      "text": "HP",
+      "lines": [
+        "HP"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        180,
+        572,
+        261,
+        583.25
+      ],
+      "text": "Stamina",
+      "lines": [
+        "Stamina"
+      ],
+      "size": 9,
+      "font": "body",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        54,
+        608,
+        270,
+        620.5
+      ],
+      "text": "Jumlah potion / progres artefak",
+      "lines": [
+        "Jumlah potion / progres artefak"
+      ],
+      "size": 10,
+      "font": "body",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        54,
+        643,
+        270,
+        666.85
+      ],
+      "text": "Skema elemen, bukan screenshot atau nilai balancing final.",
+      "lines": [
+        "Skema elemen, bukan screenshot atau nilai balancing",
+        "final."
+      ],
+      "size": 9,
+      "font": "body",
+      "color": [
+        0.7176470588235294,
+        0.803921568627451,
+        0.7411764705882353
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        311,
+        509,
+        557,
+        527.75
+      ],
+      "text": "Usulan produksi audio",
+      "lines": [
+        "Usulan produksi audio"
+      ],
+      "size": 15,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        311,
+        545,
+        557,
+        589.55
+      ],
+      "text": "Ambience pulau, musik eksplorasi, musik boss, serta SFX attack, block, dodge, potion, puzzle, dan gerbang.",
+      "lines": [
+        "Ambience pulau, musik eksplorasi, musik boss,",
+        "serta SFX attack, block, dodge, potion, puzzle,",
+        "dan gerbang."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        311,
+        634,
+        557,
+        661.825
+      ],
+      "text": "Audio memperkuat feedback visual. Pilihan track dan asset belum final.",
+      "lines": [
+        "Audio memperkuat feedback visual. Pilihan track",
+        "dan asset belum final."
+      ],
+      "size": 10.5,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 15,
+      "rect": [
+        38,
+        735,
+        557,
+        763.62
+      ],
+      "text": "Menu utama, pause, pengaturan audio, dan layar selesai disiapkan sebagai baseline UX untuk tahap prototype.",
+      "lines": [
+        "Menu utama, pause, pengaturan audio, dan layar selesai disiapkan sebagai baseline UX untuk tahap",
+        "prototype."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  TEKNOLOGI DAN PROCEDURAL GENERATION",
+      "lines": [
+        "THE LOST ISLAND / TEKNOLOGI DAN PROCEDURAL GENERATION"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.7176470588235294,
+        0.803921568627451,
+        0.7411764705882353
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "16",
+      "lines": [
+        "16"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "DEVELOPMENT / TOOLCHAIN",
+      "lines": [
+        "DEVELOPMENT / TOOLCHAIN"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.7176470588235294,
+        0.803921568627451,
+        0.7411764705882353
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 16,
+      "rect": [
+        38,
+        65,
+        553,
+        151.21
+      ],
+      "text": "Teknologi\ndan procedural terrain",
+      "lines": [
+        "Teknologi",
+        "dan procedural terrain"
+      ],
+      "size": 37,
+      "font": "title",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 16,
+      "rect": [
+        53,
+        228,
+        277,
+        251.75
+      ],
+      "text": "GODOT 4.7.2",
+      "lines": [
+        "GODOT 4.7.2"
+      ],
+      "size": 19,
+      "font": "title",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        53,
+        264,
+        277,
+        277.125
+      ],
+      "text": "Standard / GDScript",
+      "lines": [
+        "Standard / GDScript"
+      ],
+      "size": 10.5,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        318,
+        228,
+        542,
+        251.75
+      ],
+      "text": "PC OFFLINE",
+      "lines": [
+        "PC OFFLINE"
+      ],
+      "size": 19,
+      "font": "title",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        318,
+        264,
+        542,
+        277.125
+      ],
+      "text": "Single-player / Level 1",
+      "lines": [
+        "Single-player / Level 1"
+      ],
+      "size": 10.5,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        38,
+        335,
+        557,
+        363.75
+      ],
+      "text": "Terrain bervariasi, objektif tetap valid",
+      "lines": [
+        "Terrain bervariasi, objektif tetap valid"
+      ],
+      "size": 23,
+      "font": "title",
+      "color": [
+        0.7176470588235294,
+        0.803921568627451,
+        0.7411764705882353
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        53,
+        385,
+        557,
+        399.125
+      ],
+      "text": "Procedural mesh memakai variasi berdasarkan seed; seed dapat dipakai ulang untuk debugging.",
+      "lines": [
+        "Procedural mesh memakai variasi berdasarkan seed; seed dapat dipakai ulang untuk debugging."
+      ],
+      "size": 11.3,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        53,
+        409.125,
+        557,
+        423.25
+      ],
+      "text": "Puzzle, traversal, checkpoint, dan arena boss memakai penempatan atau modul terkontrol.",
+      "lines": [
+        "Puzzle, traversal, checkpoint, dan arena boss memakai penempatan atau modul terkontrol."
+      ],
+      "size": 11.3,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        53,
+        433.25,
+        557,
+        447.375
+      ],
+      "text": "Generation harus menjaga akses, slope, jarak lompatan, ruang combat, dan solusi puzzle.",
+      "lines": [
+        "Generation harus menjaga akses, slope, jarak lompatan, ruang combat, dan solusi puzzle."
+      ],
+      "size": 11.3,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        53,
+        457.375,
+        557,
+        487.32
+      ],
+      "text": "AI/MCP digunakan selama development. Game pemain tetap berjalan tanpa API atau layanan online.",
+      "lines": [
+        "AI/MCP digunakan selama development. Game pemain tetap berjalan tanpa API atau layanan",
+        "online."
+      ],
+      "size": 11.3,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        38,
+        668,
+        285,
+        688.0
+      ],
+      "text": "Kolaborasi",
+      "lines": [
+        "Kolaborasi"
+      ],
+      "size": 16,
+      "font": "bold",
+      "color": [
+        0.7176470588235294,
+        0.803921568627451,
+        0.7411764705882353
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        38,
+        701,
+        285,
+        744.74
+      ],
+      "text": "Git menyimpan scene, script, resource, dan dokumen. Cache .godot dan hasil export dikecualikan.",
+      "lines": [
+        "Git menyimpan scene, script, resource, dan",
+        "dokumen. Cache .godot dan hasil export",
+        "dikecualikan."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        313,
+        668,
+        557,
+        688.0
+      ],
+      "text": "Export",
+      "lines": [
+        "Export"
+      ],
+      "size": 16,
+      "font": "bold",
+      "color": [
+        0.7176470588235294,
+        0.803921568627451,
+        0.7411764705882353
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 16,
+      "rect": [
+        313,
+        701,
+        557,
+        729.62
+      ],
+      "text": "Target Windows Desktop. Export templates 4.7.2 dan build akhir masih harus diverifikasi.",
+      "lines": [
+        "Target Windows Desktop. Export templates 4.7.2",
+        "dan build akhir masih harus diverifikasi."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.9686274509803922,
+        0.9529411764705882,
+        0.9137254901960784
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  KEBUTUHAN PRODUK / PRD",
+      "lines": [
+        "THE LOST ISLAND / KEBUTUHAN PRODUK / PRD"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "17",
+      "lines": [
+        "17"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "PRODUCT REQUIREMENTS",
+      "lines": [
+        "PRODUCT REQUIREMENTS"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 17,
+      "rect": [
+        38,
+        65,
+        553,
+        153.54000000000002
+      ],
+      "text": "Kebutuhan produk\ndan penerimaan",
+      "lines": [
+        "Kebutuhan produk",
+        "dan penerimaan"
+      ],
+      "size": 38,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 17,
+      "rect": [
+        45,
+        204,
+        80,
+        216.5
+      ],
+      "text": "R01",
+      "lines": [
+        "R01"
+      ],
+      "size": 10,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        101,
+        197,
+        557,
+        213.25
+      ],
+      "text": "Eksplorasi dan kamera",
+      "lines": [
+        "Eksplorasi dan kamera"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        101,
+        223,
+        557,
+        236.375
+      ],
+      "text": "Movement, jump, aiming, orbit, dan camera collision bekerja bersama; rute wajib dapat dilewati.",
+      "lines": [
+        "Movement, jump, aiming, orbit, dan camera collision bekerja bersama; rute wajib dapat dilewati."
+      ],
+      "size": 10.7,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        45,
+        287,
+        80,
+        299.5
+      ],
+      "text": "R02",
+      "lines": [
+        "R02"
+      ],
+      "size": 10,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        101,
+        280,
+        557,
+        296.25
+      ],
+      "text": "Tiga objektif",
+      "lines": [
+        "Tiga objektif"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        101,
+        306,
+        557,
+        319.375
+      ],
+      "text": "Pilar Simbol, Jalur Energi, dan Jalur Menuju Puncak dapat diselesaikan dengan urutan bebas.",
+      "lines": [
+        "Pilar Simbol, Jalur Energi, dan Jalur Menuju Puncak dapat diselesaikan dengan urutan bebas."
+      ],
+      "size": 10.7,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        45,
+        370,
+        80,
+        382.5
+      ],
+      "text": "R03",
+      "lines": [
+        "R03"
+      ],
+      "size": 10,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        101,
+        363,
+        557,
+        379.25
+      ],
+      "text": "Combat dan resource",
+      "lines": [
+        "Combat dan resource"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        101,
+        389,
+        557,
+        402.375
+      ],
+      "text": "Combo tiga hit, tiga tipe musuh, block, dodge, stamina, serta potion mengikuti aturan desain.",
+      "lines": [
+        "Combo tiga hit, tiga tipe musuh, block, dodge, stamina, serta potion mengikuti aturan desain."
+      ],
+      "size": 10.7,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        45,
+        453,
+        80,
+        465.5
+      ],
+      "text": "R04",
+      "lines": [
+        "R04"
+      ],
+      "size": 10,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        101,
+        446,
+        557,
+        462.25
+      ],
+      "text": "Progres dan retry",
+      "lines": [
+        "Progres dan retry"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        101,
+        472,
+        557,
+        500.355
+      ],
+      "text": "Artefak/puzzle bertahan selama sesi. Retry boss memulihkan snapshot tanpa mengurangi atau menggandakan stok awal.",
+      "lines": [
+        "Artefak/puzzle bertahan selama sesi. Retry boss memulihkan snapshot tanpa mengurangi atau",
+        "menggandakan stok awal."
+      ],
+      "size": 10.7,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        45,
+        536,
+        80,
+        548.5
+      ],
+      "text": "R05",
+      "lines": [
+        "R05"
+      ],
+      "size": 10,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        101,
+        529,
+        557,
+        545.25
+      ],
+      "text": "Boss dan kemenangan",
+      "lines": [
+        "Boss dan kemenangan"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        101,
+        555,
+        557,
+        583.355
+      ],
+      "text": "Tiga artefak membuka aktivasi boss. Kemenangan membuka gerbang dan memungkinkan Level 1 selesai.",
+      "lines": [
+        "Tiga artefak membuka aktivasi boss. Kemenangan membuka gerbang dan memungkinkan",
+        "Level 1 selesai."
+      ],
+      "size": 10.7,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        45,
+        619,
+        80,
+        631.5
+      ],
+      "text": "R06",
+      "lines": [
+        "R06"
+      ],
+      "size": 10,
+      "font": "bold",
+      "color": [
+        1.0,
+        0.996078431372549,
+        0.9725490196078431
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        101,
+        612,
+        557,
+        628.25
+      ],
+      "text": "Build offline",
+      "lines": [
+        "Build offline"
+      ],
+      "size": 13,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        101,
+        638,
+        557,
+        651.375
+      ],
+      "text": "Build Windows berjalan tanpa Editor, MCP, akun, backend, atau koneksi internet saat bermain.",
+      "lines": [
+        "Build Windows berjalan tanpa Editor, MCP, akun, backend, atau koneksi internet saat bermain."
+      ],
+      "size": 10.7,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 17,
+      "rect": [
+        52,
+        733,
+        543,
+        760.56
+      ],
+      "text": "Semua kebutuhan di atas adalah target implementasi. Angka performa, balancing, durasi sesi, dan daftar seed pengujian ditetapkan setelah prototype.",
+      "lines": [
+        "Semua kebutuhan di atas adalah target implementasi. Angka performa, balancing, durasi sesi, dan daftar",
+        "seed pengujian ditetapkan setelah prototype."
+      ],
+      "size": 10.4,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  RENCANA PRODUKSI",
+      "lines": [
+        "THE LOST ISLAND / RENCANA PRODUKSI"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "18",
+      "lines": [
+        "18"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "USULAN KERJA / TIM EMPAT ORANG",
+      "lines": [
+        "USULAN KERJA / TIM EMPAT ORANG"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 18,
+      "rect": [
+        38,
+        65,
+        553,
+        155.87
+      ],
+      "text": "Rencana produksi\nempat minggu",
+      "lines": [
+        "Rencana produksi",
+        "empat minggu"
+      ],
+      "size": 39,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 18,
+      "rect": [
+        38,
+        195,
+        99,
+        238.75
+      ],
+      "text": "01",
+      "lines": [
+        "01"
+      ],
+      "size": 35,
+      "font": "title",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        115,
+        195,
+        557,
+        215.0
+      ],
+      "text": "Fondasi interaksi",
+      "lines": [
+        "Fondasi interaksi"
+      ],
+      "size": 16,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        115,
+        227,
+        557,
+        255.885
+      ],
+      "text": "Kamera, movement, aiming, satu enemy, dan combat dasar. Uji konflik input dan keterbacaan.",
+      "lines": [
+        "Kamera, movement, aiming, satu enemy, dan combat dasar. Uji konflik input dan",
+        "keterbacaan."
+      ],
+      "size": 10.9,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        38,
+        306,
+        99,
+        349.75
+      ],
+      "text": "02",
+      "lines": [
+        "02"
+      ],
+      "size": 35,
+      "font": "title",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        115,
+        306,
+        557,
+        326.0
+      ],
+      "text": "Alur yang bisa ditamatkan",
+      "lines": [
+        "Alur yang bisa ditamatkan"
+      ],
+      "size": 16,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        115,
+        338,
+        557,
+        351.625
+      ],
+      "text": "Tiga objektif, progres artefak, checkpoint, boss, serta ending dalam satu playable slice.",
+      "lines": [
+        "Tiga objektif, progres artefak, checkpoint, boss, serta ending dalam satu playable slice."
+      ],
+      "size": 10.9,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        38,
+        417,
+        99,
+        460.75
+      ],
+      "text": "03",
+      "lines": [
+        "03"
+      ],
+      "size": 35,
+      "font": "title",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        115,
+        417,
+        557,
+        437.0
+      ],
+      "text": "Konten dan balancing",
+      "lines": [
+        "Konten dan balancing"
+      ],
+      "size": 16,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        115,
+        449,
+        557,
+        462.625
+      ],
+      "text": "Blockout pulau, variasi biome, encounter, potion, snapshot retry, dan validasi generation.",
+      "lines": [
+        "Blockout pulau, variasi biome, encounter, potion, snapshot retry, dan validasi generation."
+      ],
+      "size": 10.9,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        38,
+        528,
+        99,
+        571.75
+      ],
+      "text": "04",
+      "lines": [
+        "04"
+      ],
+      "size": 35,
+      "font": "title",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        115,
+        528,
+        557,
+        548.0
+      ],
+      "text": "Polish dan pengumpulan",
+      "lines": [
+        "Polish dan pengumpulan"
+      ],
+      "size": 16,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        115,
+        560,
+        557,
+        588.885
+      ],
+      "text": "Visual/audio feedback, perbaikan bug, playtest anggota, export Windows, dan dokumentasi final.",
+      "lines": [
+        "Visual/audio feedback, perbaikan bug, playtest anggota, export Windows, dan dokumentasi",
+        "final."
+      ],
+      "size": 10.9,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        38,
+        673,
+        557,
+        693.0
+      ],
+      "text": "Usulan pembagian tanggung jawab",
+      "lines": [
+        "Usulan pembagian tanggung jawab"
+      ],
+      "size": 16,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        38,
+        709,
+        557,
+        737.62
+      ],
+      "text": "Player/combat • world/generation • puzzle/progression • UI/audio/QA. Penanggung jawab ditentukan bersama; pembagian ini bukan penugasan nama anggota.",
+      "lines": [
+        "Player/combat • world/generation • puzzle/progression • UI/audio/QA. Penanggung jawab ditentukan",
+        "bersama; pembagian ini bukan penugasan nama anggota."
+      ],
+      "size": 10.8,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 18,
+      "rect": [
+        38,
+        766,
+        557,
+        777.25
+      ],
+      "text": "Urutan kerja dapat disesuaikan. Tanggal milestone belum ditetapkan.",
+      "lines": [
+        "Urutan kerja dapat disesuaikan. Tanggal milestone belum ditetapkan."
+      ],
+      "size": 9,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        34,
+        809.89,
+        464,
+        819.015
+      ],
+      "text": "THE LOST ISLAND  /  STATUS DAN SUMBER",
+      "lines": [
+        "THE LOST ISLAND / STATUS DAN SUMBER"
+      ],
+      "size": 7.3,
+      "font": "bold",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        540.276,
+        807.89,
+        565.276,
+        819.14
+      ],
+      "text": "19",
+      "lines": [
+        "19"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.8862745098039215,
+        0.5607843137254902,
+        0.43529411764705883
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        38,
+        40,
+        548,
+        51.25
+      ],
+      "text": "VERSI KONSEP / 11 NOVEMBER 2026",
+      "lines": [
+        "VERSI KONSEP / 11 NOVEMBER 2026"
+      ],
+      "size": 9,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.2
+    },
+    {
+      "page": 19,
+      "rect": [
+        38,
+        65,
+        553,
+        158.2
+      ],
+      "text": "Status proyek\ndan sumber",
+      "lines": [
+        "Status proyek",
+        "dan sumber"
+      ],
+      "size": 40,
+      "font": "title",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.08
+    },
+    {
+      "page": 19,
+      "rect": [
+        54,
+        198,
+        271,
+        213.0
+      ],
+      "text": "Sudah tersedia",
+      "lines": [
+        "Sudah tersedia"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        54,
+        225,
+        271,
+        269.55
+      ],
+      "text": "Fondasi project Godot, scene preview, Git, konfigurasi MCP, serta dokumen keputusan desain.",
+      "lines": [
+        "Fondasi project Godot, scene preview, Git,",
+        "konfigurasi MCP, serta dokumen keputusan",
+        "desain."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        323,
+        198,
+        541,
+        213.0
+      ],
+      "text": "Tahap berikutnya",
+      "lines": [
+        "Tahap berikutnya"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        323,
+        225,
+        541,
+        284.95
+      ],
+      "text": "Implementasi gameplay, playtest, integrasi visual/audio, dan verifikasi build akhir. Laporan ini belum menyatakan tahap tersebut selesai.",
+      "lines": [
+        "Implementasi gameplay, playtest, integrasi",
+        "visual/audio, dan verifikasi build akhir.",
+        "Laporan ini belum menyatakan tahap",
+        "tersebut selesai."
+      ],
+      "size": 11,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        38,
+        335,
+        557,
+        363.75
+      ],
+      "text": "Sumber dan atribusi",
+      "lines": [
+        "Sumber dan atribusi"
+      ],
+      "size": 23,
+      "font": "title",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        38,
+        383,
+        557,
+        398.0
+      ],
+      "text": "Keputusan desain",
+      "lines": [
+        "Keputusan desain"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        38,
+        406.0,
+        557,
+        434.09
+      ],
+      "text": "Bersumber dari brainstorming tim dan dokumen konsep repository The Lost Island. Keputusan terbaru menggantikan catatan Unity dan kamera top-down historis.",
+      "lines": [
+        "Bersumber dari brainstorming tim dan dokumen konsep repository The Lost Island. Keputusan terbaru",
+        "menggantikan catatan Unity dan kamera top-down historis."
+      ],
+      "size": 10.6,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        38,
+        454.09,
+        557,
+        469.09
+      ],
+      "text": "Identitas visual",
+      "lines": [
+        "Identitas visual"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        38,
+        477.09,
+        557,
+        505.17999999999995
+      ],
+      "text": "Logo FILKOM disediakan pengguna. Logo gim dan ilustrasi pulau dihasilkan melalui imagegen. Semua ilustrasi merupakan konsep, bukan screenshot gameplay.",
+      "lines": [
+        "Logo FILKOM disediakan pengguna. Logo gim dan ilustrasi pulau dihasilkan melalui imagegen. Semua",
+        "ilustrasi merupakan konsep, bukan screenshot gameplay."
+      ],
+      "size": 10.6,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        38,
+        525.18,
+        557,
+        540.18
+      ],
+      "text": "Teknologi",
+      "lines": [
+        "Teknologi"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        38,
+        548.18,
+        557,
+        576.27
+      ],
+      "text": "Godot 4.7.2 Standard dan GDScript. Godot Editor MCP dari hybridindie/godot-mcp, versi 2026.10.20.1, berlisensi MIT; lihat THIRD_PARTY_NOTICES.md.",
+      "lines": [
+        "Godot 4.7.2 Standard dan GDScript. Godot Editor MCP dari hybridindie/godot-mcp, versi 2026.10.20.1,",
+        "berlisensi MIT; lihat THIRD_PARTY_NOTICES.md."
+      ],
+      "size": 10.6,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        38,
+        596.27,
+        557,
+        611.27
+      ],
+      "text": "Asset produksi",
+      "lines": [
+        "Asset produksi"
+      ],
+      "size": 12,
+      "font": "bold",
+      "color": [
+        0.19215686274509805,
+        0.4823529411764706,
+        0.4666666666666667
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        38,
+        619.27,
+        557,
+        647.36
+      ],
+      "text": "Model, musik, dan SFX final belum dipilih. Asset yang digunakan pada implementasi wajib dicatat sumber serta lisensinya.",
+      "lines": [
+        "Model, musik, dan SFX final belum dipilih. Asset yang digunakan pada implementasi wajib dicatat sumber",
+        "serta lisensinya."
+      ],
+      "size": 10.6,
+      "font": "body",
+      "color": [
+        0.12549019607843137,
+        0.20392156862745098,
+        0.23921568627450981
+      ],
+      "leading": 1.4
+    },
+    {
+      "page": 19,
+      "rect": [
+        38,
+        745,
+        557,
+        756.5
+      ],
+      "text": "Repository: github.com/ghazthiskc19/tugas-akhir-komputer-grafis",
+      "lines": [
+        "Repository: github.com/ghazthiskc19/tugas-akhir-komputer-grafis"
+      ],
+      "size": 9.2,
+      "font": "body",
+      "color": [
+        0.34509803921568627,
+        0.4196078431372549,
+        0.42745098039215684
+      ],
+      "leading": 1.4
+    }
+  ]
+}

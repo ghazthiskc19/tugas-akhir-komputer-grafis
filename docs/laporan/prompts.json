@@ -1,0 +1,15 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "assets": [
+    {
+      "file": "assets/the-lost-island-logo.png",
+      "transparent_background": true,
+      "prompt": "Use case: logo-brand. Create a finished transparent-background game logo for an Indonesian student 3D exploration adventure game titled exactly \"THE LOST ISLAND\". A compact emblem of an ancient stone gateway standing on a small tropical rocky island, three tiny turquoise energy crystals integrated into the gateway, understated compass motif. Bright stylized low-poly adventure identity. Palette deep ink navy, desaturated sea teal, warm cream stone, restrained coral accent. Professional clean silhouette, legible strong custom uppercase adventure wordmark below the emblem, text exactly THE LOST ISLAND with no other words. Balanced wide lockup, generous transparent padding. Crisp edges, suitable for a Canva academic project cover and game branding. No mockup, no paper, no watermark, no extra text. Actual alpha transparency."
+    },
+    {
+      "file": "assets/island-concept.jpg",
+      "transparent_background": false,
+      "prompt": "Use case: stylized-concept. Asset type: full-width concept illustration for an A4 editorial game project report, not a screenshot. A beautiful uninhabited tropical island with layered gray cliffs, cream beaches, turquoise water, grassland in the foreground, a forest of stylized trees on the left, rocky highlands and a small ancient stone watchtower at the peak, an ancient gateway glimpsed near the shore. Bright stylized low-poly 3D art with softly painted atmospheric edges, warm sunlight, soft cream clouds, desaturated sea teal and sage green palette, deep navy shadows and restrained coral flowers. The entire island is visible from an elevated three-quarter view, landscape composition, calm horizon, soft cream sky, polished adventure art matching a tasteful cream-and-teal expedition journal. No text, no labels, no UI, no characters, no watermark."
+    }
+  ]
+}
