@@ -37,7 +37,7 @@ Challenge ini memakai tipe musuh yang sudah direncanakan pada Level 1 dan tidak 
 - Status musuh yang sudah dikalahkan dipertahankan agar kegagalan traversal tidak memaksa pengulangan seluruh combat.
 - Aktivasi checkpoint belum ditetapkan sebagai sumber healing tambahan. Ketentuan HP penuh saat respawn mengikuti desain kegagalan umum.
 
-Aturan musuh tetap mati ini berlaku untuk Jalur Menuju Puncak. Aturan reset encounter di area lain dan boss tetap memerlukan penetapan tersendiri.
+Aturan musuh tetap mati ini berlaku untuk Jalur Menuju Puncak. Aturan reset encounter biasa di area lain belum ditetapkan. Boss memakai aturan retry berbasis snapshot yang dijelaskan pada [desain Penjaga Gerbang](boss-penjaga-gerbang.md).
 
 ## Puncak dan shortcut
 

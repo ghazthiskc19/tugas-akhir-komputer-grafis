@@ -8,7 +8,9 @@
 
 > **Keputusan exploration challenge 11 November 2026:** pengguna menetapkan **Jalur Menuju Puncak** di Rocky Highlands, mencakup rute naik, lompatan pendek, musuh melee/ranged, checkpoint kaki bukit, altar artefak, viewpoint, dan shortcut turun. Artefak tidak mengharuskan kedua puzzle selesai atau seluruh musuh dibunuh. Musuh rute yang telah dikalahkan tetap mati selama sesi. Baseline maksimal dua musuh aktif bersamaan perlu diuji. Aturan lengkap tersedia pada [desain exploration challenge](../desain/exploration-03-jalur-menuju-puncak.md). Pembahasan di bawah mempertahankan keadaan historis sumber sebelum keputusan tambahan ini.
 
-Dokumen ini mempertahankan keadaan desain terakhir untuk melanjutkan percakapan di chat ini. Sumber: [Memilih 2D Atau 3D](https://chatgpt.com/share/6ad9cd49-6070-83ec-afc6-17a7ea735296). Ekstraksi kronologis rinci tersedia pada dokumen `ekstraksi-percakapan-the-lost-island.md` di folder outputs yang sama.
+> **Keputusan boss 11 November 2026:** pengguna menyepakati **Penjaga Gerbang**, golem batu dengan tiga pola serangan dan dua fase, tanpa musuh tambahan. Pengguna mengganti usulan retry sebelumnya dengan snapshot sebelum pertarungan: HP, stamina, dan jumlah potion kembali ke nilai awal pada setiap retry; boss direset, sementara progres pulau tetap tersimpan. Aturan lengkap tersedia pada [desain Penjaga Gerbang](../desain/boss-penjaga-gerbang.md). Ketentuan historis di bawah tentang healing yang tidak dikembalikan tetap berlaku untuk eksplorasi biasa, dengan pengecualian retry boss ini.
+
+Dokumen ini mempertahankan keadaan desain terakhir untuk melanjutkan percakapan di chat ini. Sumber: [Memilih 2D Atau 3D](https://chatgpt.com/share/6ad9cd49-6070-83ec-afc6-17a7ea735296). Ekstraksi kronologis rinci tersedia pada dokumen `ekstraksi-percakapan-the-lost-island.md` di folder outputs yang sama. Bagian setelah catatan keputusan tambahan merupakan rekaman historis; konsep aktif tersedia pada [konsep game](../konsep-game.md).
 
 ## Hasil pemeriksaan ulang
 

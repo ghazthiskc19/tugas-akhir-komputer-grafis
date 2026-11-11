@@ -6,7 +6,7 @@ Status: konsolidasi keputusan desain yang telah tercatat. Dokumen ini belum menj
 
 The Lost Island merupakan judul sementara untuk gim 3D top-down exploration adventure dengan puzzle, traversal, dan combat. Platform sasaran adalah PC, single-player, fully offline. Engine aktif adalah Godot 4.7.2 Standard dengan GDScript.
 
-Premis awal menempatkan pemain di pulau misterius dengan gerbang kuno sebagai jalan keluar. Cerita, identitas karakter, serta alasan naratif artefak dan boss belum dirinci.
+Premis awal menempatkan pemain di pulau misterius dengan gerbang kuno sebagai jalan keluar. Penjaga Gerbang berupa golem batu dengan inti energi menjaga akses keluar. Cerita, identitas karakter pemain, serta asal-usul artefak dan boss belum dirinci.
 
 ## Scope Level 1
 
@@ -54,7 +54,15 @@ Rute menggunakan modul traversal terkontrol. Baseline maksimal dua musuh aktif b
 - Attack dan combo tidak memakai stamina.
 - Musuh mencakup dua tipe melee dan satu tipe ranged, ditambah satu boss akhir.
 
-Jenis senjata, identitas musuh, pola boss, parameter damage, serta angka timing belum ditetapkan. Agile Melee dan Heavy Melee merupakan elaborasi asisten pada catatan sumber, bukan nama karakter final.
+Jenis senjata, identitas musuh biasa, parameter damage, serta angka timing belum ditetapkan. Agile Melee dan Heavy Melee merupakan elaborasi asisten pada catatan sumber, bukan nama karakter final.
+
+## Boss akhir
+
+**Penjaga Gerbang** telah ditetapkan sebagai boss akhir. Setelah tiga artefak dipasang, pemain berinteraksi untuk membangunkan golem batu dengan inti energi di pelataran gerbang. Arena rata menyediakan ruang menghindar, checkpoint sebelum arena, dan batas yang jelas. Pertarungan tidak menambahkan musuh lain.
+
+Boss memakai sapuan lengan, hantaman tanah, dan terjangan lurus dengan telegraph yang sesuai area damage. Target serangan dikunci menjelang pelepasan. Pada HP di atas 50%, boss menyerang sekali lalu recovery; pada HP 50% atau kurang, boss sesekali merangkai dua serangan. Telegraph dan timing dasar tetap dipertahankan. Recovery hantaman memungkinkan combo tiga hit jika posisi serta timing pemain sesuai.
+
+Retry menggunakan snapshot HP, stamina, dan jumlah potion sebelum pertarungan pertama. Kegagalan mengembalikan resource pemain ke nilai snapshot dan mereset boss, sementara progres pulau tetap tersimpan. Kemenangan membuka gerbang; melewati gerbang menyelesaikan Level 1. Aturan lengkap tersedia pada [desain Penjaga Gerbang](desain/boss-penjaga-gerbang.md).
 
 ## Defense dan resource
 
@@ -64,15 +72,17 @@ HP ditampilkan dengan bar dan angka. Healing terbatas ditemukan di dunia atau da
 
 ## Kegagalan dan checkpoint
 
-Mati mengembalikan pemain ke checkpoint terakhir dengan HP penuh. Artefak yang terkumpul dan puzzle yang selesai dipertahankan selama sesi. Healing yang tersisa tetap dimiliki dan tidak bertambah karena respawn; item yang telah digunakan tidak otomatis dikembalikan.
+Saat eksplorasi biasa, mati mengembalikan pemain ke checkpoint terakhir dengan HP penuh. Artefak yang terkumpul dan puzzle yang selesai dipertahankan selama sesi. Healing yang tersisa tetap dimiliki dan tidak bertambah karena respawn; item yang telah digunakan tidak otomatis dikembalikan.
 
-Aktivasi checkpoint belum ditetapkan sebagai sumber healing. Pada Jalur Menuju Puncak, musuh yang telah dikalahkan tetap mati selama sesi. Aturan reset musuh di area lain dan boss, proteksi respawn, jumlah checkpoint keseluruhan, serta save permanen belum final.
+Retry boss menggunakan pengecualian snapshot: HP, stamina, dan jumlah potion dikembalikan persis ke kondisi sebelum pertarungan pertama. Snapshot tidak memberikan healing gratis dan tidak diperbarui oleh percobaan gagal. Pemulihan menetapkan jumlah potion ke nilai snapshot agar tidak terjadi penggandaan. Boss kembali ke HP penuh dan fase pertama. Artefak, puzzle, shortcut, dan progres eksplorasi tetap tersimpan; pemasangan artefak serta animasi pembuka tidak diulang. Setelah menang, resource yang tersisa dari percobaan berhasil dipertahankan.
+
+Aktivasi checkpoint belum ditetapkan sebagai sumber healing. Pada Jalur Menuju Puncak, musuh yang telah dikalahkan tetap mati selama sesi. Aturan reset musuh di area lain, proteksi respawn, jumlah checkpoint keseluruhan, serta save permanen belum final.
 
 ## Keputusan untuk finalisasi
 
-1. Identitas boss, pola serangan yang terbaca, serta aturan reset dan retry.
-2. Ukuran area permainan, panjang rute, distribusi encounter, dan durasi sesi; detail produksi mengikuti desain dua puzzle dan Jalur Menuju Puncak yang sudah ditetapkan.
-3. Proyeksi serta framing kamera yang mendukung eksplorasi dan mouse aiming.
+1. Ukuran area permainan, panjang rute, distribusi encounter, dan durasi sesi; detail produksi mengikuti desain dua puzzle, Jalur Menuju Puncak, dan Penjaga Gerbang yang sudah ditetapkan.
+2. Proyeksi serta framing kamera yang mendukung eksplorasi, mouse aiming, dan keterbacaan telegraph boss.
+3. Identitas karakter pemain, senjata, musuh biasa, serta narasi singkat yang menghubungkan pulau, artefak, dan gerbang.
 
 Angka movement, damage, HP, stamina, dan timing dapat disusun sebagai baseline yang diberi label lalu diuji melalui prototype. Angka baru tidak dianggap sebagai keputusan lama yang sudah disepakati.
 
