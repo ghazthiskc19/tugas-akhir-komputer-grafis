@@ -2,6 +2,14 @@
 
 Project gim 3D untuk mata kuliah **Komputer Grafis**. Engine aktif adalah **Godot 4.7.2 Standard**, menggunakan **GDScript**. Target permainan adalah PC single-player dan fully offline.
 
+## Panduan tim
+
+- [Kebutuhan development dan setup komputer anggota](docs/kebutuhan-development.md): versi Godot, cara menjalankan, MCP opsional, dan export Windows.
+- [Konsep game terbaru](docs/konsep-game.md): scope Level 1, eksplorasi, puzzle, combat, checkpoint, dan keputusan yang masih terbuka.
+- `godot-version.txt` mencatat patch version engine yang dipakai bersama: **4.7.2**.
+
+Untuk membuka dan menjalankan project, anggota cukup menggunakan Godot Standard. Server MCP dan Python hanya dibutuhkan bila menggunakan workflow AI agent.
+
 ## Membuka project
 
 1. Install atau ekstrak [Godot 4.7.2 Standard](https://godotengine.org/download/archive/4.7.2-stable/). Versi .NET tidak diperlukan.

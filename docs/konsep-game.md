@@ -1,0 +1,62 @@
+# Konsep The Lost Island
+
+Status: konsolidasi keputusan desain yang telah tercatat. Dokumen ini belum menjadi GDD final dan tidak menyatakan seluruh sistem sudah diimplementasikan.
+
+## Identitas
+
+The Lost Island merupakan judul sementara untuk gim 3D top-down exploration adventure dengan puzzle, traversal, dan combat. Platform sasaran adalah PC, single-player, fully offline. Engine aktif adalah Godot 4.7.2 Standard dengan GDScript.
+
+Premis awal menempatkan pemain di pulau misterius dengan gerbang kuno sebagai jalan keluar. Cerita, identitas karakter, serta alasan naratif artefak dan boss belum dirinci.
+
+## Scope Level 1
+
+Pengerjaan saat ini mencakup satu level pada satu pulau besar dengan elevasi moderat. Dunia dibagi menjadi Grassland, Forest, dan Rocky Highlands. Main path menghubungkan area penting, dengan jalur alternatif, hidden area, shortcut, dan landmark untuk orientasi.
+
+Pemain memperoleh tiga artefak melalui dua puzzle ringan dan satu exploration challenge. Urutan objektif fleksibel dengan arahan lingkungan. Ketiga artefak mengaktifkan boss di gerbang akhir. Kemenangan atas boss membuka gerbang dan menyelesaikan Level 1.
+
+Campaign, level selection, dan save lintas level belum menjadi scope saat ini. Target 5–10 menit pada draft awal merupakan usulan lama yang belum diuji setelah penambahan combat dan boss.
+
+## Eksplorasi dan visual
+
+Pemain bergerak dan melompat untuk melewati obstacle lingkungan. Visual menggunakan stylized low-poly, warna cerah, dan komposisi pemandangan yang mendukung eksplorasi.
+
+Terrain memakai procedural mesh dengan variasi berdasarkan seed. Lokasi objective, puzzle, checkpoint, dan arena boss perlu dibentuk atau dipilih berdasarkan aturan keterjangkauan. Perubahan seed tidak boleh membuat progres wajib mustahil dicapai.
+
+Proyeksi kamera belum final. Camera3D pada scene fondasi hanya dipakai untuk preview. Cinemachine merupakan pilihan historis saat memakai Unity dan telah digantikan pendekatan camera rig native Godot.
+
+## Combat
+
+- Pemain menggunakan satu senjata melee, diarahkan oleh posisi mouse di dunia permainan.
+- Attack memakai satu tombol dengan combo tiga hit: dua serangan cepat dan satu finisher.
+- Input lanjutan harus berada pada timing window. Early input tidak disimpan dan hold-to-auto-combo tidak dipilih.
+- Animasi attack yang sudah dimulai diselesaikan sebelum block atau dodge. Movement tetap tersedia dengan kecepatan berkurang.
+- Arah dikunci selama satu hit; arah baru dibaca saat hit selanjutnya dimulai.
+- Attack dan combo tidak memakai stamina.
+- Musuh mencakup dua tipe melee dan satu tipe ranged, ditambah satu boss akhir.
+
+Jenis senjata, identitas musuh, pola boss, parameter damage, serta angka timing belum ditetapkan. Agile Melee dan Heavy Melee merupakan elaborasi asisten pada catatan sumber, bukan nama karakter final.
+
+## Defense dan resource
+
+Block dan dodge menggunakan satu pool stamina. Block mengurangi damage dari semua arah untuk melee dan proyektil, serta menguras stamina selama ditahan. Dodge memakai biaya tetap saat dimulai dan memberikan i-frames singkat. Stamina beregenerasi setelah jeda singkat sejak berhenti block atau dodge. Jika stamina tidak mencukupi, aksi defense ditolak; movement dan attack tetap tersedia.
+
+HP ditampilkan dengan bar dan angka. Healing terbatas ditemukan di dunia atau dari drop musuh, disimpan, lalu digunakan manual. Besaran HP, kapasitas healing, drop rate, dan angka stamina masih memerlukan baseline playtesting.
+
+## Kegagalan dan checkpoint
+
+Mati mengembalikan pemain ke checkpoint terakhir dengan HP penuh. Artefak yang terkumpul dan puzzle yang selesai dipertahankan selama sesi. Healing yang tersisa tetap dimiliki dan tidak bertambah karena respawn; item yang telah digunakan tidak otomatis dikembalikan.
+
+Aktivasi checkpoint belum ditetapkan sebagai sumber healing. Aturan reset musuh dan boss, proteksi respawn, jumlah checkpoint, serta save permanen belum final.
+
+## Keputusan untuk finalisasi
+
+1. Mekanik dua puzzle, clue, solusi, dan bentuk exploration challenge.
+2. Identitas boss, pola serangan yang terbaca, serta aturan reset dan retry.
+3. Ukuran area permainan, panjang rute, distribusi encounter, dan durasi sesi.
+4. Proyeksi serta framing kamera yang mendukung eksplorasi dan mouse aiming.
+
+Angka movement, damage, HP, stamina, dan timing dapat disusun sebagai baseline yang diberi label lalu diuji melalui prototype. Angka baru tidak dianggap sebagai keputusan lama yang sudah disepakati.
+
+## Status implementasi
+
+Fondasi Godot, scene preview, konfigurasi Git, serta integrasi MCP sudah tersedia. Sistem gameplay pada dokumen ini belum diimplementasikan. Rincian dan asal keputusan dipertahankan pada [catatan brainstorming](brainstorming/konteks-lanjutan-the-lost-island.md).
