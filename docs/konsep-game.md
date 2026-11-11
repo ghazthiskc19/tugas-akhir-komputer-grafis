@@ -4,17 +4,27 @@ Status: konsolidasi keputusan desain yang telah tercatat. Dokumen ini belum menj
 
 ## Identitas
 
-The Lost Island merupakan judul sementara untuk gim 3D top-down exploration adventure dengan puzzle, traversal, dan combat. Platform sasaran adalah PC, single-player, fully offline. Engine aktif adalah Godot 4.7.2 Standard dengan GDScript.
+The Lost Island merupakan judul sementara untuk gim 3D exploration adventure dengan puzzle, traversal, dan combat. Kamera menggunakan Perspective dengan elevated third-person follow. Platform sasaran adalah PC, single-player, fully offline. Engine aktif adalah Godot 4.7.2 Standard dengan GDScript.
 
-Premis awal menempatkan pemain di pulau misterius dengan gerbang kuno sebagai jalan keluar. Penjaga Gerbang berupa golem batu dengan inti energi menjaga akses keluar. Cerita, identitas karakter pemain, serta asal-usul artefak dan boss belum dirinci.
+Pemain merupakan awak kapal yang terdampar setelah badai. Kapalnya rusak dan jalan menuju dermaga terlindung di sisi lain pulau ditutup oleh gerbang kuno. Penjaga Gerbang berupa golem batu dengan inti energi menjaga akses tersebut.
 
 ## Scope Level 1
 
-Pengerjaan saat ini mencakup satu level pada satu pulau besar dengan elevasi moderat. Dunia dibagi menjadi Grassland, Forest, dan Rocky Highlands. Main path menghubungkan area penting, dengan jalur alternatif, hidden area, shortcut, dan landmark untuk orientasi.
+Pengerjaan saat ini mencakup satu level pada satu pulau dengan elevasi moderat. Baseline area daratan yang dapat dimainkan adalah sekitar 250 × 250 meter, untuk diuji melalui prototype. Dunia dibagi menjadi Grassland, Forest, dan Rocky Highlands. Main path menghubungkan area penting, dengan jalur alternatif, hidden area, shortcut, dan landmark untuk orientasi.
+
+Grassland menjadi area kedatangan dan pengenalan kontrol. Forest dan Rocky Highlands bercabang dari jalur penghubung. Gerbang menjadi landmark yang dapat terlihat dari beberapa lokasi. Shortcut mengurangi pengulangan perjalanan dari area objektif.
 
 Pemain memperoleh tiga artefak melalui dua puzzle ringan dan satu exploration challenge. Urutan objektif fleksibel dengan arahan lingkungan. Ketiga artefak mengaktifkan boss di gerbang akhir. Kemenangan atas boss membuka gerbang dan menyelesaikan Level 1.
 
-Campaign, level selection, dan save lintas level belum menjadi scope saat ini. Target 5–10 menit pada draft awal merupakan usulan lama yang belum diuji setelah penambahan combat dan boss.
+Campaign, level selection, dan save lintas level belum menjadi scope saat ini. Pengguna mengizinkan durasi permainan lebih panjang daripada usulan awal 15–20 menit; rentang tersebut tidak menjadi batas final. Durasi sesi ditentukan melalui playtest berdasarkan perjalanan, puzzle, encounter, dan boss. Luas pulau tidak digunakan sebagai pengganti pengukuran durasi atau kepadatan aktivitas. Target 5–10 menit pada draft historis juga tidak lagi menjadi acuan.
+
+## Cerita dan penyampaian
+
+Pulau merupakan bekas tempat penjagaan jalur pelayaran kuno. Tiga artefak berfungsi sebagai kunci energi yang tersebar di reruntuhan Grassland, instalasi energi Forest, dan menara pengamatan Rocky Highlands. Reruntuhan di puncak menjadi lokasi altar artefak exploration challenge.
+
+Pemasangan ketiga artefak mengaktifkan kembali sistem gerbang beserta golem penjaganya. Golem masih menjalankan perintah lama untuk menolak penyusup. Pemain mengalahkannya agar dapat membuka gerbang dan mencapai dermaga.
+
+Cerita disampaikan melalui pembukaan singkat, relief lingkungan, dan penutup. Penyampaian ini tidak membutuhkan NPC atau dialog panjang. Nama, penampilan, serta jenis senjata karakter pemain belum ditetapkan.
 
 ## Eksplorasi dan visual
 
@@ -22,7 +32,9 @@ Pemain bergerak dan melompat untuk melewati obstacle lingkungan. Visual mengguna
 
 Terrain memakai procedural mesh dengan variasi berdasarkan seed. Lokasi objective, puzzle, checkpoint, dan arena boss perlu dibentuk atau dipilih berdasarkan aturan keterjangkauan. Perubahan seed tidak boleh membuat progres wajib mustahil dicapai.
 
-Proyeksi kamera belum final. Camera3D pada scene fondasi hanya dipakai untuk preview. Cinemachine merupakan pilihan historis saat memakai Unity dan telah digantikan pendekatan camera rig native Godot.
+Kamera Perspective memakai elevated third-person follow dengan smooth damping, termasuk saat pemain melompat. Mouse tetap digunakan untuk aiming; menahan tombol tengah mouse mengaktifkan orbit horizontal 360 derajat, sedangkan orbit vertikal dibatasi. Analog kanan mengatur orbit. Kamera tidak otomatis berputar mengikuti arah serangan dan memakai collision agar tidak menembus lingkungan. Aturan lengkap tersedia pada [desain kamera](desain/kamera-perspective-follow.md).
+
+Camera3D pada scene fondasi hanya dipakai untuk preview dan belum mewakili implementasi kamera gameplay yang disepakati. Cinemachine merupakan pilihan historis saat memakai Unity dan telah digantikan pendekatan camera rig native Godot.
 
 ## Puzzle pertama
 
@@ -54,7 +66,17 @@ Rute menggunakan modul traversal terkontrol. Baseline maksimal dua musuh aktif b
 - Attack dan combo tidak memakai stamina.
 - Musuh mencakup dua tipe melee dan satu tipe ranged, ditambah satu boss akhir.
 
-Jenis senjata, identitas musuh biasa, parameter damage, serta angka timing belum ditetapkan. Agile Melee dan Heavy Melee merupakan elaborasi asisten pada catatan sumber, bukan nama karakter final.
+Jenis senjata spesifik pemain, nama dan penampilan musuh, parameter damage, serta angka timing belum ditetapkan.
+
+## Musuh biasa
+
+| Tipe | Perilaku yang ditetapkan |
+|---|---|
+| Melee biasa | Mendekati pemain lalu melakukan satu swing singkat dengan recovery pendek. |
+| Heavy melee | Bergerak lebih lambat, mengangkat senjata sebelum hantaman kuat, lalu memasuki recovery panjang. |
+| Ranged | Menembakkan proyektil lurus dengan persiapan yang terbaca. Pemain dapat menghindar atau menggunakan perlindungan. |
+
+Rancangan awal ranged tidak memakai proyektil homing dan heavy tidak memakai combo panjang. Perbedaan timing serta posisi menjadi pembeda awal. Istilah ini merupakan tipe perilaku, bukan nama karakter final. Detection range, chase/leash, stagger, serta distribusi ketiga tipe di seluruh pulau masih memerlukan rincian produksi dan playtest.
 
 ## Boss akhir
 
@@ -68,7 +90,9 @@ Retry menggunakan snapshot HP, stamina, dan jumlah potion sebelum pertarungan pe
 
 Block dan dodge menggunakan satu pool stamina. Block mengurangi damage dari semua arah untuk melee dan proyektil, serta menguras stamina selama ditahan. Dodge memakai biaya tetap saat dimulai dan memberikan i-frames singkat. Stamina beregenerasi setelah jeda singkat sejak berhenti block atau dodge. Jika stamina tidak mencukupi, aksi defense ditolak; movement dan attack tetap tersedia.
 
-HP ditampilkan dengan bar dan angka. Healing terbatas ditemukan di dunia atau dari drop musuh, disimpan, lalu digunakan manual. Besaran HP, kapasitas healing, drop rate, dan angka stamina masih memerlukan baseline playtesting.
+HP ditampilkan dengan bar dan angka. Potion healing terbatas ditemukan di dunia atau dari drop musuh, disimpan, lalu digunakan manual. Besaran HP, kapasitas healing, drop rate, dan angka stamina masih memerlukan baseline playtesting.
+
+Penggunaan potion memiliki animasi minum yang batal jika pemain terkena serangan. HP pulih dan jumlah potion berkurang hanya saat animasi selesai. Jika animasi terinterupsi, pemain tidak mendapat healing dan potion belum terpakai. Pemain dapat berjalan dengan kecepatan berkurang selama minum, tetapi tidak dapat menyerang bersamaan. Durasi minum serta interaksi dengan block/dodge dan serangan yang diblock dirinci saat prototype.
 
 ## Kegagalan dan checkpoint
 
@@ -80,9 +104,10 @@ Aktivasi checkpoint belum ditetapkan sebagai sumber healing. Pada Jalur Menuju P
 
 ## Keputusan untuk finalisasi
 
-1. Ukuran area permainan, panjang rute, distribusi encounter, dan durasi sesi; detail produksi mengikuti desain dua puzzle, Jalur Menuju Puncak, dan Penjaga Gerbang yang sudah ditetapkan.
-2. Proyeksi serta framing kamera yang mendukung eksplorasi, mouse aiming, dan keterbacaan telegraph boss.
-3. Identitas karakter pemain, senjata, musuh biasa, serta narasi singkat yang menghubungkan pulau, artefak, dan gerbang.
+1. Prototype kamera, movement, dan mouse aiming untuk menguji framing serta perpindahan mode orbit.
+2. Blockout pulau dengan baseline 250 × 250 meter untuk mengukur panjang rute, kepadatan aktivitas, distribusi encounter, dan durasi sesi.
+3. Rincian kontrol, perilaku chase/leash dan stagger musuh, serta interaksi potion dengan aksi defense.
+4. Nama dan penampilan karakter pemain serta musuh, jenis senjata spesifik, dan teks pembukaan/penutup sesuai lore yang telah ditetapkan.
 
 Angka movement, damage, HP, stamina, dan timing dapat disusun sebagai baseline yang diberi label lalu diuji melalui prototype. Angka baru tidak dianggap sebagai keputusan lama yang sudah disepakati.
 
