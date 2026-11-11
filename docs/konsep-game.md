@@ -24,6 +24,14 @@ Terrain memakai procedural mesh dengan variasi berdasarkan seed. Lokasi objectiv
 
 Proyeksi kamera belum final. Camera3D pada scene fondasi hanya dipakai untuk preview. Cinemachine merupakan pilihan historis saat memakai Unity dan telah digantikan pendekatan camera rig native Godot.
 
+## Puzzle pertama
+
+**Pilar Simbol** telah ditetapkan sebagai puzzle pertama. Di reruntuhan Grassland, pemain membaca relief lalu mengaktifkan empat pilar bersimbol berbeda dalam urutan yang benar. Urutan benar membuka segel satu artefak; urutan salah mereset rangkaian tanpa damage atau kehilangan item.
+
+Petunjuk tetap dapat dilihat, simbol dibedakan melalui bentuk, dan musuh tidak mengganggu pengerjaan puzzle. Status selesai bertahan setelah respawn selama sesi. Generator menempatkan satu modul reruntuhan yang terkontrol pada lokasi valid. Rincian aturan dan kriteria penerimaan tersedia pada [desain Pilar Simbol](desain/puzzle-01-pilar-simbol.md).
+
+Puzzle kedua dan exploration challenge belum diputuskan.
+
 ## Combat
 
 - Pemain menggunakan satu senjata melee, diarahkan oleh posisi mouse di dunia permainan.
@@ -50,7 +58,7 @@ Aktivasi checkpoint belum ditetapkan sebagai sumber healing. Aturan reset musuh 
 
 ## Keputusan untuk finalisasi
 
-1. Mekanik dua puzzle, clue, solusi, dan bentuk exploration challenge.
+1. Mekanik puzzle kedua dan bentuk exploration challenge; detail visual Pilar Simbol mengikuti desain puzzle pertama yang sudah ditetapkan.
 2. Identitas boss, pola serangan yang terbaca, serta aturan reset dan retry.
 3. Ukuran area permainan, panjang rute, distribusi encounter, dan durasi sesi.
 4. Proyeksi serta framing kamera yang mendukung eksplorasi dan mouse aiming.
