@@ -54,4 +54,4 @@ Energi divisualisasikan mengikuti sambungan panel. Validasi cukup memeriksa kone
 
 Pola jalur spesifik, orientasi awal panel, arah putaran, jarak interaksi, tombol, animasi, suara, dan bentuk segel belum dirinci. Detail tersebut mengikuti keterbacaan serta playtest tanpa mengubah aturan inti yang telah ditetapkan.
 
-Exploration challenge untuk memperoleh artefak ketiga belum ditetapkan. Puzzle pertama mengikuti [desain Pilar Simbol](puzzle-01-pilar-simbol.md).
+Exploration challenge untuk artefak lainnya telah ditetapkan sebagai [Jalur Menuju Puncak](exploration-03-jalur-menuju-puncak.md). Puzzle pertama mengikuti [desain Pilar Simbol](puzzle-01-pilar-simbol.md).

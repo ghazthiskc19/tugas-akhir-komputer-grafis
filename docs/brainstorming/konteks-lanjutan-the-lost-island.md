@@ -4,7 +4,9 @@
 
 > **Keputusan tambahan 11 November 2026:** pengguna menetapkan **Pilar Simbol** sebagai puzzle pertama: empat pilar di reruntuhan Grassland, relief urutan sebagai petunjuk, dan satu artefak yang dibuka setelah urutan benar. Aturan lengkap tersedia pada [desain puzzle pertama](../desain/puzzle-01-pilar-simbol.md).
 
-> **Keputusan puzzle kedua 11 November 2026:** pengguna menetapkan **Jalur Energi**: tiga panel batu di reruntuhan Forest, diputar 90° untuk menyambungkan kristal sumber ke altar artefak. Tanpa damage, timer, atau batas percobaan; status selesai bertahan setelah respawn selama sesi. Aturan lengkap tersedia pada [desain puzzle kedua](../desain/puzzle-02-jalur-energi.md). Exploration challenge belum ditetapkan. Pembahasan di bawah mempertahankan keadaan historis sumber sebelum keputusan tambahan ini.
+> **Keputusan puzzle kedua 11 November 2026:** pengguna menetapkan **Jalur Energi**: tiga panel batu di reruntuhan Forest, diputar 90° untuk menyambungkan kristal sumber ke altar artefak. Tanpa damage, timer, atau batas percobaan; status selesai bertahan setelah respawn selama sesi. Aturan lengkap tersedia pada [desain puzzle kedua](../desain/puzzle-02-jalur-energi.md).
+
+> **Keputusan exploration challenge 11 November 2026:** pengguna menetapkan **Jalur Menuju Puncak** di Rocky Highlands, mencakup rute naik, lompatan pendek, musuh melee/ranged, checkpoint kaki bukit, altar artefak, viewpoint, dan shortcut turun. Artefak tidak mengharuskan kedua puzzle selesai atau seluruh musuh dibunuh. Musuh rute yang telah dikalahkan tetap mati selama sesi. Baseline maksimal dua musuh aktif bersamaan perlu diuji. Aturan lengkap tersedia pada [desain exploration challenge](../desain/exploration-03-jalur-menuju-puncak.md). Pembahasan di bawah mempertahankan keadaan historis sumber sebelum keputusan tambahan ini.
 
 Dokumen ini mempertahankan keadaan desain terakhir untuk melanjutkan percakapan di chat ini. Sumber: [Memilih 2D Atau 3D](https://chatgpt.com/share/6ad9cd49-6070-83ec-afc6-17a7ea735296). Ekstraksi kronologis rinci tersedia pada dokumen `ekstraksi-percakapan-the-lost-island.md` di folder outputs yang sama.
 

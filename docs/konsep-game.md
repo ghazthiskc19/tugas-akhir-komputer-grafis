@@ -36,7 +36,13 @@ Petunjuk tetap dapat dilihat, simbol dibedakan melalui bentuk, dan musuh tidak m
 
 Pemain bebas mencoba tanpa damage, timer, atau batas percobaan. Ukiran dan arah aliran membantu keterbacaan, sementara cahaya dan audio menunjukkan sambungan yang benar. Status selesai bertahan setelah respawn selama sesi. Modul ditempatkan secara terkontrol agar perubahan seed tidak merusak solusi. Rincian aturan dan kriteria penerimaan tersedia pada [desain Jalur Energi](desain/puzzle-02-jalur-energi.md).
 
-Exploration challenge untuk memperoleh artefak ketiga belum diputuskan.
+## Exploration challenge
+
+**Jalur Menuju Puncak** telah ditetapkan untuk artefak di Rocky Highlands. Pemain mencari rute naik menuju altar di dataran tinggi, melewati lereng dan lompatan pendek, serta menghadapi musuh penjaga. Checkpoint tersedia di kaki bukit. Encounter awal memakai satu melee; pelataran berikutnya memakai satu melee dan satu ranged dengan perlindungan serta jalur pendekatan samping.
+
+Pemain boleh melawan atau melewati musuh, dan artefak dapat diambil tanpa menyelesaikan kedua puzzle terlebih dahulu. Musuh rute yang telah dikalahkan tetap mati selama sesi setelah pemain respawn. Puncak menyediakan artefak, viewpoint, dan jembatan shortcut yang dibuka dari sisi puncak untuk kembali ke jalur utama.
+
+Rute menggunakan modul traversal terkontrol. Baseline maksimal dua musuh aktif bersamaan perlu diuji melalui playtest. Aturan lengkap tersedia pada [desain Jalur Menuju Puncak](desain/exploration-03-jalur-menuju-puncak.md).
 
 ## Combat
 
@@ -60,14 +66,13 @@ HP ditampilkan dengan bar dan angka. Healing terbatas ditemukan di dunia atau da
 
 Mati mengembalikan pemain ke checkpoint terakhir dengan HP penuh. Artefak yang terkumpul dan puzzle yang selesai dipertahankan selama sesi. Healing yang tersisa tetap dimiliki dan tidak bertambah karena respawn; item yang telah digunakan tidak otomatis dikembalikan.
 
-Aktivasi checkpoint belum ditetapkan sebagai sumber healing. Aturan reset musuh dan boss, proteksi respawn, jumlah checkpoint, serta save permanen belum final.
+Aktivasi checkpoint belum ditetapkan sebagai sumber healing. Pada Jalur Menuju Puncak, musuh yang telah dikalahkan tetap mati selama sesi. Aturan reset musuh di area lain dan boss, proteksi respawn, jumlah checkpoint keseluruhan, serta save permanen belum final.
 
 ## Keputusan untuk finalisasi
 
-1. Bentuk exploration challenge; detail produksi kedua puzzle mengikuti desain Pilar Simbol dan Jalur Energi yang telah ditetapkan.
-2. Identitas boss, pola serangan yang terbaca, serta aturan reset dan retry.
-3. Ukuran area permainan, panjang rute, distribusi encounter, dan durasi sesi.
-4. Proyeksi serta framing kamera yang mendukung eksplorasi dan mouse aiming.
+1. Identitas boss, pola serangan yang terbaca, serta aturan reset dan retry.
+2. Ukuran area permainan, panjang rute, distribusi encounter, dan durasi sesi; detail produksi mengikuti desain dua puzzle dan Jalur Menuju Puncak yang sudah ditetapkan.
+3. Proyeksi serta framing kamera yang mendukung eksplorasi dan mouse aiming.
 
 Angka movement, damage, HP, stamina, dan timing dapat disusun sebagai baseline yang diberi label lalu diuji melalui prototype. Angka baru tidak dianggap sebagai keputusan lama yang sudah disepakati.
 
