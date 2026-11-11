@@ -9,7 +9,7 @@ Laporan A4 berisi 19 halaman: cover, disclaimer AI, gambaran game, lore, core lo
 
 ## Status cover
 
-Empat nama dan NIM telah dimasukkan sesuai data pengguna. Nama dosen dan tahun ajaran masih menunggu data pengguna. Nama tim sementara menggunakan **Tim The Lost Island**. Kedua placeholder harus diisi dan nama tim dikonfirmasi sebelum laporan dikumpulkan.
+Empat nama dan NIM telah dimasukkan sesuai data pengguna. Nama tim telah ditetapkan sebagai **Aku Suka Embegeh**. Nama dosen dan tahun ajaran masih menunggu data pengguna; kedua placeholder harus diisi sebelum laporan dikumpulkan.
 
 ## Penyuntingan
 
