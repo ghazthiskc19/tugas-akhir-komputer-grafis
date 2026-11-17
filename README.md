@@ -6,6 +6,7 @@ Project gim 3D untuk mata kuliah **Komputer Grafis**. Engine aktif adalah **Godo
 
 - [Kebutuhan development dan setup komputer anggota](docs/kebutuhan-development.md): versi Godot, cara menjalankan, MCP opsional, dan export Windows.
 - [Konsep game terbaru](docs/konsep-game.md): scope Level 1, eksplorasi, puzzle, combat, checkpoint, dan keputusan yang masih terbuka.
+- [Implementation Tracker](docs/implementation/IMPLEMENTATION_TRACKER.md): checklist pengadaan asset, implementasi sistem, playtest, polish, dan release; terhubung ke inventaris asset serta acceptance checklist.
 - [Laporan visual dan Canva](docs/laporan/README.md): dokumen A4, logo game, identitas anggota, dan source layout laporan.
 - `godot-version.txt` mencatat patch version engine yang dipakai bersama: **4.7.2**.
 
