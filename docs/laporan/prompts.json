@@ -10,6 +10,36 @@
       "file": "assets/island-concept.jpg",
       "transparent_background": false,
       "prompt": "Use case: stylized-concept. Asset type: full-width concept illustration for an A4 editorial game project report, not a screenshot. A beautiful uninhabited tropical island with layered gray cliffs, cream beaches, turquoise water, grassland in the foreground, a forest of stylized trees on the left, rocky highlands and a small ancient stone watchtower at the peak, an ancient gateway glimpsed near the shore. Bright stylized low-poly 3D art with softly painted atmospheric edges, warm sunlight, soft cream clouds, desaturated sea teal and sage green palette, deep navy shadows and restrained coral flowers. The entire island is visible from an elevated three-quarter view, landscape composition, calm horizon, soft cream sky, polished adventure art matching a tasteful cream-and-teal expedition journal. No text, no labels, no UI, no characters, no watermark."
+    },
+    {
+      "file": "assets/symbol-ruins.jpg",
+      "transparent_background": false,
+      "prompt": "Use case: stylized-concept. Create an illustration for an A4 game design report, no text. Isometric three-quarter view of a small ancient grassland ruin with exactly four short freestanding stone pillars, each carrying a distinct simple engraved glyph, and a separate stone relief showing a sequence of four glyph shapes. Warm gray faceted cliffs, small pine trees, moss, cream sandy paths, turquoise sea glimpsed behind, tiny coral wildflowers. Bright low-poly adventure art with softly painted edges, airy warm cream background, desaturated sage green and sea teal palette, same feel as an inviting miniature tropical mountain island. Four pillars must all be clearly visible with space between them. No characters, UI, letters, labels or watermark. Wide landscape composition, polished concept art, not a gameplay screenshot."
+    },
+    {
+      "file": "assets/energy-ruins.jpg",
+      "transparent_background": false,
+      "prompt": "Use case: stylized-concept. Create a polished wide landscape concept illustration for a low-poly island adventure game report. In a peaceful forest ruin, exactly three square rotating stone panels lie in a row on pedestals between a glowing turquoise source crystal and a small destination altar. Engraved straight and elbow channels carry a soft turquoise energy glow. Trees and moss frame the edges, faceted warm gray stone, cream ground, sage green foliage, restrained coral flowers, soft daylight. Isometric three-quarter view, miniature diorama, painterly low-poly finish matching an inviting tropical mountain island. Energy paths should read as engraved channels rather than laser beams. No people, no text, no UI, no labels, no watermark."
+    },
+    {
+      "file": "assets/summit-route.jpg",
+      "transparent_background": false,
+      "prompt": "Use case: stylized-concept. A beautiful elevated three-quarter-view concept illustration of a rocky highland ascent on a tropical island. A winding cream stone stair path climbs layered faceted gray cliffs toward an ancient watchtower and small artifact altar on a grassy summit. A short narrow bridge creates a visible return shortcut near the summit. Pine trees, moss, turquoise sea below, soft cream clouds. Bright stylized low-poly with gently painted edges, sage foliage, muted sea teal, warm sunlight, tiny coral accent flowers. Spacious landscape composition, a readable journey from lower left to upper right, no people, no text, no UI, no watermark. This is conceptual environment art for a student game design report."
+    },
+    {
+      "file": "assets/combat-scene.jpg",
+      "transparent_background": false,
+      "prompt": "Use case: stylized-concept. Wide landscape concept illustration for a bright low-poly island adventure game report. A small shipwrecked adventurer seen from an elevated three-quarter camera angle, wearing practical cream and muted coral travel clothes and carrying a simple one-handed melee blade, faces a single ancient ruin guard on a spacious grassy stone courtyard. Capture a readable wind-up before a melee swing, with generous open ground around both characters. Warm gray faceted ruins and pines, turquoise water at the far edge, sage green foliage, warm cream light, gently painted low-poly finish. No gore, no UI, no text, no labels, no watermark. Character and weapon appearances are exploratory concept art, not final assets."
+    },
+    {
+      "file": "assets/enemy-lineup.jpg",
+      "transparent_background": false,
+      "prompt": "Use case: stylized-concept. A polished character concept lineup of exactly three distinct ancient island ruin guards on a warm cream background. Left: a light melee guard with a simple one-handed blade and small silhouette. Center: a larger heavy melee guard with a slow two-handed stone hammer and broad silhouette. Right: a slender ranged guard carrying a compact crossbow. Distinct equipment silhouettes, neutral muted sea teal, cream stone, sage green, restrained coral cloth. Full bodies, evenly spaced, visible feet, no overlap, three-quarter view, stylized low-poly 3D adventure concept art with softly painted edges and soft ground shadows. Friendly adventurous tone, no gore. No text, labels, UI or watermark. Exploratory appearance concepts only."
+    },
+    {
+      "file": "assets/gatekeeper-boss.jpg",
+      "transparent_background": false,
+      "prompt": "Use case: stylized-concept. A dramatic but bright low-poly adventure concept illustration of a single large ancient stone golem guarding a monumental ruined gateway on a tropical island. The golem has broad heavy stone arms, faceted warm gray slabs, small patches of moss and a glowing turquoise crystal core in its chest. It stands in a wide flat stone arena, gateway behind it, ocean and pine trees visible to the sides. Elevated three-quarter view that makes the whole golem and clear arena space readable. Sage green, muted sea teal, warm cream sunlight, restrained coral flowers, softly painted low-poly finish matching a beautiful miniature mountain island. Landscape composition, no players, no additional enemies, no text, no HUD, no watermark. Concept art, not a gameplay screenshot."
     }
   ]
 }
