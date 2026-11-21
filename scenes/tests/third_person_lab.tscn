@@ -7,6 +7,9 @@
 [node name="Player" parent="." index="4"]
 position = Vector3(0, 0, 3)
 
+[node name="Camera3D" parent="." index="2"]
+collision_enabled = false
+
 [node name="Header" parent="HUD" index="0"]
 text = "THIRD PERSON • MOUSE-LOOK"
 

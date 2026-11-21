@@ -12,7 +12,7 @@ Kamera mengikuti perpindahan posisi pemain dengan smooth damping. Perubahan keti
 
 - Mouse selalu tertangkap (captured) selama arena berjalan. Gerakan mouse langsung memutar kamera: yaw bebas 360°, pitch dibatasi `20°–65°`, sensitivitas `0,003 rad/pixel`. Tidak ada tombol tengah mouse (MMB) dan tidak ada mode orbit terpisah.
 - **WASD relatif kamera**: W maju, S mundur ke arah kamera, A/D menyamping, sesuai arah pandang kamera. Karakter berputar menghadap arah gerak termasuk S, yaitu berbalik menghadap kamera; kamera tidak ikut berputar.
-- **Scroll zoom**: roda mouse mengubah panjang offset kamera, langkah `1 m` per notch. Awal `11,4 m`, minimum `4 m`, maksimum `14 m`; nilai di luar batas dipotong. Collision kamera tetap dapat memperpendek jarak efektif.
+- **Scroll zoom**: roda mouse mengubah panjang offset kamera, langkah `1 m` per notch. Awal `11,4 m`, minimum `4 m`, maksimum `14 m`; obstacle tidak mengubah jarak tersebut.
 - **Esc** menjeda/melanjutkan arena nyata; saat jeda cursor terlihat dan tombol Lanjutkan tersedia. Kehilangan fokus jendela juga menjeda tanpa menangkap ulang mouse otomatis; lanjutkan secara eksplisit lewat tombol atau Esc.
 - Analog kanan tetap mengatur yaw/pitch (deadzone radial `0,2`, kecepatan penuh `2 rad/s`). Mapping gamepad lainnya belum dirinci.
 - **Arah melee (rencana)**: serangan melee kelak menghadap arah karakter. Tidak ada aim ke titik dunia di bawah mouse dan tidak ada lock-on. Arah dikunci per hit sesuai aturan combat; detail input attack ditentukan saat combat dikerjakan setelah izin pengguna.
@@ -21,9 +21,9 @@ Mouse-look sebelumnya (MMB-hold orbit dan mouse-world aiming) sudah digantikan; 
 
 ## Collision
 
-Ketika ada penghalang di antara pemain dan posisi kamera yang diinginkan, kamera mendekat ke pemain agar tidak menembus tembok atau objek lingkungan. Setelah jalur kamera kembali terbuka, kamera kembali ke jarak semula secara mulus.
+**Revisi setelah review mouse-look:** auto-mendekat karena penghalang dimatikan pada `third_person_lab.tscn`. Jarak kamera ditentukan scroll, bukan obstruction. Pengguna menerima pemain tertutup obstacle dan kamera menembus geometri; sudut pandang diatur manual dengan mouse. Implementasi collision lama hanya dipertahankan pada lab pembanding, bukan perilaku gameplay aktif.
 
-Collision perlu diuji pada lereng, jalur tebing, reruntuhan puzzle, dan arena boss. Perubahan jarak kamera tidak boleh membuat petunjuk atau serangan boss kehilangan keterbacaan.
+Framing tetap perlu diuji pada lereng, jalur tebing, reruntuhan puzzle dan arena boss dengan sudut kamera yang diatur pemain.
 
 ## Kriteria penerimaan
 
@@ -33,7 +33,7 @@ Collision perlu diuji pada lereng, jalur tebing, reruntuhan puzzle, dan arena bo
 4. Mouse yang tertangkap memutar yaw 360° tanpa tombol tambahan; pitch dibatasi `20°–65°`.
 5. WASD bergerak relatif kamera; karakter menghadap arah gerak (S berbalik menghadap kamera) tanpa memutar kamera.
 6. Scroll mengubah jarak kamera dalam rentang `4–14 m` dengan langkah `1 m`; analog kanan dapat memutar kamera.
-7. Kamera mendekat ketika terhalang, tidak menembus penghalang, dan kembali secara mulus ketika ruang terbuka.
+7. Obstacle tidak mengubah jarak kamera; scroll tetap bekerja. Occlusion dan clipping geometri diterima pada baseline ini.
 8. Simbol puzzle, jarak lompatan, posisi musuh, dan telegraph boss terbaca melalui framing kamera.
 
 ## Detail produksi berikutnya

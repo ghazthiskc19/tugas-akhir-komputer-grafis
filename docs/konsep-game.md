@@ -43,7 +43,7 @@ Pemain bergerak dan melompat untuk melewati obstacle lingkungan. Visual mengguna
 
 Terrain memakai procedural mesh dengan variasi berdasarkan seed. Lokasi objective, puzzle, checkpoint, dan arena boss perlu dibentuk atau dipilih berdasarkan aturan keterjangkauan. Perubahan seed tidak boleh membuat progres wajib mustahil dicapai.
 
-Kamera Perspective memakai elevated third-person follow dengan smooth damping, termasuk saat pemain melompat. Mouse selalu tertangkap dan langsung memutar kamera (yaw 360°, pitch dibatasi); scroll mengatur zoom dalam batas. WASD bergerak relatif kamera dan karakter menghadap arah gerak. Analog kanan juga memutar kamera. Kamera tidak otomatis berputar mengikuti arah karakter atau serangan dan memakai collision agar tidak menembus lingkungan. Aturan lengkap tersedia pada [desain kamera](desain/kamera-perspective-follow.md).
+Kamera Perspective memakai elevated third-person follow dengan smooth damping, termasuk saat pemain melompat. Mouse tertangkap langsung memutar kamera (yaw 360°, pitch dibatasi); scroll mengatur zoom terbatas. WASD relatif kamera dan karakter menghadap arah gerak. Analog kanan juga memutar kamera. Kamera tidak otomatis mengikuti arah karakter/serangan dan tidak auto-mendekat karena obstacle. Occlusion pemain dan clipping kamera diterima; pemain mengatur sudut sendiri. Aturan lengkap ada pada [desain kamera](desain/kamera-perspective-follow.md).
 
 Camera3D pada scene fondasi hanya dipakai untuk preview dan belum mewakili implementasi kamera gameplay yang disepakati. Cinemachine merupakan pilihan historis saat memakai Unity dan telah digantikan pendekatan camera rig native Godot.
 

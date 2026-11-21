@@ -114,7 +114,7 @@ Buka **`scenes/tests/third_person_lab.tscn` lalu F6**. Ini menggantikan `aiming_
 2. **WASD + Space**: gerak relatif kamera. Karakter menghadap arah gerak; **S** berbalik menghadap kamera. Kamera tidak ikut berputar.
 3. **Scroll**: zoom langkah `1 m`, awal `11,4 m`, rentang `4–14 m`.
 4. **Esc**: menjeda/melanjutkan arena dan menampilkan cursor saat jeda; tombol **Lanjutkan (Esc)** juga melanjutkan. Pindah fokus jendela menjeda dan tidak menangkap ulang mouse otomatis.
-5. Dekati tembok tinggi lalu putar kamera hingga terhalang. Kamera memendekkan jarak, lalu kembali halus saat jalur terbuka. Jarak sangat dekat bisa membuat karakter memenuhi layar; ini lebih aman daripada menembus tembok.
+5. **Auto-zoom karena obstacle dimatikan** pada scene third-person atas keputusan pengguna. Jarak hanya diatur lewat scroll; pemain boleh tertutup obstacle dan kamera dapat menembus geometri. Putar kamera sendiri untuk mencari sudut pandang. Lab collision lama tetap tersedia sebagai pembanding.
 6. **Right stick** juga memutar kamera (deadzone radial `0,2`); mapping gamepad lainnya belum ada. Bukti hanya input simulasi, **belum perangkat fisik**.
 
 Serangan melee kelak menghadap arah karakter; tidak ada aim ke titik mouse di dunia dan tidak ada lock-on. Belum ada attack/damage.
