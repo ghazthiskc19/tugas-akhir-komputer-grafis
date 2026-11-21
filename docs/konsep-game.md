@@ -24,11 +24,22 @@ Pulau merupakan bekas tempat penjagaan jalur pelayaran kuno. Tiga artefak berfun
 
 Pemasangan ketiga artefak mengaktifkan kembali sistem gerbang beserta golem penjaganya. Golem masih menjalankan perintah lama untuk menolak penyusup. Pemain mengalahkannya agar dapat membuka gerbang dan mencapai dermaga.
 
-Cerita disampaikan melalui pembukaan singkat, relief lingkungan, dan penutup. Penyampaian ini tidak membutuhkan NPC atau dialog panjang. Nama, penampilan, serta jenis senjata karakter pemain belum ditetapkan.
+Cerita disampaikan melalui pembukaan singkat, relief lingkungan, dan penutup. Penyampaian ini tidak membutuhkan NPC atau dialog panjang. Nama karakter pemain belum ditetapkan; arah penampilan dan senjata ditetapkan pada bagian berikut.
 
 ## Eksplorasi dan visual
 
 Pemain bergerak dan melompat untuk melewati obstacle lingkungan. Visual menggunakan stylized low-poly, warna cerah, dan komposisi pemandangan yang mendukung eksplorasi.
+
+### Arah karakter dan musuh — ditetapkan 20 November 2026
+
+- Pemain adalah manusia awak kapal/petualang dengan pakaian ringan, bukan kesatria berzirah penuh. Senjata pemain adalah **pedang satu tangan**, mengikuti aturan satu senjata melee dan combo tiga hit yang telah disepakati.
+- Musuh biasa adalah penjaga pulau kuno dalam satu keluarga visual: standard melee bersiluet ramping, heavy melee bertubuh lebih besar dengan senjata berat, dan ranged dengan senjata jarak jauh yang terbaca jelas.
+- Boss tetap **Penjaga Gerbang**, golem batu dengan inti energi. Kontras petualang manusia dengan sistem pertahanan kuno menyatukan cerita, reruntuhan, puzzle energi, dan musuh.
+- Gaya tetap stylized low-poly cerah. Pengguna lebih menyukai **KayKit/chibi** daripada kandidat non-chibi, tetapi prioritas pemilihan adalah **kelengkapan ekosistem asset online yang serasi**, bukan kemiripan satu model dengan concept art laporan. Proporsi gambar laporan tidak menjadi syarat mutlak model produksi.
+- Pengadaan model mengandalkan sumber online. Penyesuaian material, mesh, aksesori, skala, dan perakitan modul dikerjakan agent bila diperlukan. Recolor/attachment/kitbash dibedakan dari remodel, re-rig, dan pembuatan animasi besar; kebutuhan kategori terakhir tetap dicatat sebagai risiko, bukan dijanjikan sebagai tweak ringan.
+- **Keluarga inti ditetapkan pengguna:** KayKit Adventurers + Character Animations + Forest Nature + Dungeon Pack. Pelengkap online dicari untuk kebutuhan yang belum tertutup; bentuk sedikit berbeda boleh menjadi basis modifikasi agent. Pemilihan inti bukan bukti seluruh model/clip sudah tersedia atau lolos import, dan bukan persetujuan membeli tier berbayar.
+- Pekerjaan aktif adalah menutup gap dengan sumber asset konkret dan rencana edit yang jelas, bukan memperbanyak katalog generik. Preferensi ini tidak otomatis mengganti penjaga kuno menjadi undead atau boss batu menjadi golem tulang. Gameplay, procedural terrain, retargeting dan perakitan puzzle tetap memerlukan implementasi serta verifikasi meskipun model dasarnya berasal dari online.
+- **Kebijakan asset terkini (21 November 2026):** model yang mirip/cukup sudah memadai dan recolor diutamakan daripada ubah bentuk; bahan awal dari basis gratis yang sudah ter-import cukup untuk memulai, sehingga tidak ada download model atau paket berbayar yang wajib lagi. Gap nyata: retarget/aplikasi animasi minum dan boss, authoring wake/charge boss, serta kode (terrain procedural, puzzle, UI, perakitan scene). Rock Golem cukup dengan recolor + skala seragam + crystal attachment; shipwreck opsional. [Rencana Sumber Asset](implementation/ASSET_SOURCE_PLAN.md) dan [inventaris](implementation/ASSET_INVENTORY.md#audit-kecukupan-asset--21-november-2026-ambang-visual-dilonggarkan) memuat bukti dan status; hasil renderer, retarget, dan gameplay tetap belum terverifikasi. Pengadaan berbayar dan reproportion pada catatan 20 November bersifat historis. [Audit ekosistem](implementation/ASSET_ECOSYSTEM_AUDIT.md) dipertahankan sebagai dasar perbandingan.
 
 Terrain memakai procedural mesh dengan variasi berdasarkan seed. Lokasi objective, puzzle, checkpoint, dan arena boss perlu dibentuk atau dipilih berdasarkan aturan keterjangkauan. Perubahan seed tidak boleh membuat progres wajib mustahil dicapai.
 
@@ -66,7 +77,7 @@ Rute menggunakan modul traversal terkontrol. Baseline maksimal dua musuh aktif b
 - Attack dan combo tidak memakai stamina.
 - Musuh mencakup dua tipe melee dan satu tipe ranged, ditambah satu boss akhir.
 
-Jenis senjata spesifik pemain, nama dan penampilan musuh, parameter damage, serta angka timing belum ditetapkan.
+Senjata pemain telah ditetapkan sebagai pedang satu tangan. Model spesifik, nama musuh, parameter damage, serta angka timing belum ditetapkan.
 
 ## Musuh biasa
 
@@ -107,7 +118,7 @@ Aktivasi checkpoint belum ditetapkan sebagai sumber healing. Pada Jalur Menuju P
 1. Prototype kamera, movement, dan mouse aiming untuk menguji framing serta perpindahan mode orbit.
 2. Blockout pulau dengan baseline 250 × 250 meter untuk mengukur panjang rute, kepadatan aktivitas, distribusi encounter, dan durasi sesi.
 3. Rincian kontrol, perilaku chase/leash dan stagger musuh, serta interaksi potion dengan aksi defense.
-4. Nama dan penampilan karakter pemain serta musuh, jenis senjata spesifik, dan teks pembukaan/penutup sesuai lore yang telah ditetapkan.
+4. Pilihan model spesifik untuk petualang manusia dengan pedang satu tangan dan keluarga penjaga kuno, serta teks pembukaan/penutup sesuai lore yang telah ditetapkan. Nama karakter pemain belum final; arah visual tidak menunggu nama tersebut.
 
 Angka movement, damage, HP, stamina, dan timing dapat disusun sebagai baseline yang diberi label lalu diuji melalui prototype. Angka baru tidak dianggap sebagai keputusan lama yang sudah disepakati.
 

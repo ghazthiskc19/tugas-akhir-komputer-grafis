@@ -9,6 +9,12 @@
 /logs/
 /reports/
 /tmp/
+/downloads/
+/tools/
+
+# Mixamo raw motions stay local: this repository is public.
+/assets/third_party/mixamo/*.fbx
+/assets/third_party/mixamo/*.fbx.import
 
 # Local tooling and credentials
 /.mcp.json

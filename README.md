@@ -7,6 +7,8 @@ Project gim 3D untuk mata kuliah **Komputer Grafis**. Engine aktif adalah **Godo
 - [Kebutuhan development dan setup komputer anggota](docs/kebutuhan-development.md): versi Godot, cara menjalankan, MCP opsional, dan export Windows.
 - [Konsep game terbaru](docs/konsep-game.md): scope Level 1, eksplorasi, puzzle, combat, checkpoint, dan keputusan yang masih terbuka.
 - [Implementation Tracker](docs/implementation/IMPLEMENTATION_TRACKER.md): checklist pengadaan asset, implementasi sistem, playtest, polish, dan release; terhubung ke inventaris asset serta acceptance checklist.
+- [Audit ekosistem asset online](docs/implementation/ASSET_ECOSYSTEM_AUDIT.md): cakupan keluarga KayKit/pelengkap, tier gratis/berbayar, sumber preview, gap dan risiko modifikasi; bukan daftar asset yang sudah diunduh atau diuji.
+- [Rencana sumber asset yang dipilih](docs/implementation/ASSET_SOURCE_PLAN.md): keluarga inti KayKit disetujui, sumber pelengkap per kebutuhan, rencana edit agent serta gate akun/biaya/lisensi; belum berarti file/rig/clip siap pakai.
 - [Laporan visual dan Canva](docs/laporan/README.md): dokumen A4, logo game, identitas anggota, dan source layout laporan.
 - `godot-version.txt` mencatat patch version engine yang dipakai bersama: **4.7.2**.
 
@@ -30,12 +32,21 @@ godot --headless --path . --quit-after 120
 
 `scenes/main.tscn` berisi fondasi 3D dengan camera, lighting, environment, dan permukaan preview. Sistem gameplay belum diimplementasikan. Kamera preview dan renderer Compatibility merupakan konfigurasi awal yang dapat dievaluasi saat prototyping.
 
+## Asset yang tersedia
+
+Basis KayKit, Kenney, model Rock Golem, UI, audio dan source shader tersimpan di `assets/third_party/`. Sumber/lisensi tersedia di [Third-party notices](THIRD_PARTY_NOTICES.md) dan [Catatan Unduhan](docs/implementation/ASSET_DOWNLOADS.md). Pakai model yang sudah ada; remodel untuk menyamai concept art tidak wajib. Recolor, skala dan attachment ringan diprioritaskan.
+
+Repository ini **public**. Motion FBX Mixamo tidak ikut clone; anggota tim memperoleh file melalui akun masing-masing sesuai [petunjuk lokal](assets/third_party/mixamo/README.md). Tidak ada gameplay scene saat ini yang bergantung pada FBX lokal tersebut. Arsip download, Blender portable, dan cache kerja tetap lokal; Blender tidak diperlukan untuk membuka model GLB yang sudah dikonversi.
+
+Model tersedia tidak berarti puzzle, terrain procedural, retarget animasi atau gameplay sudah selesai. Lihat inventaris untuk membedakan file yang dapat diimpor dari hasil integrasi yang sudah diuji.
+
 ## Struktur
 
 ```text
 project.godot          Konfigurasi project
 scenes/main.tscn       Main scene awal
 icon.svg              Icon sementara
+assets/third_party/   Asset sumber yang boleh dibagikan beserta lisensi
 addons/godot_mcp/     Plugin editor untuk AI tooling
 docs/brainstorming/    Catatan desain dan riwayat diskusi
 docs/migrasi-godot.md  Keputusan migrasi dan pemetaan teknologi

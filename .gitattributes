@@ -18,3 +18,8 @@
 *.wav binary
 *.ogg binary
 *.mp3 binary
+*.bin binary
+*.fbx binary
+*.blend binary
+*.ttf binary
+*.otf binary

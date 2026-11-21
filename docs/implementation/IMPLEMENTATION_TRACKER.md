@@ -8,12 +8,12 @@ Dokumen ini menjadi checklist pelaksanaan Level 1, dari pencarian asset hingga d
 
 | Informasi | Status |
 |---|---|
-| Tahap aktif | P01: pemilihan kandidat dan pengambilan sampel asset |
-| Pekerjaan berikutnya | P01-02: pilih kandidat utama untuk sampel karakter, animasi, dan environment |
-| Fondasi yang tersedia | Project Godot, scene preview, Git, konfigurasi MCP, dokumen desain |
+| Tahap aktif | P02: import dan kesiapan asset |
+| Pekerjaan berikutnya | P02-01 sisa (folder `custom/`, `scripts/`, `resources/`, scene `scenes/tests/asset_lab.tscn`) lalu P02-03: cek visual skala, arah depan, material dari kamera game; tetapkan skala referensi karakter |
+| Fondasi yang tersedia | Project Godot, scene preview, Git, konfigurasi MCP, dokumen desain, asset pihak ketiga di `assets/third_party/` (ter-import tanpa error) |
 | Gameplay | Belum diimplementasikan |
-| Asset produksi 3D dan audio | Belum ada pada audit awal; lihat inventaris |
-| Hambatan yang diketahui | Rig/animasi, bentuk asset final, dan rincian input belum diuji dalam prototype |
+| Asset produksi 3D dan audio | Bahan awal cukup, tidak perlu download model wajib lagi. Salinan lokal: 31 dari 54 kebutuhan `IMPORTED`, 23 sisanya perlu perakitan/edit/retarget (clone baru tanpa FBX Mixamo memiliki lebih sedikit). Belum ada yang `VERIFIED`; lihat inventaris |
+| Hambatan yang diketahui | Gap nyata: retarget/aplikasi N06 dan N11 serta authoring wake/charge boss (FBX Mixamo hanya salinan lokal, repo publik); kode terrain procedural, puzzle, UI dan perakitan scene; reskin guardian/golem (recolor cukup); loop clip harus di-set manual. Tidak ada model/paket wajib baru |
 
 Urutan utama: **asset sample → import audit → player/camera → combat → progress/retry → level blockout → objective/boss → playable level → procedural generation → final art → polish/QA → release**.
 
@@ -57,11 +57,11 @@ Audit membaca file repository, tidak menjalankan ulang Godot atau MCP. Folder ca
 Dependensi: audit awal. Hasil: shortlist dan sampel yang dapat diuji, bukan kumpulan unduhan tanpa pemetaan kebutuhan.
 
 - [x] **P01-01** Susun kebutuhan dan kandidat sumber resmi pada [Asset Inventory](ASSET_INVENTORY.md); bedakan sumber yang diperiksa dari file yang sudah tersedia.
-- [ ] **P01-02** Pilih satu kandidat utama karakter/animasi dan satu kandidat environment. Bandingkan proporsi, warna, bentuk low-poly, serta rig dengan concept art sebagai arah visual.
-- [ ] **P01-03** Ambil sampel resmi: satu karakter, animasi locomotion/attack, satu senjata, pohon, batu, dan modul reruntuhan. Gunakan tier gratis yang memang memuat kebutuhan tersebut; biaya atau paket tambahan bukan dependensi otomatis.
-- [ ] **P01-04** Untuk setiap sampel, catat URL halaman/download, pembuat, nama paket/versi, tanggal, lisensi, file lisensi lokal, dan hash arsip pada inventaris.
-- [ ] **P01-05** Jalankan pencarian/scraping katalog hanya untuk kebutuhan yang belum tertutup. Gunakan download/API resmi yang tersedia; jangan melewati login atau paywall. Download massal tidak menggantikan pemeriksaan isi paket.
-- [ ] **P01-06** Tandai kebutuhan khusus yang perlu dibuat sendiri: pilar/relief simbol, panel energi, segel, altar, gate sockets, checkpoint, shortcut, dan boss bila paket tidak sesuai.
+- [x] **P01-02** Pilih satu kandidat utama karakter/animasi dan satu kandidat environment. Bandingkan proporsi, warna, bentuk low-poly, serta rig dengan concept art sebagai arah visual. — KayKit Adventurers + Character Animations + Forest + Dungeon (keputusan pengguna 20 Nov 2026); boss Rock Golem gratis.
+- [x] **P01-03** Ambil sampel resmi: satu karakter, animasi locomotion/attack, satu senjata, pohon, batu, dan modul reruntuhan. Gunakan tier gratis yang memang memuat kebutuhan tersebut; biaya atau paket tambahan bukan dependensi otomatis.
+- [x] **P01-04** Untuk setiap sampel, catat URL halaman/download, pembuat, nama paket/versi, tanggal, lisensi, file lisensi lokal, dan hash arsip pada inventaris. — [ASSET_DOWNLOADS](ASSET_DOWNLOADS.md)
+- [x] **P01-05** Jalankan pencarian/scraping katalog hanya untuk kebutuhan yang belum tertutup. Gunakan download/API resmi yang tersedia; jangan melewati login atau paywall. Download massal tidak menggantikan pemeriksaan isi paket.
+- [x] **P01-06** Tandai kebutuhan khusus yang perlu dibuat sendiri: pilar/relief simbol, panel energi, segel, altar, gate sockets, checkpoint, shortcut, dan boss bila paket tidak sesuai. — status `TURUNAN` di [Rencana Sumber Asset](ASSET_SOURCE_PLAN.md)
 
 **Exit:** semua kebutuhan punya kandidat atau rencana custom/fallback; sampel minimum tersedia untuk P02. Asset yang belum diunduh tetap berstatus `MISSING`.
 
@@ -70,7 +70,7 @@ Dependensi: audit awal. Hasil: shortlist dan sampel yang dapat diuji, bukan kump
 Dependensi: sampel P01. Test scene yang direncanakan: `scenes/tests/asset_lab.tscn`.
 
 - [ ] **P02-01** Buat struktur `assets/third_party/`, `assets/custom/`, `scenes/`, `scripts/`, `resources/`, dan test scene sesuai kebutuhan. Simpan arsip besar/cache kerja di luar resource game yang diexport.
-- [ ] **P02-02** Import model dan material. Utamakan glTF/GLB yang tersedia; jika perlu konversi FBX/Blend, catat alat/versi dan simpan sumber yang boleh dibagikan. Periksa dependency `.bin` dan texture.
+- [x] **P02-02** Import model dan material. Utamakan glTF/GLB yang tersedia; jika perlu konversi FBX/Blend, catat alat/versi dan simpan sumber yang boleh dibagikan. Periksa dependency `.bin` dan texture. — 1.281 file ter-import tanpa error; golem dikonversi Blender 4.5.16 LTS, sumber `.blend` disimpan dengan `.gdignore`.
 - [ ] **P02-03** Uji skala, arah depan, pivot, material, normal, texture, dan silhouette dari kamera permainan. Tetapkan satu skala referensi karakter untuk seluruh kit.
 - [ ] **P02-04** Uji skeleton, bone attachment, animasi, loop, transisi, serta in-place/root motion. Buktikan retargeting pada karakter terpilih sebelum bergantung pada library animasi.
 - [ ] **P02-05** Buat wrapper/inherited scene karakter dan prop agar reimport tidak menimpa script, collision, animation mapping, dan material override gameplay.
@@ -325,7 +325,7 @@ Bagian ini berisi rincian yang belum final pada desain. Isi hasil eksperimen seb
 |---|---|---|---|
 | D01 | Mapping tombol, camera-relative movement, dan perilaku attack/cursor selama MMB orbit | OPEN | — |
 | D02 | Angka movement, jump, FOV, damping, pitch, collision margin | OPEN | — |
-| D03 | Skeleton utama, pilihan weapon visual, clip mapping, in-place/root motion | OPEN | — |
+| D03 | Skeleton utama, model pedang satu tangan, clip mapping, in-place/root motion | PARTIAL | Preferensi KayKit/chibi dengan prioritas kelengkapan ekosistem online; pedang satu tangan tetap. Paket, rig, clip, dan kebutuhan penyesuaian belum diuji |
 | D04 | Potion saat block/dodge, hit yang sepenuhnya diblock, dan urutan event hit/completion | OPEN | — |
 | D05 | Reset enemy/pickup di luar rute pendakian dan proteksi safe respawn | OPEN | — |
 | D06 | Keluar sukarela dari boss, interaksi resource di area retry, dan invalidasi snapshot | OPEN | — |
@@ -352,6 +352,12 @@ Keempat anggota bisa menguji branch anggota lain. Perubahan file pusat seperti `
 | Tanggal | Task | PIC | Hasil/bukti | Commit | Berikutnya |
 |---|---|---|---|---|---|
 | 2026-11-17 | B00-01–06, P01-01 | Codex | Audit file repo; inventaris kebutuhan dan kandidat resmi tersedia. Tidak ada download/import asset produksi pada pekerjaan planning ini. | Lihat commit penambahan tracker | P01-02 |
+| 2026-11-20 | P01-02 (parsial), D03 (parsial) | OMP | Pengguna menetapkan petualang manusia berpakaian ringan dengan pedang satu tangan, keluarga musuh penjaga kuno, dan boss golem batu berinti energi. [Riset karakter](ASSET_CHARACTER_RESEARCH.md) dan [environment](ASSET_ENVIRONMENT_RESEARCH.md) memuat preview model asli yang sudah dibuka, sumber, lisensi/tier, dan gap; belum ada download paket/import. | — | Tunggu pilihan visual; selesaikan konflik lisensi Quaternius sebelum pengadaan. P01-02 tetap belum selesai |
+| 2026-11-20 | P01-02/P01-05 (parsial), D03 (parsial) | OMP | Scan ekosistem selesai sebagai metadata/preview: [audit gabungan](ASSET_ECOSYSTEM_AUDIT.md), register karakter/world/pelengkap, seluruh M01–M28/N01–N12 dipetakan. KayKit Adventurers + Animations + Forest + Dungeon direkomendasikan; legacy/rebrand/tier/bundle dibedakan. Tidak ada download/import/pembelian. | — | Pilih sampel; gap drink, boss/core/clip, guardian identity, glyph/connector/socket dan water/VFX tetap terbuka |
+| 2026-11-20 | P01-02 (inti ditetapkan), P01-05/06 (parsial) | OMP | Pengguna menetapkan empat keluarga inti KayKit dan mengizinkan edit basis online. [Rencana sumber](ASSET_SOURCE_PLAN.md) memetakan 54 kebutuhan; exact Drinking/Mixamo dan fallback clip, guardian/golem, rune/track/crystal/water/VFX serta UI/audio ditemukan. Belum download/import/beli; authoring dan retarget belum dilakukan. | — | Pengadaan sampel dengan gate akun/biaya/lisensi eksplisit, lalu proof satu drink dan boss attack; jangan mencentang readiness dari katalog |
+| 2026-11-20 | P01-03/P01-04 (parsial) | OMP | 25 file/paket gratis diunduh ke `downloads/` (ignored), ZIP/GLB lolos cek integritas, lisensi dan SHA-256 dicatat di [ASSET_DOWNLOADS](ASSET_DOWNLOADS.md). Mixamo menunggu login pengguna; Frost Golem/Extra menunggu keputusan beli. | — | Login Mixamo; keputusan Frost Golem; P02 ekstrak ke `assets/` + import Godot |
+| 2026-11-21 | P01 selesai; P02-02; P02-01/04/06/08 (parsial) | OMP | Rock Golem diunduh via akun BlendSwap pengguna; Blender 4.5.16 LTS portable di `tools/` (hash cocok checksum resmi). Subset asset diekstrak ke `assets/third_party/` (1.681 file, 74 MB; musik WAV→OGG, SFX tidak relevan dibuang). Godot 4.7.2 import 1.281 file tanpa error setelah `.gdignore` folder kerja dan `filesystem/import/blender/enabled=false`. Uji muat: golem GLB 28 bone, Rogue 23 bone, clip Rig_Medium/Large, Drinking.fbx. Nama bone karakter = library animasi. `THIRD_PARTY_NOTICES.md` diisi; inventaris diperbarui ke status per kebutuhan. | — | Scene `asset_lab`, cek visual skala/material (P02-03), set loop clip, retarget Mixamo, rework golem |
+| 2026-11-21 | P02-04/06 (parsial), audit kecukupan | OMP | Ambang visual dilonggarkan (model mirip/cukup, recolor diutamakan): tidak ada model/paket baru wajib; M27 opsional; core golem cukup recolor + skala seragam + crystal. Parse statis GLB (satu kali, tanpa Godot): Rogue/Knight/Barbarian/Ranger identik dengan `Rig_Medium_*` (23 joint, nama, parent, rest pose; semua target clip ditemukan) tetapi rest pose berbeda dari `Rig_Large_*` (translasi 1/23 cocok), sehingga klaim Barbarian=Large dikoreksi dan clip Medium dipakai. Kesamaan rest pose bukan bukti visual; loop tidak diverifikasi. Hitungan tetap 31 IMPORTED / 23 MISSING, 0 VERIFIED; angka file mentah (1.681/1.281) bukan kesiapan. Repo GitHub ternyata publik: FBX Mixamo di-gitignore, hanya salinan lokal, clone baru harus mengunduh sendiri. Gameplay belum ada. | — | P02-03 cek visual, wrapper scene, retarget N06/N11, reskin guardian |
 
 Template catatan sesi:
 
