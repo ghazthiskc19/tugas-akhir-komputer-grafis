@@ -27,7 +27,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -5.5)
 text = "SERANGAN MELEE"
 
 [node name="Help" parent="HUD" index="1"]
-text = "Klik kiri: satu ayunan • WASD: gerak • Space: lompat (di luar serangan)\nDummy 60 HP, damage 20/hit. Tahan klik tidak mengulang.\nR: ulang lab • Esc: jeda/lanjut • Serangan mengikuti arah karakter."
+text = "Klik kiri: swing badan atas • WASD: jalan full speed, kaki tetap melangkah\nDummy 60 HP, damage 20/hit • Tahan klik tidak mengulang\nSpace: lompat di luar serangan • R: ulang • Esc: jeda"
 autowrap_mode = 3
 
 [node name="Status" type="Label" parent="HUD"]

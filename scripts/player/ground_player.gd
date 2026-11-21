@@ -2,7 +2,8 @@ extends CharacterBody3D
 ## I03 ground movement (camera-relative WASD, idle/walk) + I04 jump (opt-in via jump_enabled)
 ## + single melee attack (opt-in via combat_enabled). Jump has no buffer/coyote/double/variable height.
 ## Attack: one LMB press = one swing (no hold-repeat, no buffer, no combo). Grounded start only; facing locked
-## and movement slowed during the swing; jump disabled during the swing. One hit per victim per swing.
+## and jump is disabled during the swing; movement runs at full speed. One hit per victim per swing.
+## Combat mode: an AnimationTree layers the swing on the upper body only; legs keep the locomotion clip.
 
 const SKELETON_PATH := NodePath("Rig_Medium/Skeleton3D")
 const GENERAL := "res://assets/third_party/kaykit/adventurers/animations/Rig_Medium/Rig_Medium_General.glb"
@@ -35,6 +36,9 @@ const ATTACK_RAY_ORIGIN_HEIGHT := 1.0
 const HURTBOX_MASK := 4
 const WORLD_MASK := 1
 const DAMAGEABLE_META := &"damageable"
+const ATTACK_FILTER_ROOT_BONE := "spine"
+const PARAM_BASE := &"parameters/base/transition_request"
+const PARAM_ATTACK := &"parameters/attack/request"
 
 signal attack_started
 signal attack_finished
@@ -59,8 +63,6 @@ enum State { GROUND, TAKEOFF, AIR, LANDING }
 ## False keeps old labs unchanged (no attack input, no attack clip loaded).
 @export var combat_enabled := false
 @export var attack_damage := 20
-## Horizontal speed multiplier while swinging.
-@export var attack_move_scale := 0.3
 
 @onready var _model: Node3D = $Rogue
 @onready var _anim: AnimationPlayer = $AnimationPlayer
@@ -76,6 +78,9 @@ var _attack_length := 0.0
 var _attack_basis := Basis.IDENTITY
 var _attack_queued := false
 var _unpause_frame := -1
+var _tree: AnimationTree
+var _base_node: AnimationNodeTransition
+var _base_state: StringName
 ## Victims (Damageable instance id) already hit in the current swing; reused, cleared on attack start.
 var _hit_victims: Dictionary[int, bool] = {}
 var _hit_shape := BoxShape3D.new()
@@ -96,8 +101,7 @@ func _ready() -> void:
 		_landing_length = _anim.get_animation(&"jump_land").length
 	if combat_enabled:
 		_attack_length = _anim.get_animation(&"attack").length
-		# Animation and attack clock advance in the same physics step.
-		_anim.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
+		# Animation tree and attack clock advance in the same physics step (tree callback mode set in _build_tree).
 		_hit_shape.size = ATTACK_BOX_SIZE
 		_hit_query.shape = _hit_shape
 		_hit_query.collision_mask = HURTBOX_MASK
@@ -107,7 +111,8 @@ func _ready() -> void:
 		_ray_query.collision_mask = WORLD_MASK
 		_ray_query.exclude = [get_rid()]
 	set_process_unhandled_input(combat_enabled)
-	_anim.play(&"idle")
+	if _tree == null:
+		_anim.play(&"idle")
 
 
 func _notification(what: int) -> void:
@@ -169,7 +174,7 @@ func _physics_process(delta: float) -> void:
 
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z)
 	var rate := acceleration if direction != Vector3.ZERO else deceleration
-	var speed := base_speed * (attack_move_scale if _attacking else 1.0)
+	var speed := base_speed
 	horizontal = horizontal.move_toward(direction * speed, rate * delta)
 	velocity.x = horizontal.x
 	velocity.z = horizontal.z
@@ -199,8 +204,7 @@ func _physics_process(delta: float) -> void:
 			_advance_attack(delta)
 		elif wants_attack and _window_focused and not jumped and is_on_floor() and _state == State.GROUND:
 			_start_attack()
-	if _attacking:
-		return # The attack clip owns the animation; no locomotion/jump clip fights it.
+	# Locomotion/jump base keeps updating during the swing; the attack is a separate filtered upper-body layer.
 	if jump_enabled:
 		_update_jump_state(jumped, direction != Vector3.ZERO, delta)
 	else:
@@ -212,8 +216,7 @@ func _start_attack() -> void:
 	_attack_time = 0.0
 	_attack_basis = Basis(Vector3.UP, rotation.y)
 	_hit_victims.clear()
-	_anim.stop()  # Always restart from frame 0.
-	_anim.play(&"attack", 0.05)
+	_tree.set(PARAM_ATTACK, AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)  # Restarts the upper-body layer at frame 0.
 	attack_started.emit()
 
 
@@ -236,9 +239,8 @@ func _advance_attack(delta: float) -> void:
 func _end_attack() -> void:
 	_attacking = false
 	_attack_time = 0.0
+	_tree.set(PARAM_ATTACK, AnimationNodeOneShot.ONE_SHOT_REQUEST_ABORT)
 	attack_finished.emit()
-	if is_on_floor():
-		_play_locomotion() # Fall is handled by the jump state on the next frame.
 
 
 func _hit_targets() -> void:
@@ -273,7 +275,7 @@ func _update_jump_state(jumped: bool, has_input: bool, delta: float) -> void:
 	if jumped:
 		# From GROUND or LANDING: takeoff interrupts whatever was playing.
 		_state = State.TAKEOFF
-		_anim.play(&"jump_start", 0.05)
+		_play_base(&"jump_start", 0.05)
 		return
 
 	if not grounded:
@@ -281,11 +283,11 @@ func _update_jump_state(jumped: bool, has_input: bool, delta: float) -> void:
 			State.GROUND, State.LANDING:
 				# Ledge fall, or left the floor while landing: fall pose, no takeoff clip.
 				_state = State.AIR
-				_anim.play(&"jump_idle", 0.15)
+				_play_base(&"jump_idle", 0.15)
 			State.TAKEOFF:
 				if velocity.y <= 0.0:
 					_state = State.AIR
-					_anim.play(&"jump_idle", 0.15)
+					_play_base(&"jump_idle", 0.15)
 		return
 
 	match _state:
@@ -293,7 +295,7 @@ func _update_jump_state(jumped: bool, has_input: bool, delta: float) -> void:
 			# Once per ground transition: the state leaves AIR/TAKEOFF here and cannot re-enter without leaving the floor.
 			_state = State.LANDING
 			_landing_elapsed = 0.0
-			_anim.play(&"jump_land", 0.05)
+			_play_base(&"jump_land", 0.05)
 		State.LANDING:
 			_landing_elapsed += delta
 			if _landing_elapsed >= _landing_length or (has_input and _landing_elapsed >= landing_interrupt_time):
@@ -303,10 +305,86 @@ func _update_jump_state(jumped: bool, has_input: bool, delta: float) -> void:
 			_play_locomotion()
 
 
+## Base locomotion/jump clip. Combat mode routes it through the AnimationTree transition (attack layer untouched);
+## otherwise it plays on the AnimationPlayer exactly as before.
+func _play_base(clip: StringName, fade: float) -> void:
+	if _tree == null:
+		if _anim.current_animation != clip:
+			_anim.play(clip, fade)
+		return
+	if _base_state == clip:
+		return
+	_base_state = clip
+	_base_node.xfade_time = fade
+	_tree.set(PARAM_BASE, String(clip))
+
+
 func _play_locomotion() -> void:
-	var clip := &"walk" if Vector3(velocity.x, 0.0, velocity.z).length() > MOVING_THRESHOLD else &"idle"
-	if _anim.current_animation != clip:
-		_anim.play(clip, 0.15)
+	_play_base(&"walk" if Vector3(velocity.x, 0.0, velocity.z).length() > MOVING_THRESHOLD else &"idle", 0.15)
+
+
+## Combat mode only. BlendTree: base (Transition: idle/walk[/jump_*]) -> attack (OneShot, clip "attack", filtered to
+## the spine and all its descendants) -> output. The legs/hips/root keep playing the base clip during the swing.
+func _build_tree(skeleton: Skeleton3D) -> PackedStringArray:
+	var errors := PackedStringArray()
+	for bone in [ATTACK_FILTER_ROOT_BONE, "hips", "root", "upperleg.l", "upperleg.r"]:
+		if skeleton.find_bone(bone) < 0:
+			errors.append("Bone '%s' tidak ada di %s" % [bone, SKELETON_PATH])
+	if not errors.is_empty():
+		return errors
+	var spine := skeleton.find_bone(ATTACK_FILTER_ROOT_BONE)
+	var upper_bones: Array[String] = []
+	for bone in skeleton.get_bone_count():
+		var cursor := bone
+		while cursor >= 0 and cursor != spine:
+			cursor = skeleton.get_bone_parent(cursor)
+		if cursor == spine:
+			upper_bones.append(skeleton.get_bone_name(bone))
+	for excluded in ["root", "hips", "upperleg.l", "upperleg.r"]:
+		if upper_bones.has(excluded):
+			errors.append("Bone '%s' seharusnya bukan keturunan '%s'" % [excluded, ATTACK_FILTER_ROOT_BONE])
+	if not errors.is_empty():
+		return errors
+
+	var base_clips: Array[StringName] = [&"idle", &"walk"]
+	if jump_enabled:
+		base_clips.append_array(JUMP_CLIPS.keys())
+	_base_node = AnimationNodeTransition.new()
+	_base_node.input_count = base_clips.size()
+	_base_node.xfade_time = 0.15
+	var root := AnimationNodeBlendTree.new()
+	root.add_node(&"base", _base_node, Vector2(0, 0))
+	for i in base_clips.size():
+		_base_node.set_input_name(i, base_clips[i])
+		var clip_node := AnimationNodeAnimation.new()
+		clip_node.animation = base_clips[i]
+		root.add_node(StringName("clip_%s" % base_clips[i]), clip_node, Vector2(-300, i * 100))
+		root.connect_node(&"base", i, StringName("clip_%s" % base_clips[i]))
+	var attack_clip := AnimationNodeAnimation.new()
+	attack_clip.animation = &"attack"
+	root.add_node(&"attack_clip", attack_clip, Vector2(0, 400))
+	var one_shot := AnimationNodeOneShot.new()
+	one_shot.fadein_time = 0.05
+	one_shot.fadeout_time = 0.1
+	one_shot.filter_enabled = true
+	for bone in upper_bones:
+		one_shot.set_filter_path(NodePath("%s:%s" % [SKELETON_PATH, bone]), true)
+	root.add_node(&"attack", one_shot, Vector2(300, 0))
+	root.connect_node(&"attack", 0, &"base")
+	root.connect_node(&"attack", 1, &"attack_clip")
+	root.connect_node(&"output", 0, &"attack")
+
+	_tree = AnimationTree.new()
+	_tree.name = &"AnimationTree"
+	add_child(_tree)
+	_tree.root_node = _tree.get_path_to(_model)
+	_tree.anim_player = _tree.get_path_to(_anim)
+	_tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
+	_tree.tree_root = root
+	_tree.active = true
+	_base_state = &"idle"
+	_tree.set(PARAM_BASE, "idle")
+	return errors
 
 
 ## Duplicates only the needed clips (idle/walk, plus jump/attack clips when enabled); source imports stay untouched.
@@ -345,6 +423,8 @@ func _build_library() -> PackedStringArray:
 		source.free()
 	if errors.is_empty():
 		_anim.add_animation_library(&"", library)
+		if combat_enabled:
+			errors.append_array(_build_tree(skeleton))
 	return errors
 
 
