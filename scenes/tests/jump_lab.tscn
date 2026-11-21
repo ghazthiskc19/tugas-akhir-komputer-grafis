@@ -1,0 +1,66 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/tests/movement_lab.tscn" id="1_lab"]
+
+[sub_resource type="StandardMaterial3D" id="PlatformMat"]
+albedo_color = Color(0.95, 0.5, 0.15, 1)
+roughness = 1.0
+metallic_specular = 0.0
+
+[sub_resource type="BoxMesh" id="LowMesh"]
+material = SubResource("PlatformMat")
+size = Vector3(2.5, 0.45, 2.5)
+
+[sub_resource type="BoxShape3D" id="LowShape"]
+size = Vector3(2.5, 0.45, 2.5)
+
+[sub_resource type="BoxMesh" id="HighMesh"]
+material = SubResource("PlatformMat")
+size = Vector3(2.5, 0.8, 2.5)
+
+[sub_resource type="BoxShape3D" id="HighShape"]
+size = Vector3(2.5, 0.8, 2.5)
+
+[node name="I04_JumpLab" instance=ExtResource("1_lab")]
+
+[node name="Player" parent="." index="4"]
+jump_enabled = true
+
+[node name="PlatformLow" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.225, 2.5)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/PlatformLow"]
+mesh = SubResource("LowMesh")
+
+[node name="Collision" type="CollisionShape3D" parent="World/PlatformLow"]
+shape = SubResource("LowShape")
+
+[node name="PlatformHigh" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.4, 3.5)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/PlatformHigh"]
+mesh = SubResource("HighMesh")
+
+[node name="Collision" type="CollisionShape3D" parent="World/PlatformHigh"]
+shape = SubResource("HighShape")
+
+[node name="LowLabel" type="Label3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, -1.5, 0.47, 2.5)
+pixel_size = 0.012
+modulate = Color(0.04, 0.16, 0.23, 1)
+outline_size = 0
+text = "PLATFORM 0,45 m"
+
+[node name="HighLabel" type="Label3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 2, 0.82, 3.5)
+pixel_size = 0.012
+modulate = Color(0.04, 0.16, 0.23, 1)
+outline_size = 0
+text = "PLATFORM 0,8 m"
+
+[node name="Header" parent="HUD" index="0"]
+text = "I04 • LOMPAT"
+
+[node name="Help" parent="HUD" index="1"]
+text = "WASD: gerak • Space: lompat sekali\nCoba platform 0,45 m → 0,8 m. Tahan Space tidak mengulang; tidak ada double-jump."
+autowrap_mode = 3

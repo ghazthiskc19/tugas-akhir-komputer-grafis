@@ -75,10 +75,22 @@ Buka `scenes/tests/movement_lab.tscn` lalu **F6**. Klik jendela game agar meneri
 
 Baseline yang boleh dituning setelah review: kecepatan `4 m/s`, akselerasi `20 m/s²`, perlambatan `25 m/s²`, dan turn rate `12/s`. Tombol diikat lewat physical keycode untuk posisi WASD. Layer world `1`, player `2`, mask player `1`; capsule radius `0.45 m`, tinggi `2.18 m`. Rasa gerak dan foot sliding masih perlu penilaian pengguna; loop jalan bukan bukti stride cocok dengan kecepatan dunia.
 
-[Preview arena I03](docs/implementation/evidence/i03-movement.png). I03 hanya menguji gerak darat dengan gravitasi kontak lantai; **I04/lompat menunggu persetujuan**. I01, I02 dan main scene lama tidak diubah.
+[Preview arena I03](docs/implementation/evidence/i03-movement.png). I03 tetap menguji gerak darat tanpa lompat; **I03 telah disetujui pengguna**, dan lompat tersedia terpisah pada I04. I01, I02 dan main scene lama tidak diubah.
 
 ```powershell
 godot --path . res://scenes/tests/movement_lab.tscn
+```
+
+### Review I04: lompat dan platform
+
+Buka `scenes/tests/jump_lab.tscn` lalu **F6**. Gunakan **WASD + Space** untuk naik ke platform oranye **0,45 m**, lalu menyeberang ke platform **0,8 m**. Coba melompat diam, berjalan turun dari tepi, menahan Space sampai landing, dan menekan ulang saat masih di udara.
+
+Hanya press baru saat grounded yang melompat. Tinggi baseline sekitar **1,37 m terukur**, tanpa double-jump atau hold auto-jump; kamera masih tetap. Nilai kenyamanan naik/jatuh/landing, bukan combat. I03 tetap tanpa lompat; **I05 menunggu review I04**.
+
+[Preview I04](docs/implementation/evidence/i04-jump-lab.png)
+
+```powershell
+godot --path . res://scenes/tests/jump_lab.tscn
 ```
 
 ## Struktur

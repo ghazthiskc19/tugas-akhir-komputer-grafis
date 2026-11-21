@@ -8,10 +8,10 @@ Dokumen ini menjadi checklist pelaksanaan Level 1, dari pencarian asset hingga d
 
 | Informasi | Status |
 |---|---|
-| Tahap aktif | I03: gerak darat selesai diuji agent, menunggu review pengguna |
-| Pekerjaan berikutnya | Jalankan `scenes/tests/movement_lab.tscn` dengan F6; cek WASD, arah kamera, berhenti/putar, diagonal dan tabrakan dinding. I04/lompat belum diizinkan |
+| Tahap aktif | I04: lompat dan landing selesai diuji agent, menunggu review pengguna |
+| Pekerjaan berikutnya | Jalankan `scenes/tests/jump_lab.tscn` dengan F6, WASD + Space: coba dua platform, tahan Space dan tekan ulang saat di udara. I05/kamera follow belum diizinkan |
 | Fondasi yang tersedia | Project Godot, scene preview, Git, konfigurasi MCP, dokumen desain, asset pihak ketiga di `assets/third_party/` (ter-import tanpa error) |
-| Gameplay | Prototype gerak darat I03 tersedia pada arena terpisah; combat, puzzle, boss dan generator belum diimplementasikan |
+| Gameplay | Prototype gerak darat dan lompat tersedia pada arena uji; combat, puzzle, boss dan generator belum diimplementasikan |
 | Asset produksi 3D dan audio | Bahan awal cukup, tidak perlu download model wajib lagi. Salinan lokal: 31 dari 54 kebutuhan `IMPORTED`, 23 sisanya perlu perakitan/edit/retarget (clone baru tanpa FBX Mixamo memiliki lebih sedikit). Belum ada yang `VERIFIED`; lihat inventaris |
 | Hambatan yang diketahui | Gap nyata: retarget/aplikasi N06 dan N11 serta authoring wake/charge boss (FBX Mixamo hanya salinan lokal, repo publik); kode terrain procedural, puzzle, UI dan perakitan scene; reskin guardian/golem (recolor cukup); loop clip harus di-set manual. Tidak ada model/paket wajib baru |
 
@@ -55,7 +55,7 @@ Keputusan pengguna, 21 November 2026: urutan utama dipertahankan, tetapi impleme
 | I07 | `feat(camera): avoid world geometry occlusion` | Camera probe/collision, exclude pemain, dan pengembalian jarak kamera secara mulus. | Kamera tidak menembus tembok/tanah dan tidak bergetar saat dekat obstacle. |
 | I08 | `feat(player): add mouse-world aiming` | Aiming ke permukaan dengan elevasi, fallback cursor miss, pemisahan arah gerak/arah aim, serta perpindahan aiming/orbit; belum menambahkan serangan. | Arah aim terbaca saat bergerak, di tangga dan setelah orbit; framing simbol/target masih jelas. |
 
-**Gate saat ini:** pengguna telah menyetujui I01 (`81ddc40`) dan I02 (`eca321c`) setelah mencoba di Godot. I03 tersedia dan lolos uji input/collision serta render; [bukti arena](evidence/i03-movement.png). **Menunggu review I03; I04 (lompat), kamera follow dan combat belum dimulai.**
+**Gate saat ini:** pengguna telah menyetujui I01 (`81ddc40`), I02 (`eca321c`), dan I03 (`92e85a4`) setelah mencoba langsung. I04 tersedia dan lolos uji lompat/platform serta render; [bukti arena](evidence/i04-jump-lab.png). **Menunggu review I04; kamera follow I05 belum dimulai.**
 
 Sesudah batch ini diterima, combat dan tahap berikutnya dipecah dengan pola yang sama mengikuti P05 dan seterusnya. Scope gameplay, puzzle, boss dan procedural generation tetap berlaku; tabel ini tidak menyatakan tahap tersebut selesai atau dibatalkan.
 
@@ -418,3 +418,12 @@ Task berikutnya yang dependensinya sudah siap:
 - Uji nyata Godot 4.7.2 Compatibility, Radeon RX 5500M, 1280×720, exit 0 tanpa error/warning. Event physical WASD menggerakkan pemain; uji W dan putar arah lolos. Kecepatan lurus/diagonal terukur sama 4.000/4.000 m/s. Pelepasan tombol menghentikan gerak dan kembali idle. Empat boundary menahan pusat capsule sekitar ±6.55 m; dinding tengah menahan posisi z sekitar -0.248 m. Pemain tetap grounded; simulasi notifikasi focus loss menghentikan gerak. Alt-tab fisik dan rasa gerak masih perlu review pengguna.
 - [Screenshot arena](evidence/i03-movement.png) diperiksa. Foot sliding/kenyamanan belum dinyatakan final. Belum ada kontrol lompat, aiming, orbit/follow, hitbox/damage, musuh atau pulau procedural.
 - I02 diterima pengguna; I03 akan diserahkan lewat commit `feat(player): add camera-relative ground movement`. Tunggu review I03 sebelum I04.
+
+## Hasil I04 — lompat, gravitasi dan landing
+
+- Scene `scenes/tests/jump_lab.tscn` mewarisi arena I03; controller `scripts/player/ground_player.gd` menambahkan `jump_enabled` opt-in. I03 tetap `false`, hanya I04 mengaktifkannya. Input `jump` = physical Space. Main scene dan asset sumber tetap.
+- Baseline impulse `5.1 m/s`, gravitasi project (`9.8 m/s²`), puncak teoritis sekitar 1.33 m; pengukuran diskret runtime sekitar 1.37 m. Naik memakai `Jump_Start`, jatuh `Jump_Idle` loop, mendarat `Jump_Land` sekali lalu idle/jalan. Gerak horizontal tidak diblok landing; gerak boleh memotong clip landing setelah 0.25 s. Jump baru yang valid dapat memotong landing.
+- Tidak ada double-jump, hold auto-jump, buffer/coyote atau variable jump height. Grounded + press edge wajib untuk takeoff. Gravitasi juga menangani berjalan turun dari tepi.
+- Uji Godot 4.7.2 Compatibility pada 1280×720, exit 0 tanpa error/warning: Space meluncurkan pemain, press kedua di udara tidak mereset kecepatan vertikal, menahan Space melewati landing tidak mengulang, press baru setelah landing bekerja. Urutan clip teramati `jump_start → jump_idle → jump_land → idle`.
+- Uji traversal: mendarat pada platform rendah (`y≈0.450`) dan platform tinggi (`y≈0.800`) dengan gap 1 m; berjalan dari tepi kembali grounded di lantai. I03 diuji terpisah dan tetap tidak melompat saat Space ditekan.
+- Bukti: [arena](evidence/i04-jump-lab.png), [landing platform tinggi](evidence/i04-platform.png). Tinggi/jarak dan rasa landing masih menunggu pengguna. Kamera masih tetap; I05 belum dimulai.
