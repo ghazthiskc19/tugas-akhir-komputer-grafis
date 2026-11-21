@@ -85,12 +85,24 @@ godot --path . res://scenes/tests/movement_lab.tscn
 
 Buka `scenes/tests/jump_lab.tscn` lalu **F6**. Gunakan **WASD + Space** untuk naik ke platform oranye **0,45 m**, lalu menyeberang ke platform **0,8 m**. Coba melompat diam, berjalan turun dari tepi, menahan Space sampai landing, dan menekan ulang saat masih di udara.
 
-Hanya press baru saat grounded yang melompat. Tinggi baseline sekitar **1,37 m terukur**, tanpa double-jump atau hold auto-jump; kamera masih tetap. Nilai kenyamanan naik/jatuh/landing, bukan combat. I03 tetap tanpa lompat; **I05 menunggu review I04**.
+Hanya press baru saat grounded yang melompat. Tinggi baseline sekitar **1,37 m terukur**, tanpa double-jump atau hold auto-jump; kamera masih tetap. I04 telah disetujui pengguna. Scene lama ini tetap tersedia sebagai pembanding; follow ditambahkan terpisah pada I05.
 
 [Preview I04](docs/implementation/evidence/i04-jump-lab.png)
 
 ```powershell
 godot --path . res://scenes/tests/jump_lab.tscn
+```
+
+### Review I05: kamera follow
+
+Buka `scenes/tests/follow_lab.tscn` lalu **F6**, gunakan **WASD + Space**. Kamera mengikuti posisi dan ketinggian secara halus dengan arah pandang tetap; berputar arah gerak tidak memutar kamera. Nilai framing, kelancaran mengikuti lompatan dan apakah damping terasa tertinggal atau terlalu cepat.
+
+Baseline: FOV 50°, focus height 1 m, offset `(0, 7, 9)`, damping horizontal `8/s` dan vertikal `5/s`. [Preview follow](docs/implementation/evidence/i05-follow.png) dan [lompat](docs/implementation/evidence/i05-jump.png).
+
+**Belum ada orbit atau collision kamera**: penghalang masih dapat menutupi pemain; itu scope I07, bukan fitur yang sudah selesai. I06 menunggu review I05. Scene I01–I04 dan main scene tidak diubah.
+
+```powershell
+godot --path . res://scenes/tests/follow_lab.tscn
 ```
 
 ## Struktur

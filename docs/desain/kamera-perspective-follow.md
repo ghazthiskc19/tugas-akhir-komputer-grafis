@@ -1,6 +1,6 @@
 # Kamera Perspective Follow
 
-Status: ditetapkan pengguna pada 11 November 2026. Dokumen ini menggantikan konsep kamera top-down sebelumnya. Sistem kamera gameplay belum diimplementasikan.
+Status: ditetapkan pengguna pada 11 November 2026. Dokumen ini menggantikan konsep kamera top-down sebelumnya. **I05 mengimplementasikan prototype follow posisi/ketinggian** pada `scenes/tests/follow_lab.tscn`, menunggu review pengguna. Orbit, aiming dan collision kamera pada spesifikasi di bawah belum diimplementasikan.
 
 ## Posisi dan proyeksi
 

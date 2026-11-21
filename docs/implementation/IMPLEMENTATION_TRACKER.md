@@ -8,8 +8,8 @@ Dokumen ini menjadi checklist pelaksanaan Level 1, dari pencarian asset hingga d
 
 | Informasi | Status |
 |---|---|
-| Tahap aktif | I04: lompat dan landing selesai diuji agent, menunggu review pengguna |
-| Pekerjaan berikutnya | Jalankan `scenes/tests/jump_lab.tscn` dengan F6, WASD + Space: coba dua platform, tahan Space dan tekan ulang saat di udara. I05/kamera follow belum diizinkan |
+| Tahap aktif | I05: kamera elevated follow selesai diuji agent, menunggu review pengguna |
+| Pekerjaan berikutnya | Jalankan `scenes/tests/follow_lab.tscn` dengan F6, WASD + Space: nilai framing serta damping gerak/lompatan. Orbit I06 dan collision kamera I07 belum dimulai |
 | Fondasi yang tersedia | Project Godot, scene preview, Git, konfigurasi MCP, dokumen desain, asset pihak ketiga di `assets/third_party/` (ter-import tanpa error) |
 | Gameplay | Prototype gerak darat dan lompat tersedia pada arena uji; combat, puzzle, boss dan generator belum diimplementasikan |
 | Asset produksi 3D dan audio | Bahan awal cukup, tidak perlu download model wajib lagi. Salinan lokal: 31 dari 54 kebutuhan `IMPORTED`, 23 sisanya perlu perakitan/edit/retarget (clone baru tanpa FBX Mixamo memiliki lebih sedikit). Belum ada yang `VERIFIED`; lihat inventaris |
@@ -55,7 +55,7 @@ Keputusan pengguna, 21 November 2026: urutan utama dipertahankan, tetapi impleme
 | I07 | `feat(camera): avoid world geometry occlusion` | Camera probe/collision, exclude pemain, dan pengembalian jarak kamera secara mulus. | Kamera tidak menembus tembok/tanah dan tidak bergetar saat dekat obstacle. |
 | I08 | `feat(player): add mouse-world aiming` | Aiming ke permukaan dengan elevasi, fallback cursor miss, pemisahan arah gerak/arah aim, serta perpindahan aiming/orbit; belum menambahkan serangan. | Arah aim terbaca saat bergerak, di tangga dan setelah orbit; framing simbol/target masih jelas. |
 
-**Gate saat ini:** pengguna telah menyetujui I01 (`81ddc40`), I02 (`eca321c`), dan I03 (`92e85a4`) setelah mencoba langsung. I04 tersedia dan lolos uji lompat/platform serta render; [bukti arena](evidence/i04-jump-lab.png). **Menunggu review I04; kamera follow I05 belum dimulai.**
+**Gate saat ini:** pengguna telah menyetujui I01 (`81ddc40`), I02 (`eca321c`), I03 (`92e85a4`) dan I04 (`e5d74cc`) setelah mencoba langsung. I05 tersedia dan lolos uji follow/render; [bukti](evidence/i05-follow.png). **Menunggu review I05; I06/orbit belum dimulai.**
 
 Sesudah batch ini diterima, combat dan tahap berikutnya dipecah dengan pola yang sama mengikuti P05 dan seterusnya. Scope gameplay, puzzle, boss dan procedural generation tetap berlaku; tabel ini tidak menyatakan tahap tersebut selesai atau dibatalkan.
 
@@ -427,3 +427,12 @@ Task berikutnya yang dependensinya sudah siap:
 - Uji Godot 4.7.2 Compatibility pada 1280×720, exit 0 tanpa error/warning: Space meluncurkan pemain, press kedua di udara tidak mereset kecepatan vertikal, menahan Space melewati landing tidak mengulang, press baru setelah landing bekerja. Urutan clip teramati `jump_start → jump_idle → jump_land → idle`.
 - Uji traversal: mendarat pada platform rendah (`y≈0.450`) dan platform tinggi (`y≈0.800`) dengan gap 1 m; berjalan dari tepi kembali grounded di lantai. I03 diuji terpisah dan tetap tidak melompat saat Space ditekan.
 - Bukti: [arena](evidence/i04-jump-lab.png), [landing platform tinggi](evidence/i04-platform.png). Tinggi/jarak dan rasa landing masih menunggu pengguna. Kamera masih tetap; I05 belum dimulai.
+
+## Hasil I05 — elevated smooth follow
+
+- File baru `scripts/camera/smooth_follow_camera.gd` dan `scenes/tests/follow_lab.tscn`; scene mewarisi I04 dan memasang script pada Camera3D yang sudah dipakai controller. I01–I04, main scene dan controller tidak diubah.
+- Baseline kamera Perspective FOV 50°, focus point 1 m di atas pemain, offset dunia `(0, 7, 9)` dari focus point. Posisi awal tepat sesuai target sehingga tidak ada fly-in. Pitch runtime sekitar 37.9° ke bawah, yaw tetap 0.
+- Damping eksponensial frame-independent: horizontal `8/s`, vertikal `5/s`. Hanya posisi yang berubah setelah inisialisasi; rotasi pemain tidak memutar kamera.
+- Uji nyata Godot 4.7.2 Compatibility/Radeon RX 5500M, 1280×720, exit 0 tanpa error/warning. Event W menggerakkan pemain dan kamera mengikuti horizontal sekitar 2.45 m. Space menyebabkan kamera naik sekitar 1.22 m dengan perubahan vertikal per frame maksimum sekitar 0.139 m pada run uji. Basis kamera tetap saat pemain berputar/lompat. Angka ini hasil run, bukan batas performa atau janji identik tiap mesin.
+- Bukti visual [follow](evidence/i05-follow.png) dan [lompat](evidence/i05-jump.png). Kenyamanan damping dan framing menunggu review pengguna. Tembok dapat menutupi pemain karena collision kamera sengaja belum dibuat (I07); orbit I06, aiming dan combat juga belum ditambahkan.
+- I04 diterima pengguna; I05 diserahkan dengan judul commit `feat(camera): add elevated smooth follow`. Tunggu review I05 sebelum I06.
