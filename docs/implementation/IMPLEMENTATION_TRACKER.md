@@ -8,10 +8,10 @@ Dokumen ini menjadi checklist pelaksanaan Level 1, dari pencarian asset hingga d
 
 | Informasi | Status |
 |---|---|
-| Tahap aktif | Melee satu hit ke dummy teruji runtime; menunggu review pengguna |
-| Pekerjaan berikutnya | Review iterasi kecil melee di `scenes/tests/melee_lab.tscn`; belum lanjut combo/stamina atau enemy AI |
+| Tahap aktif | Batch arena gabungan, fast-paced controls dan menu preferensi diterima pengguna pada 22 November 2026 |
+| Pekerjaan berikutnya | Commit/push batch yang diterima, compact dengan `SESSION_HANDOFF.md`, lalu P09: blockout pulau tetap dan jalur eksplorasi |
 | Fondasi yang tersedia | Project Godot, scene preview, Git, konfigurasi MCP, dokumen desain, asset pihak ketiga di `assets/third_party/` (ter-import tanpa error) |
-| Gameplay | Gerak/lompat dan kamera diterima; melee satu hit, dummy HP dan death tersedia di lab. Combo, defense, AI, puzzle, boss dan generator belum dibuat |
+| Gameplay | Combo, block/dodge/stamina, potion, tiga archetype musuh, interaksi/pickup, checkpoint/respawn sesi dan preferensi kontrol tersedia di arena tetap. Pulau/procedural, puzzle, boss dan shader polish belum dibuat |
 | Asset produksi 3D dan audio | Bahan awal cukup, tidak perlu download model wajib lagi. Salinan lokal: 31 dari 54 kebutuhan `IMPORTED`, 23 sisanya perlu perakitan/edit/retarget (clone baru tanpa FBX Mixamo memiliki lebih sedikit). Belum ada yang `VERIFIED`; lihat inventaris |
 | Hambatan yang diketahui | Gap nyata: retarget/aplikasi N06 dan N11 serta authoring wake/charge boss (FBX Mixamo hanya salinan lokal, repo publik); kode terrain procedural, puzzle, UI dan perakitan scene; reskin guardian/golem (recolor cukup); loop clip harus di-set manual. Tidak ada model/paket wajib baru |
 
@@ -55,7 +55,7 @@ Keputusan pengguna, 21 November 2026: urutan utama dipertahankan, tetapi impleme
 | I07 | `feat(camera): avoid world geometry occlusion` | Camera probe/collision, exclude pemain, dan pengembalian jarak kamera secara mulus. | Kamera tidak menembus tembok/tanah dan tidak bergetar saat dekat obstacle. |
 | I08 | `feat(player): add mouse-world aiming` | **Superseded, dihapus:** mouse-world aiming dan `MouseWorldAim` diganti karakter menghadap arah gerak; melee kelak menghadap karakter, tanpa lock-on. Semula: aiming ke permukaan dengan fallback cursor miss; belum ada serangan. | Arsip. |
 
-**Gate saat ini:** pengguna menerima kontrol kamera third-person tanpa auto-zoom obstacle dan mengizinkan melanjutkan. Iterasi berikutnya dibatasi **satu serangan melee ke dummy**, HP/damage, deduplikasi per swing dan death sekali; setelah selesai review lagi. Combo, stamina, block/dodge, potion dan AI belum bagian iterasi ini.
+**Gate saat ini:** pengguna menerima batch gabungan setelah playtest, mengizinkan commit/push dan kelanjutan. Simpan konteks pada [Session Handoff](SESSION_HANDOFF.md), compact terlebih dahulu, lalu lanjut P09 blockout pulau tetap. Shader tetap polish akhir; penerimaan prototype tidak berarti seluruh acceptance/release sudah lolos.
 
 Polish shader dikerjakan **setelah gameplay inti stabil**, sebelum regresi/export akhir. Pertahankan palet pengguna dan Compatibility; nilai visual serta frame time diuji bersama, bukan menambah efek berat di tengah prototype.
 
@@ -68,6 +68,14 @@ Runtime Godot 4.7.2 Compatibility membuktikan hold tidak mengulang; dua hurtbox 
 Revisi layering teruji di runtime Godot 4.7.2 Compatibility: `AnimationTree` memakai base locomotion dan OneShot swing dengan filter spine/upper-body, tanpa hips/legs. Kecepatan berjalan dan saat menyerang sama-sama `4 m/s`; pose upperleg/lowerleg/foot dan upperarm/lowerarm/hand berubah bersamaan selama swing. Facing tetap terkunci, hit tetap satu kali (HP 60→40), pause membekukan jam serangan dan recovery selesai. [Preview layering](evidence/layered-melee.png). Kenyamanan blend masih menunggu review pengguna.
 
 Revisi rotasi: runtime membuktikan arah berubah `1,428 rad` saat swing masih aktif, kecepatan tetap `4 m/s`, dan arah hitbox selaras dengan karakter. Aturan lock arah pada bukti sebelumnya sudah diganti.
+
+### Tuning fast-paced dan preferensi lokal
+
+Default gerak `6 m/s`, sprint Shift `9 m/s`, dodge Alt `12 m/s / 0,25 s` dengan iframe `0,18 s`; sprint memakai animasi Running_A dan debu/jejak ringan world-space. Default tiap swing `0,2 s`; TimeScale hanya pada cabang attack, active window/combo dinormalisasi, locomotion kaki tetap independen.
+
+Esc → Pengaturan: slider gerak, sprint, durasi swing `0,1–0,6 s`, sensitivitas dan jarak kamera; Terapkan menyimpan ConfigFile lokal, Reset Default menyiapkan default untuk diterapkan. Swing aktif tidak di-retime; perubahan mulai swing berikutnya.
+
+Runtime Godot 4.7.2 Compatibility membuktikan gerak 6/sprint 9, Running_A, sprint tetap saat menyerang, Alt dodge; timescale `6,8333×` memainkan klip pertama penuh dalam 0,2 s, combo tiga hit memberi 75 damage tepat satu per swing dan layer selesai. GUI diuji dengan klik tombol dan keyboard slider: Apply, file save, reload scene dan Reset Default lolos; mengganti durasi 0,2→0,3 saat pause tidak mengubah ayunan aktif. [Sprint](evidence/fast-sprint.png) · [Pengaturan](evidence/preferences-menu.png). Batch gabungan tetap belum dipush selama review.
 
 ### Revisi kontrol kamera (21 November 2026)
 
@@ -167,9 +175,9 @@ Dependensi: P03; gunakan placeholder atau karakter yang lolos P02. Acuan: [Camer
 
 Dependensi: P03–P04.
 
-- [ ] **P05-01** Buat deteksi objek interactable, prioritas satu target, jarak/range, prompt, dan penolakan interaksi ketika state pemain tidak mengizinkan.
-- [ ] **P05-02** Buat health/damage dan event death yang hanya diproses sekali. Hindari beberapa sistem mengubah HP tanpa jalur yang sama.
-- [ ] **P05-03** Buat hitbox/hurtbox dengan attack ID dan daftar target yang sudah terkena, agar satu swing tidak memberi damage berulang per physics frame.
+- [x] **P05-01** Deteksi satu interactable terdekat yang valid, range/LOS, prompt E dan pembatasan state pemain tersedia; pickup/checkpoint diuji runtime.
+- [x] **P05-02** Health/damage dan death sekali tersedia; damage musuh melalui `player.receive_damage()` agar defense/potion tidak dilewati.
+- [x] **P05-03** Hurtbox dan daftar korban per swing tersedia; dua hurtbox satu pemilik terbukti tidak menggandakan hit.
 - [ ] **P05-04** Definisikan state minimum player: locomotion, attack, block, dodge, potion, hurt/dead. Tetapkan prioritas serta pembatalan berdasarkan desain, bukan urutan callback kebetulan.
 - [ ] **P05-05** Siapkan debug HP/stamina, hitbox, state, dan target interaksi yang dapat dimatikan untuk build pemain.
 
@@ -179,13 +187,13 @@ Dependensi: P03–P04.
 
 Dependensi: P05 dan mapping animasi minimum P02. Acuan: bagian combat/resource pada [konsep](../konsep-game.md).
 
-- [ ] **P06-01** Implementasikan satu tombol combo tiga hit: dua hit cepat dan finisher. Input hanya diterima pada timing window; early input tidak dibuffer dan hold tidak menjalankan auto-combo.
-- [ ] **P06-02** Rotasi bebas selama swing; hitbox mengikuti arah hadap terkini. Movement full speed tanpa slowdown dan kaki idle/jalan diblend dengan swing badan atas. Tanpa mouse-ground aim/lock-on. Animasi attack selesai sebelum block/dodge.
+- [x] **P06-01** Combo tiga hit berbasis press dalam timing window tersedia; early input dibuang dan hold tidak mengulang. Runtime damage 20+20+35 lolos.
+- [x] **P06-02** Rotasi bebas, full-speed movement dan upper-body swing + kaki locomotion tersedia; attack tetap memiliki prioritas atas block/dodge.
 - [ ] **P06-03** Sinkronkan animasi dan active hit window; attack tidak memakai stamina. Uji seluruh rangkaian terhadap dummy bergerak.
-- [ ] **P06-04** Implementasikan satu pool stamina, held-block drain, dodge fixed cost, regen delay, penolakan aksi saat tidak cukup, dan clamp tanpa nilai negatif.
+- [x] **P06-04** Stamina bersama block/dodge, drain/cost, regen delay, refusal dan clamp tersedia dan diuji runtime. Sprint tidak menambah drain stamina.
 - [ ] **P06-05** Implementasikan block yang mengurangi damage semua arah dan dodge i-frames untuk melee, projectile, serta boss. Pisahkan collision fisik dari invulnerability.
 - [ ] **P06-06** Implementasikan inventory potion terbatas, pickup/drop, HUD quantity, dan penggunaan manual. Angka kapasitas/heal/drop merupakan baseline playtest.
-- [ ] **P06-07** Implementasikan animasi minum dengan slow movement dan larangan attack bersamaan. Heal dan konsumsi item hanya pada completion; hit membatalkan tanpa menghabiskan item.
+- [x] **P06-07** Animasi minum authored 1,5 s dengan movement ×0,5 tersedia; hit membatalkan tanpa konsumsi, heal 40 dan konsumsi satu hanya saat completion. Attack/dodge dapat membatalkan channel, bukan berjalan bersamaan.
 - [ ] **P06-08** Uji interaksi potion dengan block/dodge, death, damage pada frame completion, pause, dan pemakaian berturut-turut sesuai baseline yang dicatat.
 
 **Exit:** combat bisa dimainkan dengan resource yang konsisten, bukan hanya animasi yang terlihat; jalankan A05–A08.
@@ -195,10 +203,10 @@ Dependensi: P05 dan mapping animasi minimum P02. Acuan: bagian combat/resource p
 Dependensi: P05–P06. Model dapat berbagi rig/fondasi AI, tetapi perilaku harus berbeda.
 
 - [ ] **P07-01** Buat state idle/patrol bila diperlukan, detect, approach, wind-up, attack, recovery, hurt, dan dead. Tetapkan detection, chase/leash, dan obstacle handling sebagai baseline.
-- [ ] **P07-02** Implementasikan standard melee: approach, satu swing singkat, recovery pendek.
-- [ ] **P07-03** Implementasikan heavy melee: movement lebih lambat, telegraph hantaman kuat, recovery lebih panjang; tanpa combo panjang pada rancangan awal.
-- [ ] **P07-04** Implementasikan ranged: persiapan terbaca dan projectile lurus tanpa homing. Uji hit world/cover, player, dan cleanup setelah impact/lifetime.
-- [ ] **P07-05** Bedakan player/enemy damage ownership; projectile tidak mengenai pemiliknya secara tidak sengaja. Tentukan friendly-fire baseline.
+- [x] **P07-02** Standard melee approach/single swing/recovery tersedia; encounter runtime memberi 12 damage setelah telegraph.
+- [x] **P07-03** Heavy lambat/telegraph panjang/strong hit/recovery panjang tersedia; encounter runtime memberi 32 damage.
+- [x] **P07-04** Ranged windup dan projectile lurus non-homing tersedia; encounter memberi 10 damage dan cover menyerap projectile.
+- [x] **P07-05** Ownership damage player/enemy terpisah; projectile mengecualikan shooter, friendly fire antarmusuh nonaktif.
 - [ ] **P07-06** Terapkan stagger menurut tipe melalui konfigurasi. Jangan menganggap semua hit dapat membatalkan attack heavy atau boss.
 - [ ] **P07-07** Uji encounter satu melee dan satu melee + satu ranged pada ruang yang mendukung movement, block, dan dodge. Validasi batas awal dua musuh aktif di rute pendakian.
 
@@ -209,8 +217,8 @@ Dependensi: P05–P06. Model dapat berbagi rig/fondasi AI, tetapi perilaku harus
 Dependensi: P03, P05–P07. Aturan boss mengikuti [snapshot specification](../desain/boss-penjaga-gerbang.md).
 
 - [ ] **P08-01** Simpan solved puzzle dan collected artifact sebagai state terpisah dengan stable IDs. Artifact hanya dapat dikoleksi sekali.
-- [ ] **P08-02** Implementasikan aktivasi checkpoint, safe respawn point, reset state transient player, dan respawn eksplorasi dengan HP penuh.
-- [ ] **P08-03** Pertahankan jumlah healing tersisa saat respawn eksplorasi; item yang sudah dipakai tidak kembali. Aktivasi checkpoint tidak otomatis memberi healing tambahan.
+- [x] **P08-02** Checkpoint dan respawn eksplorasi tersedia: jeda 2 s, teleport aman, HP/stamina penuh serta reset transient.
+- [x] **P08-03** Potion tersisa dipertahankan; checkpoint tidak memberi heal/potion gratis. Runtime pemakaian 5→4 lalu death/respawn mempertahankan 4 lolos.
 - [ ] **P08-04** Simpan killed-enemy state pada Jalur Menuju Puncak. Putuskan dan dokumentasikan reset musuh/pickup area lain; jangan memperluas aturan rute itu tanpa catatan baseline.
 - [ ] **P08-05** Buat snapshot HP, stamina, dan potion sebelum boss attempt pertama. Snapshot tidak memberi heal gratis dan tidak ditimpa oleh retry gagal.
 - [ ] **P08-06** Pada kegagalan boss, tetapkan resource ke nilai snapshot; reset HP/fase boss, projectile, hitbox aktif, timer, target, dan event tertunda. Progres pulau tetap tersimpan.

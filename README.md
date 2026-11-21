@@ -125,13 +125,23 @@ Bukti I06–I08 lama (MMB orbit dan aiming) **superseded**: [collision lama](doc
 godot --path . res://scenes/tests/third_person_lab.tscn
 ```
 
-### Review melee satu hit
+### Arsip review melee awal (sebelum batch combo/resource)
 
 Buka `scenes/tests/melee_lab.tscn` lalu **F6**. **Klik kiri** untuk satu swing ke arah hadap karakter; tahan klik tidak mengulang serangan. Dummy memperlihatkan HP dan hanya menerima satu damage per swing. Coba di depan/belakang, di luar jangkauan dan dengan dinding di antara pemain-dummy.
 
 Ini iterasi dasar, **belum combo, stamina, block/dodge, potion atau enemy AI**. Kamera tanpa auto-zoom obstacle; Esc menjeda, **R** mengulang lab. Serangan mulai grounded dan lompat ditahan selama swing. **Movement full speed dan rotasi bebas; hitbox mengikuti arah hadap terkini**, kaki idle/jalan dan upper-body swing dipadukan. Dummy 60 HP, damage 20/swing.
 
 Shader/material/lighting/air/efek dipoles setelah gameplay inti stabil, sesuai palet pengguna dan anggaran performa renderer Compatibility; belum dikerjakan pada iterasi ini.
+
+### Review arena batch terbaru
+
+Jalankan `scenes/tests/adventure_lab.tscn` dengan **F6**. Arena tetap ini menggabungkan combo, defense, potion, tiga musuh, pickup dan checkpoint; belum pulau/procedural/puzzle/boss.
+
+Baseline default fast-paced: **WASD** 6 m/s, **Shift tahan** sprint 9 m/s + jejak debu, **Alt** dodge, **LMB** combo, **RMB tahan** block, **Q** potion, **E** interaksi, **Space** lompat, **Esc** jeda. Sprint tanpa drain stamina tambahan; block/dodge memakai stamina. Default swing **0,2 s** mencakup playback penuh dan timing hit/combo. Serangan tanpa slowdown dan rotasi bebas.
+
+Checkpoint tidak memberi heal gratis. Respawn memulihkan HP/stamina, mempertahankan potion tersisa, artefak/pickup yang sudah diambil dan musuh yang sudah mati selama sesi. **Batch diterima pengguna pada 22 November 2026.** Progres, batas verifikasi dan urutan berikutnya dicatat di [Session Handoff](docs/implementation/SESSION_HANDOFF.md).
+
+**Esc → Pengaturan** menyediakan slider kecepatan gerak/sprint, durasi swing, sensitivitas mouse dan jarak kamera awal. **Terapkan** mengaktifkan sekaligus menyimpan lokal ke `user://control_preferences.cfg`; **Reset Default → Terapkan** mengembalikan default. Nilai swing baru berlaku mulai ayunan berikutnya, bukan memotong ayunan yang sedang berjalan. Scroll masih dapat mengatur jarak saat bermain. Damage/stamina/aturan combo tidak berubah melalui menu ini. [Preview pengaturan](docs/implementation/evidence/preferences-menu.png).
 
 ## Struktur
 
