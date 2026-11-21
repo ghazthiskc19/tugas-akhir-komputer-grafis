@@ -125,6 +125,14 @@ Bukti I06–I08 lama (MMB orbit dan aiming) **superseded**: [collision lama](doc
 godot --path . res://scenes/tests/third_person_lab.tscn
 ```
 
+### Review melee satu hit
+
+Buka `scenes/tests/melee_lab.tscn` lalu **F6**. **Klik kiri** untuk satu swing ke arah hadap karakter; tahan klik tidak mengulang serangan. Dummy memperlihatkan HP dan hanya menerima satu damage per swing. Coba di depan/belakang, di luar jangkauan dan dengan dinding di antara pemain-dummy.
+
+Ini iterasi dasar, **belum combo, stamina, block/dodge, potion atau enemy AI**. Kamera memakai kontrol yang sudah diterima tanpa auto-zoom obstacle; Esc menjeda arena. **R** memuat ulang lab. Serangan mulai hanya grounded; arah terkunci, movement ×0,3 dan lompat ditahan selama swing. Dummy 60 HP, damage 20/swing. [Bukti runtime](docs/implementation/evidence/melee-review.png).
+
+Shader/material/lighting/air/efek dipoles setelah gameplay inti stabil, sesuai palet pengguna dan anggaran performa renderer Compatibility; belum dikerjakan pada iterasi ini.
+
 ## Struktur
 
 ```text

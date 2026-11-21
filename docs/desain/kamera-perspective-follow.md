@@ -1,6 +1,6 @@
 # Kamera Perspective Follow
 
-Status: ditetapkan pengguna pada 11 November 2026; kontrol direvisi dan disetujui pengguna pada 21 November 2026 (mouse-look selalu tertangkap, scroll zoom, tanpa MMB dan tanpa mouse-world aim). Dokumen ini menggantikan konsep kamera top-down sebelumnya. Implementasi revisi menunggu review pengguna di `scenes/tests/third_person_lab.tscn`; hasil runtime dicatat terpisah setelah pemeriksaan. Combat belum dibuat dan belum ada izin untuk mengerjakannya.
+Status: kontrol mouse-look dan scroll zoom diterima pengguna setelah review `scenes/tests/third_person_lab.tscn`; auto-zoom obstacle dimatikan. Iterasi berikutnya hanya melee satu hit ke dummy, tanpa combo/stamina/AI. Dokumen ini menggantikan aturan top-down, MMB-hold dan mouse-world aiming sebelumnya.
 
 ## Posisi dan proyeksi
 

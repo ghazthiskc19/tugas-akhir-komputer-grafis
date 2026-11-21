@@ -8,10 +8,10 @@ Dokumen ini menjadi checklist pelaksanaan Level 1, dari pencarian asset hingga d
 
 | Informasi | Status |
 |---|---|
-| Tahap aktif | Revisi kontrol kamera third-person teruji runtime; **menunggu review pengguna** |
-| Pekerjaan berikutnya | Review `scenes/tests/third_person_lab.tscn`. **Tidak ada izin combat**; jangan mulai attack/combat sebelum persetujuan pengguna |
+| Tahap aktif | Melee satu hit ke dummy teruji runtime; menunggu review pengguna |
+| Pekerjaan berikutnya | Review iterasi kecil melee di `scenes/tests/melee_lab.tscn`; belum lanjut combo/stamina atau enemy AI |
 | Fondasi yang tersedia | Project Godot, scene preview, Git, konfigurasi MCP, dokumen desain, asset pihak ketiga di `assets/third_party/` (ter-import tanpa error) |
-| Gameplay | Prototype gerak relatif kamera, lompat, mouse-look, scroll zoom, follow dan collision kamera tersedia untuk review; combat, puzzle, boss dan generator belum diimplementasikan |
+| Gameplay | Gerak/lompat dan kamera diterima; melee satu hit, dummy HP dan death tersedia di lab. Combo, defense, AI, puzzle, boss dan generator belum dibuat |
 | Asset produksi 3D dan audio | Bahan awal cukup, tidak perlu download model wajib lagi. Salinan lokal: 31 dari 54 kebutuhan `IMPORTED`, 23 sisanya perlu perakitan/edit/retarget (clone baru tanpa FBX Mixamo memiliki lebih sedikit). Belum ada yang `VERIFIED`; lihat inventaris |
 | Hambatan yang diketahui | Gap nyata: retarget/aplikasi N06 dan N11 serta authoring wake/charge boss (FBX Mixamo hanya salinan lokal, repo publik); kode terrain procedural, puzzle, UI dan perakitan scene; reskin guardian/golem (recolor cukup); loop clip harus di-set manual. Tidak ada model/paket wajib baru |
 
@@ -55,9 +55,15 @@ Keputusan pengguna, 21 November 2026: urutan utama dipertahankan, tetapi impleme
 | I07 | `feat(camera): avoid world geometry occlusion` | Camera probe/collision, exclude pemain, dan pengembalian jarak kamera secara mulus. | Kamera tidak menembus tembok/tanah dan tidak bergetar saat dekat obstacle. |
 | I08 | `feat(player): add mouse-world aiming` | **Superseded, dihapus:** mouse-world aiming dan `MouseWorldAim` diganti karakter menghadap arah gerak; melee kelak menghadap karakter, tanpa lock-on. Semula: aiming ke permukaan dengan fallback cursor miss; belum ada serangan. | Arsip. |
 
-**Gate saat ini:** I01–I04 diterima. I05–I08 pernah diimplementasikan di `aiming_lab.tscn`, tetapi kontrolnya direvisi dan digantikan oleh `scenes/tests/third_person_lab.tscn` (lihat bawah). Revisi **menunggu review pengguna**; tidak ada izin lanjut ke combat/iterasi berikutnya. Review framing I05 tetap tercakup.
+**Gate saat ini:** pengguna menerima kontrol kamera third-person tanpa auto-zoom obstacle dan mengizinkan melanjutkan. Iterasi berikutnya dibatasi **satu serangan melee ke dummy**, HP/damage, deduplikasi per swing dan death sekali; setelah selesai review lagi. Combo, stamina, block/dodge, potion dan AI belum bagian iterasi ini.
 
-Sesudah revisi ini diterima, combat dan tahap berikutnya dipecah dengan pola yang sama mengikuti P05 dan seterusnya. Scope gameplay, puzzle, boss dan procedural generation tetap berlaku; tabel ini tidak menyatakan tahap tersebut selesai atau dibatalkan.
+Polish shader dikerjakan **setelah gameplay inti stabil**, sebelum regresi/export akhir. Pertahankan palet pengguna dan Compatibility; nilai visual serta frame time diuji bersama, bukan menambah efek berat di tengah prototype.
+
+### Iterasi melee satu hit
+
+Scene `scenes/tests/melee_lab.tscn`: klik kiri satu swing arah karakter, arah terkunci, movement ×0,3, mulai hanya grounded dan tidak lompat saat swing. Klip `Melee_1H_Attack_Slice_Horizontal` sepanjang `1,3667 s`; window aktif rasio `0,15–0,30` (~`0,205–0,410 s`). Dummy 60 HP menerima 20 damage, tiga swing menjadi KO; R memuat ulang lab.
+
+Runtime Godot 4.7.2 Compatibility membuktikan hold tidak mengulang; dua hurtbox satu pemilik tidak menggandakan damage; target belakang/di luar jangkauan dan di balik world wall tidak kena; HP `60→40→20→0`, death sekali dan label KO. Klik GUI Lanjutkan tidak menyerang. [Bukti](evidence/melee-review.png). Belum combo/stamina/AI; arah visual dan timing masih perlu review pengguna.
 
 ### Revisi kontrol kamera (21 November 2026)
 
@@ -145,7 +151,7 @@ Dependensi: P03; gunakan placeholder atau karakter yang lolos P02. Acuan: [Camer
 
 - [ ] **P04-01** Implementasikan movement, gravity, jump, grounded/fall/landing, collision, dan death volume. Uji tangga, slope, gap pendek, dan lereng sebelum world diperbesar.
 - [x] **P04-02** Implementasikan kamera Perspective elevated follow dengan damping posisi dan ketinggian, tanpa rotasi otomatis mengikuti arah attack. — I05 follow tersedia; I06–I08 tidak menambahkan auto-yaw. Attack belum tersedia.
-- [ ] **P04-03** Implementasikan mouse-look selalu tertangkap (yaw 360°, pitch `20°–65°`, sensitivitas `0,003`), scroll zoom `4–14 m` (awal `11,4 m`, langkah `1 m`), Esc pause + Resume, dan right-stick. Uji gamepad ketika perangkat tersedia; catat bila belum diuji. — Menggantikan orbit MMB I06 (superseded). Implementasi menunggu runtime check dan review pengguna; right stick sebelumnya hanya input sintetis.
+- [x] **P04-03** Implementasikan mouse-look selalu tertangkap (yaw 360°, pitch `20°–65°`, sensitivitas `0,003`), scroll zoom `4–14 m` (awal `11,4 m`, langkah `1 m`), Esc pause + Lanjutkan, dan right-stick. — Runtime mouse/zoom/pause lolos dan kamera diterima pengguna; right stick hanya diuji sintetis, controller fisik belum tersedia.
 - [x] **P04-04** Revisi pengguna: matikan auto-zoom kamera karena obstacle pada scene third-person; zoom hanya lewat scroll. — Runtime dengan/tanpa tembok mempertahankan jarak. Implementasi collision I07 tetap hanya pada lab pembanding; occlusion/clipping gameplay diterima.
 - [ ] **P04-05** Implementasikan WASD relatif kamera dengan karakter menghadap arah gerak (S menghadap kamera) sebagai dasar arah melee; tanpa mouse-ground aim dan tanpa lock-on. — Mouse-world aiming I08 dihapus. Terrain/attack belum dibuat; menunggu runtime check dan review.
 - [ ] **P04-06** Uji Esc pause/Resume, focus loss tanpa recapture otomatis, cursor visible/captured, zoom bounds, dan perilaku input attack saat combat dikerjakan (setelah izin pengguna).
@@ -336,6 +342,7 @@ Dependensi: playable content lengkap.
 - [ ] **P18-04** Tentukan mesin uji, resolusi, target FPS/frame time, dan anggaran memory/loading sebelum menilai performa. Catat hasil pada seed dan encounter yang sama.
 - [ ] **P18-05** Profile terrain, physics, navigation, foliage, transparansi/water, shadows, audio, dan resources. Gunakan optimasi yang didukung hasil pengukuran.
 - [ ] **P18-06** Perbaiki bug prioritas: crash, progres macet, objective tidak terjangkau, resource duplikat, input/camera buruk, lalu visual/audio minor. Ulangi acceptance yang terdampak.
+- [ ] **P18-07** Polish shader/material, lighting, air dan efek setelah gameplay inti stabil; cocokkan palet pengguna, keterbacaan dan renderer Compatibility. Bandingkan visual serta frame time sebelum/sesudah pada mesin target; hindari efek berat tanpa bukti manfaat.
 
 **Exit:** tidak ada blocker yang diketahui pada alur lengkap; A23 lolos dengan catatan mesin dan build.
 

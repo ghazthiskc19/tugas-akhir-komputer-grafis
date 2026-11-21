@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/tests/third_person_lab.tscn" id="1_lab"]
+[ext_resource type="Script" path="res://scripts/tests/melee_lab.gd" id="2_script"]
+[ext_resource type="PackedScene" path="res://scenes/combat/training_dummy.tscn" id="3_dummy"]
+[ext_resource type="PackedScene" path="res://assets/third_party/kaykit/adventurers/props/sword_1handed.gltf" id="4_sword"]
+
+[node name="MeleeLab" instance=ExtResource("1_lab")]
+script = ExtResource("2_script")
+
+[node name="Player" parent="." index="4"]
+position = Vector3(0, 0, -4)
+combat_enabled = true
+
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Player/Rogue/Rig_Medium/Skeleton3D" index="3"]
+bone_name = "handslot.r"
+
+[node name="Sword" parent="Player/Rogue/Rig_Medium/Skeleton3D/BoneAttachment3D" instance=ExtResource("4_sword")]
+
+[node name="DummyNear" parent="." instance=ExtResource("3_dummy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2.5)
+
+[node name="DummyFar" parent="." instance=ExtResource("3_dummy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -5.5)
+
+[node name="Header" parent="HUD" index="0"]
+text = "SERANGAN MELEE"
+
+[node name="Help" parent="HUD" index="1"]
+text = "Klik kiri: satu ayunan • WASD: gerak • Space: lompat (di luar serangan)\nDummy 60 HP, damage 20/hit. Tahan klik tidak mengulang.\nR: ulang lab • Esc: jeda/lanjut • Serangan mengikuti arah karakter."
+autowrap_mode = 3
+
+[node name="Status" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 164.0
+offset_right = 1000.0
+offset_bottom = 196.0
+theme_override_colors/font_color = Color(0.04, 0.16, 0.23, 1)
+theme_override_font_sizes/font_size = 20
