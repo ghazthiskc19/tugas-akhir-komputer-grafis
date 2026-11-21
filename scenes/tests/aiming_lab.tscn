@@ -1,0 +1,32 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/tests/camera_collision_lab.tscn" id="1_lab"]
+[ext_resource type="Script" path="res://scripts/player/mouse_world_aim.gd" id="2_aim"]
+
+[node name="I08_AimingLab" instance=ExtResource("1_lab")]
+
+[node name="Player" parent="."]
+position = Vector3(0, 0, 3)
+external_facing = true
+
+
+[node name="Aiming" type="Node" parent="."]
+script = ExtResource("2_aim")
+player_path = NodePath("../Player")
+camera_path = NodePath("../Camera3D")
+debug_label_path = NodePath("../HUD/AimDebug")
+
+[node name="Header" parent="HUD"]
+text = "I08 • BIDIK MOUSE"
+
+[node name="Help" parent="HUD"]
+text = "WASD: gerak • Space: lompat • MMB tahan: orbit kamera\nPenanda merah mengikuti permukaan; model menghadap kursor.\nBidik saja, belum ada serangan."
+autowrap_mode = 3
+
+[node name="AimDebug" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 164.0
+offset_right = 900.0
+offset_bottom = 192.0
+theme_override_colors/font_color = Color(0.04, 0.16, 0.23, 1)
+theme_override_font_sizes/font_size = 18

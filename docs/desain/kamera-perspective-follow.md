@@ -1,6 +1,6 @@
 # Kamera Perspective Follow
 
-Status: ditetapkan pengguna pada 11 November 2026. Dokumen ini menggantikan konsep kamera top-down sebelumnya. **I05 mengimplementasikan prototype follow posisi/ketinggian** pada `scenes/tests/follow_lab.tscn`, menunggu review pengguna. Orbit, aiming dan collision kamera pada spesifikasi di bawah belum diimplementasikan.
+Status: ditetapkan pengguna pada 11 November 2026. Dokumen ini menggantikan konsep kamera top-down sebelumnya. Prototype I05–I08 tersedia; batch orbit/collision/aiming menunggu review pengguna di `scenes/tests/aiming_lab.tscn`. Combat belum dibuat.
 
 ## Posisi dan proyeksi
 
@@ -38,3 +38,14 @@ Collision perlu diuji pada lereng, jalur tebing, reruntuhan puzzle, dan arena bo
 ## Detail produksi berikutnya
 
 FOV, jarak dan ketinggian follow, batas pitch, sensitivitas orbit, damping, collision margin, dan perilaku input selama orbit ditentukan melalui prototype. Camera3D pada scene fondasi tetap merupakan preview sampai sistem ini diimplementasikan.
+
+## Baseline prototype I06–I08
+
+- Follow: FOV 50°, offset awal `(0, 7, 9)`, focus height 1 m, damping horizontal `8/s` dan vertikal `5/s`.
+- Orbit: MMB-hold, sensitivitas `0,003 rad/pixel`, yaw bebas, pitch `20°–65°`. Release/Esc/focus loss melepas capture dan memulihkan posisi cursor; fokus kembali tidak menangkap ulang.
+- Right stick: deadzone radial `0,2`, rescale di luar deadzone, kecepatan penuh `2 rad/s`. Diuji dengan event sintetis, bukan perangkat fisik.
+- Collision: sphere radius `0,25 m`, margin `0,1 m`, near plane `0,1 m`; mask world `1`, exclude RID pemain. Fokus, orbit, cast dan penempatan memakai langkah fisika yang sama agar arah baru tidak memakai batas collision lama. Jarak langsung memendek, kembali dengan damping `4/s`. Fokus yang overlap dicari ulang menuju target; bila seluruh lintasan fokus gagal, kamera ditahan pada posisi terakhir. Framing sangat dekat belum memakai character fade.
+- Aiming: ray ke world dengan exclude pemain, penanda merah `#930031` pada hit + normal `0,03 m`; hanya model Rogue yang berputar, bukan body/arah WASD. Saat orbit atau kehilangan fokus, arah dibekukan dan penanda disembunyikan. Tidak ada serangan yang dipicu.
+- Cursor miss: fallback bidang setinggi kaki, cap jarak horizontal `50 m`; ray paralel/ke atas atau bidang di belakang kamera tidak membuat target baru dan mempertahankan heading terakhir.
+
+Bukti runtime: [collision](../implementation/evidence/i07-blocked.png) dan [hit platform 0,8 m](../implementation/evidence/i08-surface.png). Cast dan aim diuji pada arena kotak; slope, canopy, cliff, boss dan input attack saat orbit belum bisa dinyatakan lolos. Kamera collision mengikuti physics tick; kenyamanan pada monitor refresh tinggi masih perlu review.

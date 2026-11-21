@@ -8,10 +8,10 @@ Dokumen ini menjadi checklist pelaksanaan Level 1, dari pencarian asset hingga d
 
 | Informasi | Status |
 |---|---|
-| Tahap aktif | I05: kamera elevated follow selesai diuji agent, menunggu review pengguna |
-| Pekerjaan berikutnya | Jalankan `scenes/tests/follow_lab.tscn` dengan F6, WASD + Space: nilai framing serta damping gerak/lompatan. Orbit I06 dan collision kamera I07 belum dimulai |
+| Tahap aktif | Batch I06–I08 selesai di arena uji; menunggu satu review pengguna |
+| Pekerjaan berikutnya | Review `scenes/tests/aiming_lab.tscn`; jangan lanjut combat sebelum persetujuan |
 | Fondasi yang tersedia | Project Godot, scene preview, Git, konfigurasi MCP, dokumen desain, asset pihak ketiga di `assets/third_party/` (ter-import tanpa error) |
-| Gameplay | Prototype gerak darat dan lompat tersedia pada arena uji; combat, puzzle, boss dan generator belum diimplementasikan |
+| Gameplay | Prototype gerak, lompat, follow/orbit/collision kamera dan mouse-world aiming tersedia; combat, puzzle, boss dan generator belum diimplementasikan |
 | Asset produksi 3D dan audio | Bahan awal cukup, tidak perlu download model wajib lagi. Salinan lokal: 31 dari 54 kebutuhan `IMPORTED`, 23 sisanya perlu perakitan/edit/retarget (clone baru tanpa FBX Mixamo memiliki lebih sedikit). Belum ada yang `VERIFIED`; lihat inventaris |
 | Hambatan yang diketahui | Gap nyata: retarget/aplikasi N06 dan N11 serta authoring wake/charge boss (FBX Mixamo hanya salinan lokal, repo publik); kode terrain procedural, puzzle, UI dan perakitan scene; reskin guardian/golem (recolor cukup); loop clip harus di-set manual. Tidak ada model/paket wajib baru |
 
@@ -36,7 +36,7 @@ Pencarian asset berjalan bersama prototype. Tidak perlu menunggu seluruh dekoras
 
 Keputusan pengguna, 21 November 2026: urutan utama dipertahankan, tetapi implementasi dipecah menjadi hasil kecil yang dapat diperiksa pengguna. Tabel berikut adalah **rencana**, bukan pekerjaan yang sudah selesai.
 
-1. Sebelum mengerjakan satu iterasi, sepakati scope dan cara pengguna mengujinya. **Jangan menjalankan beberapa iterasi sekaligus tanpa persetujuan.**
+1. Sebelum mengerjakan iterasi, sepakati scope dan cara pengguna mengujinya. Jangan menjalankan beberapa iterasi sekaligus tanpa persetujuan; **pengecualian yang sedang diizinkan: batch I06–I08, review setelah ketiganya selesai**.
 2. Agent implementasikan hanya scope tersebut, jalankan pemeriksaan paling sempit dan buktikan permukaan visual bila berubah, lalu catat hasil serta batas verifikasinya.
 3. Commit implementasi dan tracking yang saling terkait, lalu push ke `main`. Satu iterasi dapat memiliki commit perbaikan tambahan, tetapi jangan campur fitur iterasi berikutnya atau rewrite riwayat yang sudah dipush.
 4. Serahkan hash commit, scene/cara menjalankan, serta checklist singkat untuk pengguna. Pengguna menguji kenyamanan dan kecocokan; lolos pemeriksaan agent tidak berarti disetujui pengguna.
@@ -55,9 +55,16 @@ Keputusan pengguna, 21 November 2026: urutan utama dipertahankan, tetapi impleme
 | I07 | `feat(camera): avoid world geometry occlusion` | Camera probe/collision, exclude pemain, dan pengembalian jarak kamera secara mulus. | Kamera tidak menembus tembok/tanah dan tidak bergetar saat dekat obstacle. |
 | I08 | `feat(player): add mouse-world aiming` | Aiming ke permukaan dengan elevasi, fallback cursor miss, pemisahan arah gerak/arah aim, serta perpindahan aiming/orbit; belum menambahkan serangan. | Arah aim terbaca saat bergerak, di tangga dan setelah orbit; framing simbol/target masih jelas. |
 
-**Gate saat ini:** pengguna telah menyetujui I01 (`81ddc40`), I02 (`eca321c`), I03 (`92e85a4`) dan I04 (`e5d74cc`) setelah mencoba langsung. I05 tersedia dan lolos uji follow/render; [bukti](evidence/i05-follow.png). **Menunggu review I05; I06/orbit belum dimulai.**
+**Gate saat ini:** I01–I04 diterima; pengguna mengizinkan batch **I06–I08 tanpa review sela** setelah I05. Ketiganya telah diimplementasikan dan diuji runtime, menunggu **review gabungan** di `scenes/tests/aiming_lab.tscn`. Tidak ada izin lanjut ke combat/iterasi berikutnya. Review framing I05 tetap tercakup dalam batch.
 
 Sesudah batch ini diterima, combat dan tahap berikutnya dipecah dengan pola yang sama mengikuti P05 dan seterusnya. Scope gameplay, puzzle, boss dan procedural generation tetap berlaku; tabel ini tidak menyatakan tahap tersebut selesai atau dibatalkan.
+
+### Bukti batch I06–I08
+
+- **I06:** event mouse yang disuntikkan ke runtime membuktikan MMB capture, yaw, pitch clamp 65°, release dan focus-out/focus-in tanpa recapture. Arah model tetap selama orbit. Right-stick event sintetis membuktikan deadzone, rotasi dan neutral; controller fisik belum diuji.
+- **I07:** sphere kamera bebas overlap pada sapuan yaw dekat batas arena. Tembok tinggi memperpendek arm ke `2,034 m`; setelah dihapus, arm kembali bertahap (`4,227 m` awal, `11,393 m` setelah settling). [Screenshot](evidence/i07-blocked.png).
+- **I08:** hit platform menghasilkan titik sekitar `(2,001; 0,800; 3,495)`; model membidik independen dari body saat WASD. Ray miss nyata memakai bidang kaki dengan cap 50 m; focus loss menyembunyikan marker. Marker merah mengikuti palet pengguna. [Screenshot](evidence/i08-surface.png).
+- Uji berjalan pada **Godot 4.7.2, Compatibility/OpenGL, Radeon RX 5500M, 1280×720**, bukan headless. Harness sementara tidak menjadi test produksi. Belum ada attack, terrain, slope, canopy, boss atau pengujian kenyamanan pengguna; A01–A03 tidak dicentang penuh.
 
 ## Baseline Audit
 
@@ -126,10 +133,10 @@ Dependensi: project foundation. Dapat dimulai saat P01–P02 berlangsung.
 Dependensi: P03; gunakan placeholder atau karakter yang lolos P02. Acuan: [Camera Design](../desain/kamera-perspective-follow.md).
 
 - [ ] **P04-01** Implementasikan movement, gravity, jump, grounded/fall/landing, collision, dan death volume. Uji tangga, slope, gap pendek, dan lereng sebelum world diperbesar.
-- [ ] **P04-02** Implementasikan kamera Perspective elevated follow dengan damping posisi dan ketinggian, tanpa rotasi otomatis mengikuti arah attack.
-- [ ] **P04-03** Implementasikan orbit MMB-hold horizontal 360°, clamp vertikal, sensitivitas, dan right-stick orbit. Uji gamepad ketika perangkat tersedia; catat bila belum diuji.
-- [ ] **P04-04** Implementasikan camera collision yang menghindari tembok/tanah dan mengembalikan jarak secara mulus setelah penghalang hilang. Exclude player dari probe.
-- [ ] **P04-05** Implementasikan mouse-world aiming pada terrain/elevasi, fallback saat cursor tidak mengenai permukaan valid, dan pemisahan arah gerak dari arah attack.
+- [x] **P04-02** Implementasikan kamera Perspective elevated follow dengan damping posisi dan ketinggian, tanpa rotasi otomatis mengikuti arah attack. — I05 follow tersedia; I06–I08 tidak menambahkan auto-yaw. Attack belum tersedia.
+- [x] **P04-03** Implementasikan orbit MMB-hold horizontal 360°, clamp vertikal, sensitivitas, dan right-stick orbit. Uji gamepad ketika perangkat tersedia; catat bila belum diuji. — I06 runtime lolos; right stick hanya input sintetis, belum controller fisik.
+- [ ] **P04-04** Implementasikan camera collision yang menghindari tembok/tanah dan mengembalikan jarak secara mulus setelah penghalang hilang. Exclude player dari probe. — I07 tersedia dan teruji di arena kotak; lereng/terrain dan kenyamanan pengguna belum diuji.
+- [ ] **P04-05** Implementasikan mouse-world aiming pada terrain/elevasi, fallback saat cursor tidak mengenai permukaan valid, dan pemisahan arah gerak dari arah attack. — I08 hit elevasi, fallback dan arah model independen tersedia; terrain/attack belum dibuat.
 - [ ] **P04-06** Uji perpindahan aiming/orbit, focus loss, cursor capture/release, dan input attack selama orbit. Catat baseline yang dipilih tanpa mengubah aturan mouse-world aiming.
 - [ ] **P04-07** Uji framing simbol puzzle, musuh, gap, serta boss telegraph melalui test objects. Tuning FOV, follow distance, dan pitch berdasarkan hasil ini.
 

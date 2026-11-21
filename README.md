@@ -9,6 +9,7 @@ Project gim 3D untuk mata kuliah **Komputer Grafis**. Engine aktif adalah **Godo
 - [Implementation Tracker](docs/implementation/IMPLEMENTATION_TRACKER.md): checklist pengadaan asset, implementasi sistem, playtest, polish, dan release; terhubung ke inventaris asset serta acceptance checklist.
 - [Audit ekosistem asset online](docs/implementation/ASSET_ECOSYSTEM_AUDIT.md): cakupan keluarga KayKit/pelengkap, tier gratis/berbayar, sumber preview, gap dan risiko modifikasi; bukan daftar asset yang sudah diunduh atau diuji.
 - [Rencana sumber asset yang dipilih](docs/implementation/ASSET_SOURCE_PLAN.md): keluarga inti KayKit disetujui, sumber pelengkap per kebutuhan, rencana edit agent serta gate akun/biaya/lisensi; belum berarti file/rig/clip siap pakai.
+- [Konteks lanjutan OMP](docs/brainstorming/konteks-lanjutan-the-lost-island.md#handoff-omp--17-november-2026): hasil impor session, keputusan terakhir, status pekerjaan, dan titik lanjut.
 - [Laporan visual dan Canva](docs/laporan/README.md): dokumen A4, logo game, identitas anggota, dan source layout laporan.
 - `godot-version.txt` mencatat patch version engine yang dipakai bersama: **4.7.2**.
 
@@ -99,10 +100,29 @@ Buka `scenes/tests/follow_lab.tscn` lalu **F6**, gunakan **WASD + Space**. Kamer
 
 Baseline: FOV 50°, focus height 1 m, offset `(0, 7, 9)`, damping horizontal `8/s` dan vertikal `5/s`. [Preview follow](docs/implementation/evidence/i05-follow.png) dan [lompat](docs/implementation/evidence/i05-jump.png).
 
-**Belum ada orbit atau collision kamera**: penghalang masih dapat menutupi pemain; itu scope I07, bukan fitur yang sudah selesai. I06 menunggu review I05. Scene I01–I04 dan main scene tidak diubah.
+Scene I05 sendiri tetap **tanpa orbit/collision** sebagai pembanding. Batch I06–I08 tersedia di bawah; main scene dan lab terdahulu tidak diubah.
 
 ```powershell
 godot --path . res://scenes/tests/follow_lab.tscn
+```
+
+### Review batch I06–I08: orbit, collision dan aiming
+
+Buka **`scenes/tests/aiming_lab.tscn` lalu F6** untuk mencoba ketiganya sekaligus:
+
+1. **WASD + Space**: berjalan/lompat; model menghadap penanda merah mouse, bukan arah berjalan. Coba bidik platform 0,8 m dan sisi dinding; penanda mengikuti elevasi/normal permukaan.
+2. **Tahan MMB + geser mouse**: orbit 360°, pitch 20°–65°. Saat orbit, arah model dibekukan dan penanda disembunyikan. Lepas MMB untuk kembali membidik; cursor kembali ke posisi sebelum orbit. **Esc** atau pindah fokus jendela membatalkan capture tanpa mengaktifkannya lagi otomatis.
+3. Dekati tembok tinggi di kiri, lalu orbit hingga tembok menghalangi kamera. Kamera langsung memendekkan jarak, kemudian kembali halus setelah jalur terbuka. Jarak sangat dekat bisa membuat karakter memenuhi layar; ini lebih aman daripada menembus tembok.
+4. **Right stick** juga mengorbit (deadzone radial 0,2); kontrol gamepad lainnya belum dipetakan. Bukti saat ini hanya input simulasi, **belum perangkat fisik**.
+
+Cursor miss memakai bidang horizontal setinggi kaki, dibatasi 50 m dari pemain. Ray mendatar/ke atas atau bidang di belakang kamera mempertahankan arah terakhir dan menyembunyikan penanda. Belum ada attack/damage; warna penanda memakai aksen `#930031` dari palet pengguna.
+
+Lab terpisah: `orbit_lab.tscn` (I06, tanpa collision) dan `camera_collision_lab.tscn` (I07, mulai tepat di depan tembok untuk memperlihatkan kamera mendekat). Scene gabungan memulai pemain di area terbuka. [Bukti collision](docs/implementation/evidence/i07-blocked.png) · [Bukti aiming di platform](docs/implementation/evidence/i08-surface.png).
+
+Runtime Godot 4.7.2 Compatibility membuktikan MMB/capture/focus loss, pitch clamp, right-stick simulasi, sphere bebas overlap saat sapuan yaw, pengembalian jarak dan hit platform. Review kenyamanan pengguna serta pengujian terrain/slope/canopy/boss belum dilakukan.
+
+```powershell
+godot --path . res://scenes/tests/aiming_lab.tscn
 ```
 
 ## Struktur

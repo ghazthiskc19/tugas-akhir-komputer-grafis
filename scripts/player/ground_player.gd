@@ -32,6 +32,8 @@ enum State { GROUND, TAKEOFF, AIR, LANDING }
 @export var jump_velocity := 5.1
 ## Movement input may cut the landing clip short only after this many seconds, so a landing stays visible.
 @export var landing_interrupt_time := 0.25
+## True: movement no longer rotates the body; an external node (MouseWorldAim) owns facing.
+@export var external_facing := false
 
 @onready var _model: Node3D = $Rogue
 @onready var _anim: AnimationPlayer = $AnimationPlayer
@@ -95,7 +97,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.y += get_gravity().y * delta
 
-	if direction != Vector3.ZERO:
+	if direction != Vector3.ZERO and not external_facing:
 		rotation.y = lerp_angle(rotation.y, atan2(direction.x, direction.z), 1.0 - exp(-turn_rate * delta))
 
 	# Ceiling hits zero velocity.y here, so rising ends and falling begins naturally.
