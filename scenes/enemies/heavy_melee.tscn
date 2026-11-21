@@ -1,0 +1,57 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy.gd" id="1_enemy"]
+[ext_resource type="Script" path="res://scripts/combat/damageable.gd" id="2_health"]
+[ext_resource type="PackedScene" path="res://assets/third_party/kaykit/adventurers/characters/Barbarian.glb" id="3_model"]
+[ext_resource type="PackedScene" path="res://assets/third_party/kaykit/adventurers/props/axe_2handed.gltf" id="4_weapon"]
+
+[sub_resource type="CapsuleShape3D" id="BodyShape"]
+radius = 0.65
+height = 2.4
+
+[sub_resource type="CapsuleShape3D" id="HurtShape"]
+radius = 0.75
+height = 2.5
+
+[node name="HeavyMelee" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 8
+collision_mask = 11
+script = ExtResource("1_enemy")
+archetype = "heavy"
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_health")
+max_health = 160
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+shape = SubResource("BodyShape")
+
+[node name="Hurtbox" type="Area3D" parent="."]
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+metadata/damageable = NodePath("../Health")
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+shape = SubResource("HurtShape")
+
+[node name="Model" parent="." instance=ExtResource("3_model")]
+
+[node name="WeaponSlot" type="BoneAttachment3D" parent="Model/Rig_Medium/Skeleton3D"]
+bone_name = "handslot.r"
+
+[node name="Weapon" parent="Model/Rig_Medium/Skeleton3D/WeaponSlot" instance=ExtResource("4_weapon")]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+root_node = NodePath("../Model")
+
+[node name="HealthLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, 0)
+billboard = 1
+pixel_size = 0.01
+modulate = Color(0.55, 0.05, 0.05, 1)
+outline_size = 0
+text = "heavy"
+font_size = 40

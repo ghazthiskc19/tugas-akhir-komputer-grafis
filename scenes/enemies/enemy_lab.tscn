@@ -1,0 +1,67 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/tests/third_person_lab.tscn" id="1_lab"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_lab.gd" id="2_script"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/standard_melee.tscn" id="3_standard"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/heavy_melee.tscn" id="4_heavy"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/ranged_enemy.tscn" id="5_ranged"]
+[ext_resource type="PackedScene" path="res://assets/third_party/kaykit/adventurers/props/sword_1handed.gltf" id="6_sword"]
+
+[sub_resource type="BoxMesh" id="CoverMesh"]
+
+[sub_resource type="BoxShape3D" id="CoverShape"]
+size = Vector3(3, 2, 0.5)
+
+[node name="EnemyLab" instance=ExtResource("1_lab")]
+script = ExtResource("2_script")
+
+[node name="Player" parent="." index="4" groups=["player"]]
+position = Vector3(0, 0, 5)
+combat_enabled = true
+
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Player/Rogue/Rig_Medium/Skeleton3D"]
+bone_name = "handslot.r"
+
+[node name="Sword" parent="Player/Rogue/Rig_Medium/Skeleton3D/BoneAttachment3D" instance=ExtResource("6_sword")]
+
+[node name="Cover" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/Cover"]
+transform = Transform3D(3, 0, 0, 0, 2, 0, 0, 0, 0.5, 0, 0, 0)
+mesh = SubResource("CoverMesh")
+
+[node name="Collision" type="CollisionShape3D" parent="World/Cover"]
+shape = SubResource("CoverShape")
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Standard" parent="Enemies" instance=ExtResource("3_standard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
+enemy_id = &"lab_standard"
+player_path = NodePath("../../Player")
+
+[node name="Heavy" parent="Enemies" instance=ExtResource("4_heavy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -4)
+enemy_id = &"lab_heavy"
+player_path = NodePath("../../Player")
+
+[node name="Ranged" parent="Enemies" instance=ExtResource("5_ranged")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0, -4.5)
+enemy_id = &"lab_ranged"
+player_path = NodePath("../../Player")
+
+[node name="Header" parent="HUD" index="0"]
+text = "LAB MUSUH"
+
+[node name="Help" parent="HUD" index="1"]
+text = "Standar: kejar-ayun-pulih • Berat: aba-aba lambat, pukulan keras, tidak terputus saat aba-aba • Penembak: garis biru = jalur peluru\nKotak/garis kuning = aba-aba, merah = serangan aktif (dipotong oleh dinding) • Klik kiri: serang • R: ulang • Esc: jeda"
+autowrap_mode = 3
+
+[node name="Status" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 164.0
+offset_right = 1200.0
+offset_bottom = 232.0
+theme_override_colors/font_color = Color(0.04, 0.16, 0.23, 1)
+theme_override_font_sizes/font_size = 20
