@@ -1,8 +1,8 @@
 extends CharacterBody3D
 ## I03 ground movement (camera-relative WASD, idle/walk) + I04 jump (opt-in via jump_enabled)
 ## + single melee attack (opt-in via combat_enabled). Jump has no buffer/coyote/double/variable height.
-## Attack: one LMB press = one swing (no hold-repeat, no buffer, no combo). Grounded start only; facing locked
-## and jump is disabled during the swing; movement runs at full speed. One hit per victim per swing.
+## Attack: one LMB press = one swing (no hold-repeat, no buffer, no combo). Grounded start only;
+## jump is disabled during the swing, but movement and turning stay free. One hit per victim per swing.
 ## Combat mode: an AnimationTree layers the swing on the upper body only; legs keep the locomotion clip.
 
 const SKELETON_PATH := NodePath("Rig_Medium/Skeleton3D")
@@ -28,7 +28,7 @@ const MOVING_THRESHOLD := 0.1
 ## reaches the far side of the slash at ~0.22 (x≈-0.86), then follows through slowly. Active window = fraction of clip length.
 const ATTACK_ACTIVE_START := 0.15
 const ATTACK_ACTIVE_END := 0.30
-## Hit box in the player's locked facing frame (+Z forward): center 1.0 m ahead, 1.0 m up; extents 2.0 x 1.4 x 1.6 m.
+## Hit box follows the player's current facing (+Z forward): center 1.0 m ahead, 1.0 m up; size 2.0 x 1.4 x 1.6 m.
 const ATTACK_BOX_SIZE := Vector3(2.0, 1.4, 1.6)
 const ATTACK_BOX_CENTER := Vector3(0.0, 1.0, 1.0)
 const ATTACK_RAY_ORIGIN_HEIGHT := 1.0
@@ -75,7 +75,6 @@ var _landing_length := 0.0
 var _attacking := false
 var _attack_time := 0.0
 var _attack_length := 0.0
-var _attack_basis := Basis.IDENTITY
 var _attack_queued := false
 var _unpause_frame := -1
 var _tree: AnimationTree
@@ -193,7 +192,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.y += get_gravity().y * delta
 
-	if direction != Vector3.ZERO and not _attacking:
+	if direction != Vector3.ZERO:
 		rotation.y = lerp_angle(rotation.y, atan2(direction.x, direction.z), 1.0 - exp(-turn_rate * delta))
 
 	# Ceiling hits zero velocity.y here, so rising ends and falling begins naturally.
@@ -214,7 +213,6 @@ func _physics_process(delta: float) -> void:
 func _start_attack() -> void:
 	_attacking = true
 	_attack_time = 0.0
-	_attack_basis = Basis(Vector3.UP, rotation.y)
 	_hit_victims.clear()
 	_tree.set(PARAM_ATTACK, AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)  # Restarts the upper-body layer at frame 0.
 	attack_started.emit()
@@ -245,7 +243,8 @@ func _end_attack() -> void:
 
 func _hit_targets() -> void:
 	var space := get_world_3d().direct_space_state
-	_hit_query.transform = Transform3D(_attack_basis, global_position + _attack_basis * ATTACK_BOX_CENTER)
+	var facing := Basis(Vector3.UP, global_rotation.y)
+	_hit_query.transform = Transform3D(facing, global_position + facing * ATTACK_BOX_CENTER)
 	var origin := global_position + Vector3(0.0, ATTACK_RAY_ORIGIN_HEIGHT, 0.0)
 	for hit in space.intersect_shape(_hit_query, 32):
 		var area := hit["collider"] as Node

@@ -73,7 +73,7 @@ Rute menggunakan modul traversal terkontrol. Baseline maksimal dua musuh aktif b
 - Attack memakai satu tombol dengan combo tiga hit: dua serangan cepat dan satu finisher.
 - Input lanjutan harus berada pada timing window. Early input tidak disimpan dan hold-to-auto-combo tidak dipilih.
 - Animasi attack yang sudah dimulai diselesaikan sebelum block atau dodge. Movement tetap full speed tanpa slowdown; animasi kaki idle/jalan berjalan bersamaan dengan swing badan atas.
-- Arah dikunci selama satu hit; arah karakter dibaca ulang saat hit selanjutnya dimulai.
+- Rotasi tetap bebas selama serangan mengikuti arah gerak; hitbox mengikuti arah hadap karakter terkini, bukan arah saat swing dimulai.
 - Attack dan combo tidak memakai stamina.
 - Musuh mencakup dua tipe melee dan satu tipe ranged, ditambah satu boss akhir.
 

@@ -61,11 +61,13 @@ Polish shader dikerjakan **setelah gameplay inti stabil**, sebelum regresi/expor
 
 ### Iterasi melee satu hit
 
-Scene `scenes/tests/melee_lab.tscn`: klik kiri satu swing arah karakter, arah terkunci, mulai grounded dan tidak lompat saat swing. **Revisi pengguna: tanpa slowdown, kaki idle/jalan tetap bergerak bersamaan dengan swing upper-body.** Klip `Melee_1H_Attack_Slice_Horizontal` panjang `1,3667 s`; window aktif rasio `0,15–0,30` (~`0,205–0,410 s`). Dummy 60 HP menerima 20 damage, tiga swing KO; R mengulang lab.
+Scene `scenes/tests/melee_lab.tscn`: klik kiri satu swing, mulai grounded dan tidak lompat saat swing. **Movement full speed, rotasi bebas selama swing, hitbox mengikuti arah hadap terkini**, kaki idle/jalan diblend dengan swing upper-body. Klip `Melee_1H_Attack_Slice_Horizontal` panjang `1,3667 s`; window aktif rasio `0,15–0,30` (~`0,205–0,410 s`). Dummy 60 HP, damage 20/swing; R mengulang lab.
 
 Runtime Godot 4.7.2 Compatibility membuktikan hold tidak mengulang; dua hurtbox satu pemilik tidak menggandakan damage; target belakang/di luar jangkauan dan di balik world wall tidak kena; HP `60→40→20→0`, death sekali dan label KO. Klik GUI Lanjutkan tidak menyerang. [Bukti](evidence/melee-review.png). Belum combo/stamina/AI; arah visual dan timing masih perlu review pengguna.
 
 Revisi layering teruji di runtime Godot 4.7.2 Compatibility: `AnimationTree` memakai base locomotion dan OneShot swing dengan filter spine/upper-body, tanpa hips/legs. Kecepatan berjalan dan saat menyerang sama-sama `4 m/s`; pose upperleg/lowerleg/foot dan upperarm/lowerarm/hand berubah bersamaan selama swing. Facing tetap terkunci, hit tetap satu kali (HP 60→40), pause membekukan jam serangan dan recovery selesai. [Preview layering](evidence/layered-melee.png). Kenyamanan blend masih menunggu review pengguna.
+
+Revisi rotasi: runtime membuktikan arah berubah `1,428 rad` saat swing masih aktif, kecepatan tetap `4 m/s`, dan arah hitbox selaras dengan karakter. Aturan lock arah pada bukti sebelumnya sudah diganti.
 
 ### Revisi kontrol kamera (21 November 2026)
 
@@ -178,7 +180,7 @@ Dependensi: P03–P04.
 Dependensi: P05 dan mapping animasi minimum P02. Acuan: bagian combat/resource pada [konsep](../konsep-game.md).
 
 - [ ] **P06-01** Implementasikan satu tombol combo tiga hit: dua hit cepat dan finisher. Input hanya diterima pada timing window; early input tidak dibuffer dan hold tidak menjalankan auto-combo.
-- [ ] **P06-02** Kunci arah karakter per hit, baca ulang pada hit berikutnya; movement full speed tanpa slowdown dan kaki idle/jalan diblend dengan swing badan atas. Tanpa mouse-ground aim/lock-on. Animasi attack selesai sebelum block/dodge.
+- [ ] **P06-02** Rotasi bebas selama swing; hitbox mengikuti arah hadap terkini. Movement full speed tanpa slowdown dan kaki idle/jalan diblend dengan swing badan atas. Tanpa mouse-ground aim/lock-on. Animasi attack selesai sebelum block/dodge.
 - [ ] **P06-03** Sinkronkan animasi dan active hit window; attack tidak memakai stamina. Uji seluruh rangkaian terhadap dummy bergerak.
 - [ ] **P06-04** Implementasikan satu pool stamina, held-block drain, dodge fixed cost, regen delay, penolakan aksi saat tidak cukup, dan clamp tanpa nilai negatif.
 - [ ] **P06-05** Implementasikan block yang mengurangi damage semua arah dan dodge i-frames untuk melee, projectile, serta boss. Pisahkan collision fisik dari invulnerability.

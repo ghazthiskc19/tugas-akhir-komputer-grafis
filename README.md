@@ -129,7 +129,7 @@ godot --path . res://scenes/tests/third_person_lab.tscn
 
 Buka `scenes/tests/melee_lab.tscn` lalu **F6**. **Klik kiri** untuk satu swing ke arah hadap karakter; tahan klik tidak mengulang serangan. Dummy memperlihatkan HP dan hanya menerima satu damage per swing. Coba di depan/belakang, di luar jangkauan dan dengan dinding di antara pemain-dummy.
 
-Ini iterasi dasar, **belum combo, stamina, block/dodge, potion atau enemy AI**. Kamera tanpa auto-zoom obstacle; Esc menjeda, **R** mengulang lab. Serangan mulai grounded; arah tebasan terkunci dan lompat ditahan selama swing. **Movement tetap full speed; kaki idle/jalan dan upper-body swing dipadukan**, tanpa slowdown. Dummy 60 HP, damage 20/swing.
+Ini iterasi dasar, **belum combo, stamina, block/dodge, potion atau enemy AI**. Kamera tanpa auto-zoom obstacle; Esc menjeda, **R** mengulang lab. Serangan mulai grounded dan lompat ditahan selama swing. **Movement full speed dan rotasi bebas; hitbox mengikuti arah hadap terkini**, kaki idle/jalan dan upper-body swing dipadukan. Dummy 60 HP, damage 20/swing.
 
 Shader/material/lighting/air/efek dipoles setelah gameplay inti stabil, sesuai palet pengguna dan anggaran performa renderer Compatibility; belum dikerjakan pada iterasi ini.
 
