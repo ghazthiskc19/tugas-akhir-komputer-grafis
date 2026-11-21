@@ -43,7 +43,7 @@ Pemain bergerak dan melompat untuk melewati obstacle lingkungan. Visual mengguna
 
 Terrain memakai procedural mesh dengan variasi berdasarkan seed. Lokasi objective, puzzle, checkpoint, dan arena boss perlu dibentuk atau dipilih berdasarkan aturan keterjangkauan. Perubahan seed tidak boleh membuat progres wajib mustahil dicapai.
 
-Kamera Perspective memakai elevated third-person follow dengan smooth damping, termasuk saat pemain melompat. Mouse tetap digunakan untuk aiming; menahan tombol tengah mouse mengaktifkan orbit horizontal 360 derajat, sedangkan orbit vertikal dibatasi. Analog kanan mengatur orbit. Kamera tidak otomatis berputar mengikuti arah serangan dan memakai collision agar tidak menembus lingkungan. Aturan lengkap tersedia pada [desain kamera](desain/kamera-perspective-follow.md).
+Kamera Perspective memakai elevated third-person follow dengan smooth damping, termasuk saat pemain melompat. Mouse selalu tertangkap dan langsung memutar kamera (yaw 360°, pitch dibatasi); scroll mengatur zoom dalam batas. WASD bergerak relatif kamera dan karakter menghadap arah gerak. Analog kanan juga memutar kamera. Kamera tidak otomatis berputar mengikuti arah karakter atau serangan dan memakai collision agar tidak menembus lingkungan. Aturan lengkap tersedia pada [desain kamera](desain/kamera-perspective-follow.md).
 
 Camera3D pada scene fondasi hanya dipakai untuk preview dan belum mewakili implementasi kamera gameplay yang disepakati. Cinemachine merupakan pilihan historis saat memakai Unity dan telah digantikan pendekatan camera rig native Godot.
 
@@ -69,11 +69,11 @@ Rute menggunakan modul traversal terkontrol. Baseline maksimal dua musuh aktif b
 
 ## Combat
 
-- Pemain menggunakan satu senjata melee, diarahkan oleh posisi mouse di dunia permainan.
+- Pemain menggunakan satu senjata melee yang menghadap arah karakter. Tidak ada aim ke titik mouse di dunia dan tidak ada lock-on.
 - Attack memakai satu tombol dengan combo tiga hit: dua serangan cepat dan satu finisher.
 - Input lanjutan harus berada pada timing window. Early input tidak disimpan dan hold-to-auto-combo tidak dipilih.
 - Animasi attack yang sudah dimulai diselesaikan sebelum block atau dodge. Movement tetap tersedia dengan kecepatan berkurang.
-- Arah dikunci selama satu hit; arah baru dibaca saat hit selanjutnya dimulai.
+- Arah dikunci selama satu hit; arah karakter dibaca ulang saat hit selanjutnya dimulai.
 - Attack dan combo tidak memakai stamina.
 - Musuh mencakup dua tipe melee dan satu tipe ranged, ditambah satu boss akhir.
 
@@ -115,7 +115,7 @@ Aktivasi checkpoint belum ditetapkan sebagai sumber healing. Pada Jalur Menuju P
 
 ## Keputusan untuk finalisasi
 
-1. Prototype kamera, movement, dan mouse aiming untuk menguji framing serta perpindahan mode orbit.
+1. Prototype kamera mouse-look, movement relatif kamera, dan zoom untuk menguji framing; arah melee mengikuti karakter.
 2. Blockout pulau dengan baseline 250 × 250 meter untuk mengukur panjang rute, kepadatan aktivitas, distribusi encounter, dan durasi sesi.
 3. Rincian kontrol, perilaku chase/leash dan stagger musuh, serta interaksi potion dengan aksi defense.
 4. Pilihan model spesifik untuk petualang manusia dengan pedang satu tangan dan keluarga penjaga kuno, serta teks pembukaan/penutup sesuai lore yang telah ditetapkan. Nama karakter pemain belum final; arah visual tidak menunggu nama tersebut.

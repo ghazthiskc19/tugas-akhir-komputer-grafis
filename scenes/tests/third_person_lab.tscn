@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/tests/camera_collision_lab.tscn" id="1_lab"]
+
+[node name="ThirdPersonLab" instance=ExtResource("1_lab")]
+
+[node name="Player" parent="." index="4"]
+position = Vector3(0, 0, 3)
+
+[node name="Header" parent="HUD" index="0"]
+text = "THIRD PERSON • MOUSE-LOOK"
+
+[node name="Help" parent="HUD" index="1"]
+text = "Mouse: putar kamera (tertangkap) • Scroll: zoom 4–14 m • WASD: gerak relatif kamera • Space: lompat\nModel menghadap arah gerak (S = menghadap kamera). Esc: jeda/lanjut; klik Lanjutkan juga bisa.\nHilang fokus jendela = jeda; kembali hanya lewat Lanjutkan/Esc. Belum ada serangan."
+autowrap_mode = 3

@@ -11,10 +11,13 @@ min_pitch_degrees = 20.0
 max_pitch_degrees = 65.0
 mouse_sensitivity = 0.003
 stick_speed = 2.0
+min_distance = 4.0
+max_distance = 14.0
+zoom_step = 1.0
 
 [node name="Header" parent="HUD" index="0"]
 text = "I06 • KAMERA ORBIT"
 
 [node name="Help" parent="HUD" index="1"]
-text = "WASD: gerak • Space: lompat • Tahan klik tengah: orbit (Esc membatalkan)\nStick kanan gamepad: orbit. Yaw 360°, pitch 20°–65°. Tanpa collision kamera (I07): tembok masih dapat menutupi pemain."
+text = "WASD: gerak • Space: lompat • Mouse tertangkap: putar kamera • Scroll: zoom 4–14 m • Esc: jeda/lanjut\nStick kanan gamepad: orbit. Yaw 360°, pitch 20°–65°. Tanpa collision kamera (I07): tembok masih dapat menutupi pemain."
 autowrap_mode = 3

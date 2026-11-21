@@ -8,10 +8,10 @@ Dokumen ini menjadi checklist pelaksanaan Level 1, dari pencarian asset hingga d
 
 | Informasi | Status |
 |---|---|
-| Tahap aktif | Batch I06–I08 selesai di arena uji; menunggu satu review pengguna |
-| Pekerjaan berikutnya | Review `scenes/tests/aiming_lab.tscn`; jangan lanjut combat sebelum persetujuan |
+| Tahap aktif | Revisi kontrol kamera third-person teruji runtime; **menunggu review pengguna** |
+| Pekerjaan berikutnya | Review `scenes/tests/third_person_lab.tscn`. **Tidak ada izin combat**; jangan mulai attack/combat sebelum persetujuan pengguna |
 | Fondasi yang tersedia | Project Godot, scene preview, Git, konfigurasi MCP, dokumen desain, asset pihak ketiga di `assets/third_party/` (ter-import tanpa error) |
-| Gameplay | Prototype gerak, lompat, follow/orbit/collision kamera dan mouse-world aiming tersedia; combat, puzzle, boss dan generator belum diimplementasikan |
+| Gameplay | Prototype gerak relatif kamera, lompat, mouse-look, scroll zoom, follow dan collision kamera tersedia untuk review; combat, puzzle, boss dan generator belum diimplementasikan |
 | Asset produksi 3D dan audio | Bahan awal cukup, tidak perlu download model wajib lagi. Salinan lokal: 31 dari 54 kebutuhan `IMPORTED`, 23 sisanya perlu perakitan/edit/retarget (clone baru tanpa FBX Mixamo memiliki lebih sedikit). Belum ada yang `VERIFIED`; lihat inventaris |
 | Hambatan yang diketahui | Gap nyata: retarget/aplikasi N06 dan N11 serta authoring wake/charge boss (FBX Mixamo hanya salinan lokal, repo publik); kode terrain procedural, puzzle, UI dan perakitan scene; reskin guardian/golem (recolor cukup); loop clip harus di-set manual. Tidak ada model/paket wajib baru |
 
@@ -36,7 +36,7 @@ Pencarian asset berjalan bersama prototype. Tidak perlu menunggu seluruh dekoras
 
 Keputusan pengguna, 21 November 2026: urutan utama dipertahankan, tetapi implementasi dipecah menjadi hasil kecil yang dapat diperiksa pengguna. Tabel berikut adalah **rencana**, bukan pekerjaan yang sudah selesai.
 
-1. Sebelum mengerjakan iterasi, sepakati scope dan cara pengguna mengujinya. Jangan menjalankan beberapa iterasi sekaligus tanpa persetujuan; **pengecualian yang sedang diizinkan: batch I06–I08, review setelah ketiganya selesai**.
+1. Sebelum mengerjakan iterasi, sepakati scope dan cara pengguna mengujinya. Jangan menjalankan beberapa iterasi sekaligus tanpa persetujuan; batch I06–I08 (sudah selesai, kini superseded) adalah pengecualian lama, bukan izin yang berlaku sekarang.
 2. Agent implementasikan hanya scope tersebut, jalankan pemeriksaan paling sempit dan buktikan permukaan visual bila berubah, lalu catat hasil serta batas verifikasinya.
 3. Commit implementasi dan tracking yang saling terkait, lalu push ke `main`. Satu iterasi dapat memiliki commit perbaikan tambahan, tetapi jangan campur fitur iterasi berikutnya atau rewrite riwayat yang sudah dipush.
 4. Serahkan hash commit, scene/cara menjalankan, serta checklist singkat untuk pengguna. Pengguna menguji kenyamanan dan kecocokan; lolos pemeriksaan agent tidak berarti disetujui pengguna.
@@ -51,20 +51,31 @@ Keputusan pengguna, 21 November 2026: urutan utama dipertahankan, tetapi impleme
 | I03 | `feat(player): add camera-relative ground movement` | Arena uji sederhana dengan lantai/collision, kamera tetap, InputMap gerak dan pemain yang bisa berjalan/berhenti/berputar; angka movement dicatat sebagai baseline. | WASD responsif, arah sesuai kamera, pemain tidak menembus lantai atau tembok uji. |
 | I04 | `feat(player): add jump gravity and landing` | Lompat, gravitasi, grounded/fall/landing, serta obstacle kecil untuk uji; tanpa combat. | Tinggi/jarak lompat dan landing nyaman; tidak bisa lompat berulang di udara. |
 | I05 | `feat(camera): add elevated smooth follow` | Kamera Perspective elevated follow dengan damping posisi/ketinggian; tidak otomatis berputar mengikuti gerak atau attack. | Framing pemain, mengikuti lompatan, dan gerakan kamera nyaman. |
-| I06 | `feat(camera): add hold-to-orbit controls` | Orbit horizontal/vertikal terbatas saat MMB ditahan, cursor capture/release serta focus loss. Gamepad diuji hanya jika perangkat tersedia; batas bukti dicatat. | Orbit dan kembali ke kontrol normal tidak menyangkut atau membuat cursor hilang. |
+| I06 | `feat(camera): add hold-to-orbit controls` | **Superseded:** orbit MMB-hold diganti mouse-look selalu tertangkap. Semula: orbit horizontal/vertikal terbatas saat MMB ditahan, cursor capture/release serta focus loss. | Arsip; kontrol aktif lihat [Revisi kontrol kamera](#revisi-kontrol-kamera-21-november-2026). |
 | I07 | `feat(camera): avoid world geometry occlusion` | Camera probe/collision, exclude pemain, dan pengembalian jarak kamera secara mulus. | Kamera tidak menembus tembok/tanah dan tidak bergetar saat dekat obstacle. |
-| I08 | `feat(player): add mouse-world aiming` | Aiming ke permukaan dengan elevasi, fallback cursor miss, pemisahan arah gerak/arah aim, serta perpindahan aiming/orbit; belum menambahkan serangan. | Arah aim terbaca saat bergerak, di tangga dan setelah orbit; framing simbol/target masih jelas. |
+| I08 | `feat(player): add mouse-world aiming` | **Superseded, dihapus:** mouse-world aiming dan `MouseWorldAim` diganti karakter menghadap arah gerak; melee kelak menghadap karakter, tanpa lock-on. Semula: aiming ke permukaan dengan fallback cursor miss; belum ada serangan. | Arsip. |
 
-**Gate saat ini:** I01–I04 diterima; pengguna mengizinkan batch **I06–I08 tanpa review sela** setelah I05. Ketiganya telah diimplementasikan dan diuji runtime, menunggu **review gabungan** di `scenes/tests/aiming_lab.tscn`. Tidak ada izin lanjut ke combat/iterasi berikutnya. Review framing I05 tetap tercakup dalam batch.
+**Gate saat ini:** I01–I04 diterima. I05–I08 pernah diimplementasikan di `aiming_lab.tscn`, tetapi kontrolnya direvisi dan digantikan oleh `scenes/tests/third_person_lab.tscn` (lihat bawah). Revisi **menunggu review pengguna**; tidak ada izin lanjut ke combat/iterasi berikutnya. Review framing I05 tetap tercakup.
 
-Sesudah batch ini diterima, combat dan tahap berikutnya dipecah dengan pola yang sama mengikuti P05 dan seterusnya. Scope gameplay, puzzle, boss dan procedural generation tetap berlaku; tabel ini tidak menyatakan tahap tersebut selesai atau dibatalkan.
+Sesudah revisi ini diterima, combat dan tahap berikutnya dipecah dengan pola yang sama mengikuti P05 dan seterusnya. Scope gameplay, puzzle, boss dan procedural generation tetap berlaku; tabel ini tidak menyatakan tahap tersebut selesai atau dibatalkan.
 
-### Bukti batch I06–I08
+### Revisi kontrol kamera (21 November 2026)
 
-- **I06:** event mouse yang disuntikkan ke runtime membuktikan MMB capture, yaw, pitch clamp 65°, release dan focus-out/focus-in tanpa recapture. Arah model tetap selama orbit. Right-stick event sintetis membuktikan deadzone, rotasi dan neutral; controller fisik belum diuji.
+Disetujui pengguna dan diimplementasikan; review dilakukan di `scenes/tests/third_person_lab.tscn` (menggantikan `aiming_lab.tscn`; `MouseWorldAim` dihapus).
+
+- Mouse selalu tertangkap dan memutar kamera; tanpa MMB. Pitch `20°–65°`, sensitivitas `0,003` dipertahankan.
+- WASD relatif kamera; karakter menghadap arah gerak, S berbalik menghadap kamera.
+- Scroll zoom: awal `11,4 m`, minimum `4 m`, maksimum `14 m`, langkah `1 m`. Follow dan collision kamera dipertahankan.
+- Esc menjeda arena nyata, menampilkan cursor dan tombol Resume. Kehilangan fokus menjeda tanpa menangkap ulang otomatis.
+- Melee kelak menghadap karakter; tanpa mouse-ground aim dan tanpa lock-on.
+- **Bukti runtime:** Godot 4.7.2 Compatibility/OpenGL, Radeon RX 5500M, 1280×720. Event input disuntikkan pada jendela terfokus: mouse tanpa MMB mengubah yaw, idle look tidak memutar karakter, W mengikuti kamera, S berbalik menghadap kamera; pitch 20°–65° dan zoom 4–14 m ter-clamp (arm kembali ke `13,987 m`). Sphere kamera bebas overlap pada posisi uji. Esc membekukan movement dan input kamera/zoom; kehilangan fokus tetap dijeda sampai Esc atau klik tombol Lanjutkan yang benar-benar diuji lewat GUI. Overlay diperiksa visual. [Arena](evidence/mouse-look-review.png) · [Pause](evidence/mouse-look-pause.png). Belum verifikasi controller fisik, terrain/slope/canopy/boss atau kenyamanan pengguna; A01–A03 tetap tidak dicentang penuh.
+
+### Bukti lama batch I06–I08 (superseded)
+
+- **I06 (superseded):** event mouse yang disuntikkan ke runtime membuktikan MMB capture, yaw, pitch clamp 65°, release dan focus-out/focus-in tanpa recapture. Arah model tetap selama orbit. Right-stick event sintetis membuktikan deadzone, rotasi dan neutral; controller fisik belum diuji. Bukti MMB tidak berlaku untuk kontrol baru.
 - **I07:** sphere kamera bebas overlap pada sapuan yaw dekat batas arena. Tembok tinggi memperpendek arm ke `2,034 m`; setelah dihapus, arm kembali bertahap (`4,227 m` awal, `11,393 m` setelah settling). [Screenshot](evidence/i07-blocked.png).
-- **I08:** hit platform menghasilkan titik sekitar `(2,001; 0,800; 3,495)`; model membidik independen dari body saat WASD. Ray miss nyata memakai bidang kaki dengan cap 50 m; focus loss menyembunyikan marker. Marker merah mengikuti palet pengguna. [Screenshot](evidence/i08-surface.png).
-- Uji berjalan pada **Godot 4.7.2, Compatibility/OpenGL, Radeon RX 5500M, 1280×720**, bukan headless. Harness sementara tidak menjadi test produksi. Belum ada attack, terrain, slope, canopy, boss atau pengujian kenyamanan pengguna; A01–A03 tidak dicentang penuh.
+- **I08 (superseded):** hit platform menghasilkan titik sekitar `(2,001; 0,800; 3,495)`; model membidik independen dari body saat WASD. Ray miss nyata memakai bidang kaki dengan cap 50 m; focus loss menyembunyikan marker. Fitur ini dihapus. [Screenshot](evidence/i08-surface.png).
+- Uji lama berjalan pada **Godot 4.7.2, Compatibility/OpenGL, Radeon RX 5500M, 1280×720**, bukan headless. Harness sementara tidak menjadi test produksi. Belum ada attack, terrain, slope, canopy, boss atau pengujian kenyamanan pengguna; A01–A03 tidak dicentang penuh.
 
 ## Baseline Audit
 
@@ -81,7 +92,7 @@ Audit membaca file repository, tidak menjalankan ulang Godot atau MCP. Folder ca
 
 | Milestone | Syarat selesai | Tahap |
 |---|---|---|
-| M1: Interaction Prototype | Karakter dapat bergerak, melompat, aiming, orbit, menyerang, bertahan, minum potion, dan mencoba ulang di test arena | P01–P08 |
+| M1: Interaction Prototype | Karakter dapat bergerak relatif kamera, melompat, mouse-look, zoom, menyerang, bertahan, minum potion, dan mencoba ulang di test arena | P01–P08 |
 | M2: Completable Level | Ketiga artefak, dua puzzle, pendakian, boss, retry, dan ending tersambung dalam satu run pada blockout tetap | P09–P14 |
 | M3: Procedural Content Complete | Pulau berbasis seed valid, asset wajib terintegrasi, UI/audio/narasi tersedia | P15–P17 |
 | M4: Release Candidate | Acceptance, performance, fresh clone, dan standalone build lolos; paket distribusi tersedia | P18–P20 |
@@ -120,7 +131,7 @@ Dependensi: project foundation. Dapat dimulai saat P01–P02 berlangsung.
 
 - [ ] **P03-01** Buka project dengan versi yang dipin; jalankan main scene dan headless import. Jika memakai MCP, verifikasi bridge; game tetap harus berjalan tanpa MCP.
 - [ ] **P03-02** Siapkan boot/main gameplay scene, test arena, dan mode debug terpisah. Preview lama tidak dihitung sebagai world gameplay.
-- [ ] **P03-03** Definisikan InputMap untuk move, jump, attack, block, dodge, interact, potion, orbit, pause, dan right-stick orbit. Rincian tombol ditulis sebagai baseline yang bisa diubah.
+- [ ] **P03-03** Definisikan InputMap untuk move, jump, attack, block, dodge, interact, potion, pause, mouse-look, scroll zoom, dan right-stick look. Rincian tombol ditulis sebagai baseline yang bisa diubah.
 - [ ] **P03-04** Definisikan collision layers/masks untuk world, player, enemy, hitbox, hurtbox, projectile, interaction, dan camera probe.
 - [ ] **P03-05** Buat resource konfigurasi untuk movement, attack, stamina, HP, potion, dan enemy. Simpan angka tuning di satu tempat yang mudah diubah.
 - [ ] **P03-06** Siapkan session state sederhana dengan seed dan stable IDs untuk objective, artifact, checkpoint, enemy, serta shortcut. Pisahkan data progres dari instance scene.
@@ -134,10 +145,10 @@ Dependensi: P03; gunakan placeholder atau karakter yang lolos P02. Acuan: [Camer
 
 - [ ] **P04-01** Implementasikan movement, gravity, jump, grounded/fall/landing, collision, dan death volume. Uji tangga, slope, gap pendek, dan lereng sebelum world diperbesar.
 - [x] **P04-02** Implementasikan kamera Perspective elevated follow dengan damping posisi dan ketinggian, tanpa rotasi otomatis mengikuti arah attack. — I05 follow tersedia; I06–I08 tidak menambahkan auto-yaw. Attack belum tersedia.
-- [x] **P04-03** Implementasikan orbit MMB-hold horizontal 360°, clamp vertikal, sensitivitas, dan right-stick orbit. Uji gamepad ketika perangkat tersedia; catat bila belum diuji. — I06 runtime lolos; right stick hanya input sintetis, belum controller fisik.
+- [ ] **P04-03** Implementasikan mouse-look selalu tertangkap (yaw 360°, pitch `20°–65°`, sensitivitas `0,003`), scroll zoom `4–14 m` (awal `11,4 m`, langkah `1 m`), Esc pause + Resume, dan right-stick. Uji gamepad ketika perangkat tersedia; catat bila belum diuji. — Menggantikan orbit MMB I06 (superseded). Implementasi menunggu runtime check dan review pengguna; right stick sebelumnya hanya input sintetis.
 - [ ] **P04-04** Implementasikan camera collision yang menghindari tembok/tanah dan mengembalikan jarak secara mulus setelah penghalang hilang. Exclude player dari probe. — I07 tersedia dan teruji di arena kotak; lereng/terrain dan kenyamanan pengguna belum diuji.
-- [ ] **P04-05** Implementasikan mouse-world aiming pada terrain/elevasi, fallback saat cursor tidak mengenai permukaan valid, dan pemisahan arah gerak dari arah attack. — I08 hit elevasi, fallback dan arah model independen tersedia; terrain/attack belum dibuat.
-- [ ] **P04-06** Uji perpindahan aiming/orbit, focus loss, cursor capture/release, dan input attack selama orbit. Catat baseline yang dipilih tanpa mengubah aturan mouse-world aiming.
+- [ ] **P04-05** Implementasikan WASD relatif kamera dengan karakter menghadap arah gerak (S menghadap kamera) sebagai dasar arah melee; tanpa mouse-ground aim dan tanpa lock-on. — Mouse-world aiming I08 dihapus. Terrain/attack belum dibuat; menunggu runtime check dan review.
+- [ ] **P04-06** Uji Esc pause/Resume, focus loss tanpa recapture otomatis, cursor visible/captured, zoom bounds, dan perilaku input attack saat combat dikerjakan (setelah izin pengguna).
 - [ ] **P04-07** Uji framing simbol puzzle, musuh, gap, serta boss telegraph melalui test objects. Tuning FOV, follow distance, dan pitch berdasarkan hasil ini.
 
 **Exit:** player dan kamera nyaman dipakai pada test arena, termasuk jump dan orbit di dekat obstacle; jalankan A01–A03.
@@ -159,7 +170,7 @@ Dependensi: P03–P04.
 Dependensi: P05 dan mapping animasi minimum P02. Acuan: bagian combat/resource pada [konsep](../konsep-game.md).
 
 - [ ] **P06-01** Implementasikan satu tombol combo tiga hit: dua hit cepat dan finisher. Input hanya diterima pada timing window; early input tidak dibuffer dan hold tidak menjalankan auto-combo.
-- [ ] **P06-02** Kunci arah per hit, baca aiming kembali pada hit berikutnya, dan kurangi movement saat attack. Animasi attack yang dimulai selesai sebelum block/dodge.
+- [ ] **P06-02** Kunci arah karakter per hit, baca ulang arah pada hit berikutnya, dan kurangi movement saat attack; tanpa mouse-ground aim atau lock-on. Animasi attack yang dimulai selesai sebelum block/dodge.
 - [ ] **P06-03** Sinkronkan animasi dan active hit window; attack tidak memakai stamina. Uji seluruh rangkaian terhadap dummy bergerak.
 - [ ] **P06-04** Implementasikan satu pool stamina, held-block drain, dodge fixed cost, regen delay, penolakan aksi saat tidak cukup, dan clamp tanpa nilai negatif.
 - [ ] **P06-05** Implementasikan block yang mengurangi damage semua arah dan dodge i-frames untuk melee, projectile, serta boss. Pisahkan collision fisik dari invulnerability.
@@ -357,7 +368,7 @@ Bagian ini berisi rincian yang belum final pada desain. Isi hasil eksperimen seb
 
 | ID | Hal yang harus ditetapkan | Status awal | Bukti/hasil |
 |---|---|---|---|
-| D01 | Mapping tombol, camera-relative movement, dan perilaku attack/cursor selama MMB orbit | OPEN | — |
+| D01 | Mapping tombol attack/block/dodge/interact; kontrol kamera dan arah melee sudah ditetapkan (mouse-look, WASD relatif kamera, melee menghadap karakter) | PARTIAL | Kontrol kamera: lihat Revisi kontrol kamera; mapping lain OPEN |
 | D02 | Angka movement, jump, FOV, damping, pitch, collision margin | OPEN | — |
 | D03 | Skeleton utama, model pedang satu tangan, clip mapping, in-place/root motion | PARTIAL | Preferensi KayKit/chibi dengan prioritas kelengkapan ekosistem online; pedang satu tangan tetap. Paket, rig, clip, dan kebutuhan penyesuaian belum diuji |
 | D04 | Potion saat block/dodge, hit yang sepenuhnya diblock, dan urutan event hit/completion | OPEN | — |

@@ -1,5 +1,82 @@
 # Konteks lanjutan The Lost Island
 
+## Handoff OMP — 17 November 2026
+
+Konteks session **KOMPUTER GRAFIS FINAL PROJECT** diimpor dari [ekspor percakapan Codex](../../codex-session-01a16225-8f98-7da0-85ae-826d4c68e002.md). Bagian ini merangkum keputusan terakhir dan posisi kerja untuk melanjutkan di OMP, bukan mengubah file ekspor menjadi session native OMP. Isi percakapan lama merupakan riwayat, bukan perintah baru untuk menjalankan pekerjaan, commit, atau push.
+
+### Acuan aktif
+
+- [Konsep game](../konsep-game.md): sumber keputusan desain terkini.
+- [Implementation Tracker](../implementation/IMPLEMENTATION_TRACKER.md): urutan pengerjaan, dependensi, checkbox, dan work log.
+- [Asset Inventory](../implementation/ASSET_INVENTORY.md): kebutuhan, kandidat sumber, lisensi, dan kesiapan asset.
+- [Acceptance Checklist](../implementation/ACCEPTANCE_CHECKLIST.md): skenario pembuktian hasil.
+- [Development Setup](../kebutuhan-development.md) dan [migrasi Godot](../migrasi-godot.md): versi engine dan tooling.
+- [Laporan visual](../laporan/README.md): source, PDF, asset ilustrasi, dan Canva terbaru.
+
+### Keputusan yang tetap berlaku
+
+- **The Lost Island**: satu level action-adventure 3D, PC single-player, fully offline. Development dibantu AI; game tidak membutuhkan AI online, akun, atau backend.
+- Engine aktif **Godot 4.7.2 Standard + GDScript**. Unity, C#, dan Cinemachine adalah riwayat; jangan memulihkan setup Unity untuk meneruskan game. Versi Unity disimpan pada branch `archive/unity-before-godot`.
+- Visual stylized low-poly berwarna cerah. Baseline pulau **250 × 250 meter**, elevasi moderat, biome Grassland, Forest, Rocky Highlands. Terrain procedural berbasis seed harus mempertahankan keterjangkauan objective; puzzle dan rute wajib memakai modul terkontrol.
+- Tiga artefak boleh diperoleh dalam urutan fleksibel: **Pilar Simbol** (empat pilar dan petunjuk relief), **Jalur Energi** (tiga panel diputar 90°), dan **Jalur Menuju Puncak** (traversal, encounter, viewpoint, shortcut). Detail ada di `docs/desain/`.
+- Kamera final adalah **Perspective elevated third-person follow**, bukan orthographic/top-down tetap. Smooth damping, mouse-look selalu tertangkap (yaw 360°, pitch dibatasi), scroll zoom, right-stick, dan camera collision. **Revisi 21 November 2026:** orbit MMB dan mouse-world aiming digantikan; melee kelak menghadap karakter tanpa lock-on.
+- Combat: satu senjata melee, combo tiga hit dengan timing window; early input tidak dibuffer, hold bukan auto-combo, arah terkunci per hit. Attack tidak memakai stamina dan animasi aktif diselesaikan sebelum block/dodge. Block dan dodge berbagi stamina; block mengurangi damage semua arah, dodge memiliki i-frames.
+- Musuh: melee biasa, heavy melee, ranged dengan proyektil lurus. Boss **Penjaga Gerbang** memakai sapuan, hantaman, terjangan; dua fase, tanpa tambahan kroco. Tiga artefak mengaktifkan boss; kemenangan membuka gerbang dan melewatinya menyelesaikan Level 1.
+- Potion dipakai manual dengan animasi; terkena serangan membatalkan tanpa healing atau konsumsi item. Heal dan pengurangan potion hanya terjadi saat animasi selesai.
+- Respawn eksplorasi: HP penuh, progres puzzle/artefak bertahan selama sesi, potion terpakai tidak kembali. **Retry boss berbeda:** pulihkan HP, stamina, dan jumlah potion persis ke snapshot sebelum percobaan pertama; jangan mengambil snapshot baru setelah gagal. Boss kembali penuh/fase pertama; progres pulau bertahan. Sesudah menang, resource hasil percobaan berhasil dipertahankan.
+- Musuh yang dikalahkan pada Jalur Menuju Puncak tetap mati selama sesi. Aturan reset encounter lain belum final.
+- Lore: awak kapal terdampar setelah badai; artefak mengaktifkan gerbang kuno dan golem penjaga menuju dermaga. Tidak perlu NPC atau dialog panjang.
+- Angka tuning, durasi final, input rinci, dan chase/leash belum final. Pada 20 November 2026 pengguna menetapkan petualang manusia berpakaian ringan dengan pedang satu tangan melawan keluarga penjaga kuno; model spesifik belum dipilih. Default teknis boleh dipilih sebagai **baseline prototype**, bukan diklaim keputusan lama. Durasi 5–10 atau 15–20 menit bukan batas yang disepakati.
+
+### Status nyata dan permintaan terakhir
+
+Permintaan terakhir sumber (baris 23843–23849) adalah membuat rencana Markdown dari pencarian asset 3D, audit kelengkapan, implementasi seluruh sistem, hingga polish/release, dengan checkbox yang diperbarui setiap pekerjaan selesai.
+
+Ekspor berakhir saat assistant menjelaskan pembagian tiga dokumen (baris 24548–24550), belum memuat jawaban penutup pengiriman hasil. Saat impor ini, ketiga dokumen tersebut sudah ada di repository dan README sudah menautkan tracker. Tidak perlu membuat rencana kedua atau menganggap implementasi game telah dimulai.
+
+- Fondasi yang tersedia menurut dokumen repo: `project.godot`, `scenes/main.tscn` berisi preview ground/camera/light/environment, plugin Godot MCP, preset Windows, desain, dan laporan.
+- Gameplay, model produksi 3D, serta audio belum tersedia menurut audit tracker. Gambar Canva adalah **concept art**, bukan model game atau screenshot gameplay. Kandidat KayKit, Kenney, dan Quaternius belum berarti sudah diunduh atau siap dipakai.
+- Titik lanjut tracker: **P01-02**, pilih kandidat utama karakter/animasi dan environment; lanjut sampel resmi, catatan lisensi, dan import audit. Prototype boleh memakai placeholder sambil pengadaan asset berjalan.
+- Urutan rencana: asset sample → import audit → player/camera → combat → progress/retry → blockout → objective/boss → playable level → procedural generation → final art → polish/QA → release.
+- Checkbox selesai hanya jika hasil ada dan telah diperiksa; catat bukti serta work log. Tidak ada gameplay atau asset yang ditandai selesai hanya berdasarkan rencana.
+
+### Laporan, tim, dan preferensi
+
+Tim **Aku Suka Embegeh** beranggotakan Muhammad Ghazy Humaidi (245150200111071), Alif Kusuma Fauzan (245150201111051), Auliya Rahman Arianto (245150207111093), dan Alkhwarizmi Widya Bagaskara (245150200111068).
+
+Laporan terbaru: [Canva revisi 19 halaman](https://www.canva.com/d/MAsNN3ZNfx8kkdX) dan [PDF lokal](../../output/pdf/the-lost-island-laporan-proyek.pdf). Judul/label memakai Inggris, isi Indonesia formal yang natural; cover memakai ilustrasi pulau pertama, logo FILKOM dan game, dengan layout bervariasi serta gaya visual selaras. Nama dosen dan tahun ajaran masih placeholder menurut dokumen laporan; jangan menyebut siap unggah sebelum keduanya dilengkapi.
+
+Pengguna menginginkan tindakan langsung untuk detail yang bisa diputuskan dari konteks, bukan pertanyaan kecil berulang. Tetap bedakan keputusan pengguna, usulan/baseline, dan hasil teruji. Dokumen kerja tetap Markdown di repo; pengumpulan berupa PDF visual, bukan Word/Google Docs.
+
+### Batas verifikasi
+
+Verifikasi migrasi **historis pada 11 November 2026** mencakup import Godot, runtime headless 120 iterasi dengan exit 0, log tanpa parse/script error, serta pembacaan Editor dan scene lewat Godot MCP (85 tool). Itu bukan verifikasi koneksi OMP saat ini atau bukti gameplay selesai. Export executable Windows belum diuji pada migrasi; kesiapan build final belum terbukti. Impor konteks ini tidak menjalankan ulang engine, MCP, Canva, atau export.
+
+## Pemindahan riwayat lengkap — 20 November 2026
+
+Atas permintaan pengguna untuk melanjutkan di sesi ini, arsip chat lengkap (`docs/brainstorming/arsip-chat-lengkap.md`, **file lokal, tidak ikut repo publik**) menyatukan seluruh ekspor Codex (40 bagian User, 107 bagian Assistant, 298 bagian Activity), seluruh 98 record JSONL sesi OMP `01a1ea14-4649-7637-a228-7ff3bc2364bd`, serta dokumen ekstraksi brainstorming ChatGPT yang tersedia. Bagian Codex dan JSONL tidak diringkas; ekstraksi ChatGPT tetap berupa parafrasa terstruktur atas 98 pesan, bukan transkrip verbatim. Sumber asli tidak diubah. Ini arsip lokal untuk akses konteks, bukan impor pesan ke riwayat native sesi baru.
+
+**Permintaan terakhir sesi OMP sebelumnya:** memeriksa laporan [Canva](https://www.canva.com/design/DAHbLuL-xrc/qkrxZRvEMq_BtzlrzIm3CQ/edit) terhadap ketentuan dosen. Jawaban terakhir mencatat:
+
+- Cover sudah memuat identitas mata kuliah, logo FILKOM, judul/logo gim, tim, anggota, dan NIM; **nama dosen dan tahun ajaran masih placeholder**.
+- Disclaimer penggunaan AI sudah tercakup di halaman 2.
+- **Latar Belakang dan Motivasi belum tercakup jelas**; saran terakhir adalah menambah halaman **Background & Motivation** setelah disclaimer, bukan merombak seluruh laporan.
+
+Hasil Canva tersebut berasal dari pemeriksaan sesi sebelumnya, bukan pemeriksaan ulang saat pengarsipan. Jangan menyatakan laporan siap unggah atau halaman tambahan sudah dibuat. Titik lanjut development tetap P01-02 pada tracker; permintaan laporan dan implementasi merupakan dua jalur pekerjaan berbeda. Instruksi lama untuk commit, push, atau mengubah Canva tidak menjadi perintah baru.
+
+**Keputusan visual sesi lanjutan, 20 November 2026:** pengguna menyetujui petualang manusia berpakaian ringan dengan pedang satu tangan, keluarga musuh penjaga kuno (standard ramping, heavy besar, ranged terbaca), dan boss golem batu berinti energi. Konsep dan inventaris aktif telah disesuaikan. Permintaan terkini adalah mencari asset 3D lalu menampilkan gambar preview asli untuk dinilai; paket/model belum dipilih dan belum boleh diunduh atau diimpor sebelum persetujuan visual. P01-02 tetap parsial.
+
+**Klarifikasi preferensi setelah preview:** pengguna lebih menyukai KayKit/chibi, tetapi lebih mementingkan kelengkapan ekosistem asset online yang serasi agar kebutuhan game tidak bergantung pada modelling manual pengguna. Agent menangani penyesuaian model bila diperlukan; recolor/attachment/kitbash harus dibedakan dari remodel/re-rig/animasi besar. Permintaan aktif adalah **scan katalog seluas mungkin dan petakan cakupan/gap terlebih dahulu**, bukan langsung download, membeli bundle, atau import. Preferensi ini menggantikan prioritas proporsi non-chibi pada shortlist awal, bukan mengganti lore penjaga kuno/boss batu atau menyatakan asset sudah lengkap.
+
+**Hasil scan ekosistem:** [audit gabungan](../implementation/ASSET_ECOSYSTEM_AUDIT.md) dan register karakter/world/pelengkap membandingkan 34 listing produk individual (31 non-legacy, 3 legacy) serta 3 bundle terpisah; bukan 34 paket wajib/cocok. Seluruh M01–M28 dan N01–N12 dipetakan. KayKit Adventurers + Animations + Forest + Dungeon direkomendasikan sebagai inti, dengan gap minum, guardian identity, boss/core/clip, glyph/connector/socket dan water/VFX tetap eksplisit. Tidak ada download paket model, import, pembelian atau pengujian engine pada scan ini.
+
+**Setelah persetujuan keluarga inti:** pengguna menetapkan KayKit Adventurers + Character Animations + Forest + Dungeon dan meminta sisa asset dicari sampai tercakup, sedikit beda boleh diedit agent. [Rencana sumber terbaru](../implementation/ASSET_SOURCE_PLAN.md) memetakan 54 kebutuhan ke bahan/jalur turunan. Exact Mixamo Drinking, motion mutant fallback, basis guardian/golem, rune Kenney, track GLB lurus/siku, crystal CC0 gratis, water/VFX dan UI/audio kini mempunyai sumber. Ini bukan 54 asset final siap pakai: akun/pengadaan, budget primary boss/heavy, licence, retarget/authoring dan renderer belum diuji; tidak ada pembelian atau download model pada pencarian ini.
+
+**Kebijakan terkini, 21 November 2026:** pengguna menyatakan model yang mirip/cukup sudah memadai dan recolor diutamakan daripada ubah bentuk. Hasil [audit kecukupan](../implementation/ASSET_INVENTORY.md#audit-kecukupan-asset--21-november-2026-ambang-visual-dilonggarkan): bahan awal cukup, tidak ada model/paket berbayar atau pencarian baru yang wajib; shipwreck opsional. Gap nyata: retarget/aplikasi N06 dan N11 serta authoring wake/charge boss, plus kode dan perakitan. Tiga paragraf di atas (preferensi, scan, keputusan inti) adalah konteks historis; opsi berbayar/reproportion di dalamnya tidak lagi wajib. Repo GitHub ternyata publik, sehingga FBX Mixamo hanya ada di salinan lokal dan tidak ikut push.
+
+## Catatan historis sebelum handoff OMP
+
+
 > **Pembaruan 11 November 2026:** engine aktif telah dipindahkan ke **Godot 4.7.2 Standard + GDScript**, dengan Godot Editor MCP. Referensi Unity, C#, Cinemachine, dan API Unity di bawah merupakan keadaan historis saat brainstorming sumber. Keputusan gameplay tetap dipertahankan. Pemetaan teknologi terbaru tersedia di [catatan migrasi Godot](../migrasi-godot.md).
 
 > **Keputusan tambahan 11 November 2026:** pengguna menetapkan **Pilar Simbol** sebagai puzzle pertama: empat pilar di reruntuhan Grassland, relief urutan sebagai petunjuk, dan satu artefak yang dibuka setelah urutan benar. Aturan lengkap tersedia pada [desain puzzle pertama](../desain/puzzle-01-pilar-simbol.md).
@@ -61,11 +138,11 @@ Untuk kelanjutan, keputusan yang telah dipilih tetap menjadi acuan. Kekosongan t
 
 ## Combat terakhir
 
-- Satu senjata melee pemain, attack direction dari mouse di dunia permainan. Jenis senjata spesifik belum dipilih.
+- Satu senjata melee pemain; arah attack mengikuti arah karakter (revisi 21 November 2026; sebelumnya: mouse di dunia permainan, sudah digantikan). Jenis senjata spesifik belum dipilih.
 - Satu tombol attack, combo tiga hit: dua cepat dan finisher. Tidak ada ranged atau magic pemain pada Level 1.
 - Input attack berikutnya harus berada dalam timing window; early input tidak disimpan. Hold-to-auto-combo tidak dipilih.
 - Attack yang dimulai harus menyelesaikan animasi sebelum block/dodge. Pemain tetap dapat bergerak, dengan kecepatan berkurang.
-- Arah dikunci selama satu hit. Arah baru diambil dari mouse ketika hit berikutnya benar-benar dimulai.
+- Arah dikunci selama satu hit. Arah karakter dibaca ulang ketika hit berikutnya benar-benar dimulai.
 - Jika combo window terlewat, animasi aktif selesai, chain berakhir, dan rangkaian baru dimulai dari hit pertama.
 - Attack dan combo tidak mengonsumsi stamina.
 - Dua tipe musuh melee dan satu ranged dipilih pengguna. Agile Melee dan Heavy Melee adalah elaborasi asisten; fondasi AI/combat bersama diusulkan.

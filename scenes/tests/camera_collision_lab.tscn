@@ -39,5 +39,5 @@ shape = SubResource("TallShape")
 text = "I07 • COLLISION KAMERA"
 
 [node name="Help" parent="HUD" index="1"]
-text = "WASD: gerak • Space: lompat • Tahan klik tengah: orbit (Esc membatalkan)\nKamera mendekat saat tembok oranye tinggi atau dinding berada di antara kamera dan pemain, lalu kembali halus."
+text = "WASD: gerak • Space: lompat • Mouse tertangkap: putar kamera • Scroll: zoom 4–14 m • Esc: jeda/lanjut\nKamera mendekat saat tembok oranye tinggi atau dinding berada di antara kamera dan pemain; zoom-out dan kembali berjalan halus."
 autowrap_mode = 3

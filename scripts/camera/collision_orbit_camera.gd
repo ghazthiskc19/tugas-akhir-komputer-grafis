@@ -1,9 +1,9 @@
 extends "res://scripts/camera/orbit_camera.gd"
 ## I07: kamera orbit + collision dunia.
-## Seluruh update (stick, fokus ter-damping, query, penempatan) berjalan di satu langkah fisika,
+## Seluruh update (stick, fokus ter-damping, query, penempatan) berjalan di satu langkah fisika (dilewati saat jeda),
 ## sehingga batas jarak selalu dihitung dari arah dan fokus yang sama dengan yang dipakai menempatkan kamera.
 ## Sphere cast memakai radius penuh (>= near plane); tidak ada radius yang dikecilkan diam-diam.
-## Mendekat segera saat terhalang; kembali halus tetapi tidak pernah melewati batas aktif.
+## Mendekat segera saat terhalang atau zoom-in; zoom-out/kembali halus tetapi tidak pernah melewati batas aktif.
 
 @export var collision_enabled := true
 ## Hanya dunia (layer 1); pemain (layer 2) tidak menghalangi.
@@ -40,6 +40,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if is_paused():
+		return
 	_update_stick(delta)
 	_follow_focus(delta)
 	_limit = INF
