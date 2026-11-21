@@ -101,9 +101,11 @@ func _overlaps(origin: Vector3) -> bool:
 func _placement_distance(delta: float) -> float:
 	if _distance < 0.0:
 		_distance = _ideal_distance
-	var limit := minf(_limit, _ideal_distance)
-	if limit <= _distance:
-		_distance = limit
+	# limit == ideal berarti tidak terhalang; itu bukan batas yang boleh memotong ease zoom-in.
+	var limit := _limit if _limit < _ideal_distance else INF
+	# Hanya halangan nyata yang memotong jarak seketika; zoom scroll (masuk/keluar) selalu ter-ease.
+	if _limit < _distance and _limit < _ideal_distance:
+		_distance = _limit
 	else:
 		var eased := lerpf(_distance, _ideal_distance, 1.0 - exp(-return_damping * delta))
 		_distance = minf(eased, limit)

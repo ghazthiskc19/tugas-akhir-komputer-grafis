@@ -9,6 +9,7 @@ const INTERACTOR_SCRIPT := preload("res://scripts/interaction/interactor.gd")
 const POTION_PICKUP := preload("res://scenes/world/potion_pickup.tscn")
 const ARTIFACT_PICKUP := preload("res://scenes/world/artifact_pickup.tscn")
 const CHECKPOINT := preload("res://scenes/world/checkpoint.tscn")
+const ENEMY_IDS: Array[StringName] = [&"arena_standard", &"arena_heavy", &"arena_ranged"]
 
 @onready var player = $Player
 var hp_bar: ProgressBar
@@ -19,6 +20,7 @@ var progress_label: Label
 var status_label: Label
 var session: Node
 var interactor: Node
+var _reload_pending := false
 
 func _ready() -> void:
 	# Replace the inherited review obstacles and dummies, retaining its rig, sword and camera setup.
@@ -98,6 +100,35 @@ func _build_enemies() -> void:
 		enemy.player_path = NodePath("../../Player")
 		enemies.add_child(enemy)
 
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo or key.keycode != KEY_F5 or get_tree().paused:
+		return
+	get_viewport().set_input_as_handled()
+	if _reload_pending:
+		return
+	_reload_pending = true
+	_reload_enemies.call_deferred()
+
+## Revives all arena enemies at their spawns. Player, pickups, checkpoint and non-arena session state are untouched.
+func _reload_enemies() -> void:
+	_reload_pending = false
+	session.clear_registrations()
+	var old := get_node_or_null("Enemies")
+	if old != null:
+		remove_child(old)
+		old.free()
+	for projectile in get_tree().get_nodes_in_group(&"enemy_projectiles"):
+		projectile.get_parent().remove_child(projectile)
+		projectile.free()
+	for id in ENEMY_IDS:
+		session.killed_enemy_ids.erase(id)
+	_build_enemies()
+	for enemy in $Enemies.get_children():
+		session.register_enemy(enemy)
+	session.status_changed.emit()
+
 func _build_session() -> void:
 	session = SESSION_SCRIPT.new()
 	session.name = "Session"
@@ -137,7 +168,7 @@ func _build_hud() -> void:
 	stamina_bar = _bar(hud,Vector2(24,88),Color("607938"))
 	resource_label = _label(hud,"",Vector2(24,120),19)
 	status_label = _label(hud,"",Vector2(24,149),18)
-	_label(hud,"LMB: combo • RMB: block • Shift: sprint • Alt: dodge • Q: potion • E: interaksi",Vector2(24,180),18)
+	_label(hud,"LMB: combo • RMB: block • Shift: sprint • Alt: dodge • Q: potion • E: interaksi • F5: reload musuh",Vector2(24,180),18)
 	_label(hud,"WASD + Space • Mouse: kamera • Scroll: zoom • Esc: jeda",Vector2(24,207),18)
 	progress_label = _label(hud,"",Vector2(24,240),18)
 	prompt_label = _label(hud,"",Vector2(24,660),22)

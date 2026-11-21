@@ -33,6 +33,7 @@ Handoff ini adalah konteks minimum untuk kelanjutan; arsip percakapan bukan pras
 | Dodge | Alt; biaya 25 stamina, 0,25 s, iframe 0,18 s, kecepatan awal 12 m/s |
 | Potion | Q; channel authored 1,5 s, movement ×0,5; heal 40 + konsumsi satu hanya saat completion |
 | Interaksi / lompat | E / Space |
+| Reload musuh (lab) | F5 di arena: hidupkan ulang ketiga musuh di spawn awal (dibuat ulang, projectile dibersihkan, killed ID arena dihapus). HP/potion/artefak/checkpoint/preferensi pemain tidak berubah; diabaikan saat jeda/echo |
 | Kamera | mouse-look; pitch 20°–65°, sensitivitas default 0,003; wheel jarak 4–14 m |
 | Resource | HP 100, stamina 100; awal 3 potion, kapasitas 5; regen stamina 25/s setelah 0,75 s |
 
