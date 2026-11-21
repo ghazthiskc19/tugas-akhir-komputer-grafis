@@ -8,8 +8,8 @@ Dokumen ini menjadi checklist pelaksanaan Level 1, dari pencarian asset hingga d
 
 | Informasi | Status |
 |---|---|
-| Tahap aktif | P02: import dan kesiapan asset |
-| Pekerjaan berikutnya | P02-01 sisa (folder `custom/`, `scripts/`, `resources/`, scene `scenes/tests/asset_lab.tscn`) lalu P02-03: cek visual skala, arah depan, material dari kamera game; tetapkan skala referensi karakter |
+| Tahap aktif | P02 / I01: asset lab statis selesai diuji agent, menunggu review pengguna |
+| Pekerjaan berikutnya | Pengguna menjalankan `scenes/tests/asset_lab.tscn` dengan F6: cek warna/ukuran relatif dan pilih Rogue, Rogue Hooded, atau Ranger. Revisi I01 bila perlu; I02 belum diizinkan |
 | Fondasi yang tersedia | Project Godot, scene preview, Git, konfigurasi MCP, dokumen desain, asset pihak ketiga di `assets/third_party/` (ter-import tanpa error) |
 | Gameplay | Belum diimplementasikan |
 | Asset produksi 3D dan audio | Bahan awal cukup, tidak perlu download model wajib lagi. Salinan lokal: 31 dari 54 kebutuhan `IMPORTED`, 23 sisanya perlu perakitan/edit/retarget (clone baru tanpa FBX Mixamo memiliki lebih sedikit). Belum ada yang `VERIFIED`; lihat inventaris |
@@ -31,6 +31,33 @@ Pencarian asset berjalan bersama prototype. Tidak perlu menunggu seluruh dekoras
 4. Setelah selesai, perbarui checkbox, inventaris asset bila relevan, skenario acceptance yang diuji, lalu posisi **Tahap aktif/Pekerjaan berikutnya**. Commit perubahan implementasi dan tracking yang saling terkait.
 5. Jika asset atau sistem yang sudah diterima diganti, buka kembali pemeriksaan yang terdampak. Jangan mempertahankan centang lama untuk hasil yang belum diuji ulang.
 6. Angka dan aturan yang belum dipilih pada desain dicatat sebagai **baseline prototype**, beserta alasan dan hasil uji. Perubahan desain inti diperbarui ke dokumen konsep sebelum dianggap final.
+
+## Iterasi kecil dan persetujuan pengguna
+
+Keputusan pengguna, 21 November 2026: urutan utama dipertahankan, tetapi implementasi dipecah menjadi hasil kecil yang dapat diperiksa pengguna. Tabel berikut adalah **rencana**, bukan pekerjaan yang sudah selesai.
+
+1. Sebelum mengerjakan satu iterasi, sepakati scope dan cara pengguna mengujinya. **Jangan menjalankan beberapa iterasi sekaligus tanpa persetujuan.**
+2. Agent implementasikan hanya scope tersebut, jalankan pemeriksaan paling sempit dan buktikan permukaan visual bila berubah, lalu catat hasil serta batas verifikasinya.
+3. Commit implementasi dan tracking yang saling terkait, lalu push ke `main`. Satu iterasi dapat memiliki commit perbaikan tambahan, tetapi jangan campur fitur iterasi berikutnya atau rewrite riwayat yang sudah dipush.
+4. Serahkan hash commit, scene/cara menjalankan, serta checklist singkat untuk pengguna. Pengguna menguji kenyamanan dan kecocokan; lolos pemeriksaan agent tidak berarti disetujui pengguna.
+5. **Berhenti menunggu tanggapan pengguna.** Jika perlu revisi, perbaiki iterasi aktif, kirim commit perbaikan, dan ulangi review. Lanjut hanya setelah pengguna menyatakan hasilnya oke.
+
+### Batch pertama: asset lab → pemain dan kamera
+
+| Iterasi | Rencana commit | Scope minimum | Yang diperiksa pengguna |
+|---|---|---|---|
+| I01 | `feat(asset-lab): add static asset comparison scene` | Scene `scenes/tests/asset_lab.tscn` berisi kandidat pemain, musuh, golem, pohon, batu, dan pilar; lantai, kamera tetap, lighting, label serta skala pembanding. Tidak mengubah main scene, gameplay atau bentuk asset. | Jalankan F6: model terlihat, ukuran relatif masuk akal, warna cukup serasi; pilih pemain dasar. |
+| I02 | `feat(asset-lab): preview selected character animations` | Preview idle, walk/run dan satu serangan pada karakter terpilih; mapping serta loop yang relevan. Tidak retarget Mixamo, menambahkan combat atau mengubah bentuk model. | Gerak tidak merusak pose, animasi terbaca, senjata dapat ditempatkan pada tangan. |
+| I03 | `feat(player): add camera-relative ground movement` | Arena uji sederhana dengan lantai/collision, kamera tetap, InputMap gerak dan pemain yang bisa berjalan/berhenti/berputar; angka movement dicatat sebagai baseline. | WASD responsif, arah sesuai kamera, pemain tidak menembus lantai atau tembok uji. |
+| I04 | `feat(player): add jump gravity and landing` | Lompat, gravitasi, grounded/fall/landing, serta obstacle kecil untuk uji; tanpa combat. | Tinggi/jarak lompat dan landing nyaman; tidak bisa lompat berulang di udara. |
+| I05 | `feat(camera): add elevated smooth follow` | Kamera Perspective elevated follow dengan damping posisi/ketinggian; tidak otomatis berputar mengikuti gerak atau attack. | Framing pemain, mengikuti lompatan, dan gerakan kamera nyaman. |
+| I06 | `feat(camera): add hold-to-orbit controls` | Orbit horizontal/vertikal terbatas saat MMB ditahan, cursor capture/release serta focus loss. Gamepad diuji hanya jika perangkat tersedia; batas bukti dicatat. | Orbit dan kembali ke kontrol normal tidak menyangkut atau membuat cursor hilang. |
+| I07 | `feat(camera): avoid world geometry occlusion` | Camera probe/collision, exclude pemain, dan pengembalian jarak kamera secara mulus. | Kamera tidak menembus tembok/tanah dan tidak bergetar saat dekat obstacle. |
+| I08 | `feat(player): add mouse-world aiming` | Aiming ke permukaan dengan elevasi, fallback cursor miss, pemisahan arah gerak/arah aim, serta perpindahan aiming/orbit; belum menambahkan serangan. | Arah aim terbaca saat bergerak, di tangga dan setelah orbit; framing simbol/target masih jelas. |
+
+**Gate saat ini:** pengguna telah mengizinkan I01. Scene statis selesai dan diperiksa lewat render nyata Godot 4.7.2 pada 1280×720; [bukti visual](evidence/i01-asset-lab.png). **Menunggu review pengguna atas I01. I02 belum dikerjakan dan tidak dimulai sebelum hasil I01 diterima.**
+
+Sesudah batch ini diterima, combat dan tahap berikutnya dipecah dengan pola yang sama mengikuti P05 dan seterusnya. Scope gameplay, puzzle, boss dan procedural generation tetap berlaku; tabel ini tidak menyatakan tahap tersebut selesai atau dibatalkan.
 
 ## Baseline Audit
 
@@ -69,7 +96,7 @@ Dependensi: audit awal. Hasil: shortlist dan sampel yang dapat diuji, bukan kump
 
 Dependensi: sampel P01. Test scene yang direncanakan: `scenes/tests/asset_lab.tscn`.
 
-- [ ] **P02-01** Buat struktur `assets/third_party/`, `assets/custom/`, `scenes/`, `scripts/`, `resources/`, dan test scene sesuai kebutuhan. Simpan arsip besar/cache kerja di luar resource game yang diexport.
+- [ ] **P02-01** Buat struktur `assets/third_party/`, `assets/custom/`, `scenes/`, `scripts/`, `resources/`, dan test scene sesuai kebutuhan. Simpan arsip besar/cache kerja di luar resource game yang diexport. — Parsial: `scenes/tests/asset_lab.tscn` dan `assets/third_party/` tersedia. I01 berupa scene statis tanpa script/resource terpisah; folder kosong yang belum dipakai tidak dibuat.
 - [x] **P02-02** Import model dan material. Utamakan glTF/GLB yang tersedia; jika perlu konversi FBX/Blend, catat alat/versi dan simpan sumber yang boleh dibagikan. Periksa dependency `.bin` dan texture. — 1.281 file ter-import tanpa error; golem dikonversi Blender 4.5.16 LTS, sumber `.blend` disimpan dengan `.gdignore`.
 - [ ] **P02-03** Uji skala, arah depan, pivot, material, normal, texture, dan silhouette dari kamera permainan. Tetapkan satu skala referensi karakter untuk seluruh kit.
 - [ ] **P02-04** Uji skeleton, bone attachment, animasi, loop, transisi, serta in-place/root motion. Buktikan retargeting pada karakter terpilih sebelum bergantung pada library animasi.
@@ -358,6 +385,7 @@ Keempat anggota bisa menguji branch anggota lain. Perubahan file pusat seperti `
 | 2026-11-20 | P01-03/P01-04 (parsial) | OMP | 25 file/paket gratis diunduh ke `downloads/` (ignored), ZIP/GLB lolos cek integritas, lisensi dan SHA-256 dicatat di [ASSET_DOWNLOADS](ASSET_DOWNLOADS.md). Mixamo menunggu login pengguna; Frost Golem/Extra menunggu keputusan beli. | — | Login Mixamo; keputusan Frost Golem; P02 ekstrak ke `assets/` + import Godot |
 | 2026-11-21 | P01 selesai; P02-02; P02-01/04/06/08 (parsial) | OMP | Rock Golem diunduh via akun BlendSwap pengguna; Blender 4.5.16 LTS portable di `tools/` (hash cocok checksum resmi). Subset asset diekstrak ke `assets/third_party/` (1.681 file, 74 MB; musik WAV→OGG, SFX tidak relevan dibuang). Godot 4.7.2 import 1.281 file tanpa error setelah `.gdignore` folder kerja dan `filesystem/import/blender/enabled=false`. Uji muat: golem GLB 28 bone, Rogue 23 bone, clip Rig_Medium/Large, Drinking.fbx. Nama bone karakter = library animasi. `THIRD_PARTY_NOTICES.md` diisi; inventaris diperbarui ke status per kebutuhan. | — | Scene `asset_lab`, cek visual skala/material (P02-03), set loop clip, retarget Mixamo, rework golem |
 | 2026-11-21 | P02-04/06 (parsial), audit kecukupan | OMP | Ambang visual dilonggarkan (model mirip/cukup, recolor diutamakan): tidak ada model/paket baru wajib; M27 opsional; core golem cukup recolor + skala seragam + crystal. Parse statis GLB (satu kali, tanpa Godot): Rogue/Knight/Barbarian/Ranger identik dengan `Rig_Medium_*` (23 joint, nama, parent, rest pose; semua target clip ditemukan) tetapi rest pose berbeda dari `Rig_Large_*` (translasi 1/23 cocok), sehingga klaim Barbarian=Large dikoreksi dan clip Medium dipakai. Kesamaan rest pose bukan bukti visual; loop tidak diverifikasi. Hitungan tetap 31 IMPORTED / 23 MISSING, 0 VERIFIED; angka file mentah (1.681/1.281) bukan kesiapan. Repo GitHub ternyata publik: FBX Mixamo di-gitignore, hanya salinan lokal, clone baru harus mengunduh sendiri. Gameplay belum ada. | — | P02-03 cek visual, wrapper scene, retarget N06/N11, reskin guardian |
+| 2026-11-21 | I01; P02-01/03/08 (parsial) | OMP | Scene statis `scenes/tests/asset_lab.tscn`: Rogue, Rogue Hooded, Ranger, Knight, Barbarian, Rock Golem, pohon, batu, pilar; kamera tetap, label, lighting, lantai dan bar tepat 1 m. Palet pengguna disimpan di `docs/desain/palettes/`. Posisi golem/pohon didasarkan pada AABB nyata dan skala seragam; tidak remodel/recolor asset sumber, tidak animasi/Mixamo/gameplay. Run nyata Godot 4.7.2 Compatibility (Radeon RX 5500M), 1280×720, exit 0, capture PNG berhasil tanpa error/warning; [screenshot](evidence/i01-asset-lab.png). Main scene tidak diubah. | Commit I01 (log commit terkait) | Tunggu pilihan pemain serta review warna/skala dari pengguna; I02 diblok sampai disetujui |
 
 Template catatan sesi:
 

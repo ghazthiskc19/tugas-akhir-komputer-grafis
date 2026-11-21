@@ -40,6 +40,23 @@ Repository ini **public**. Motion FBX Mixamo tidak ikut clone; anggota tim mempe
 
 Model tersedia tidak berarti puzzle, terrain procedural, retarget animasi atau gameplay sudah selesai. Lihat inventaris untuk membedakan file yang dapat diimpor dari hasil integrasi yang sudah diuji.
 
+### Review I01: asset lab statis
+
+1. Buka `scenes/tests/asset_lab.tscn` di Godot **4.7.2 Standard**.
+2. Tekan **F6** untuk menjalankan scene tersebut. F5 tetap menjalankan main scene lama; main scene tidak diubah untuk showroom ini.
+3. Bandingkan kandidat **Rogue, Rogue Hooded, dan Ranger**, basis musuh, golem serta sampel lingkungan. Periksa ukuran relatif, arah hadap, material dan kecocokan warna dengan [referensi palet pengguna](docs/desain/palettes/README.md).
+4. Sampaikan pilihan pemain serta bagian warna/skala yang perlu direvisi. Ukuran showroom adalah baseline review, bukan ukuran final gameplay.
+
+Scene ini sengaja statis: belum ada kontrol pemain, animasi, combat, collision gameplay atau generator pulau. Material/tekstur model asal dipertahankan sebagai pembanding; palet mengarahkan lantai, display dan suasana, bukan klaim semua model sudah direcolor. **I02 tidak dikerjakan sebelum review I01 diterima pengguna.**
+
+[Bukti render I01 1280×720](docs/implementation/evidence/i01-asset-lab.png) diambil dari Godot 4.7.2 Compatibility. Ini pemeriksaan visual agent, bukan persetujuan akhir pengguna.
+
+Cara menjalankan langsung lewat terminal:
+
+```powershell
+godot --path . res://scenes/tests/asset_lab.tscn
+```
+
 ## Struktur
 
 ```text

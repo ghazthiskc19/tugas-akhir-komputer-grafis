@@ -229,3 +229,12 @@ Kondisi awal: seluruh model/world resource produksi, animasi, UI runtime, dan au
 | Tanggal | Asset ID | Kekurangan/temuan | Fallback atau tindakan berikutnya | PIC |
 |---|---|---|---|---|
 | 2026-11-17 | Semua baris produksi | Belum ada file 3D/audio/gameplay script pada audit awal | Ambil sampel P01-02–04, lalu uji pada P02 | Belum ditetapkan |
+
+## Bukti review statis I01 — 21 November 2026
+
+Scene `scenes/tests/asset_lab.tscn` menampilkan sembilan sampel: Rogue, Rogue Hooded, Ranger, Knight, Barbarian, Rock Golem, `Tree_2_C_Color1`, `Rock_1_A_Color1`, dan pilar Dungeon. [Screenshot runtime](evidence/i01-asset-lab.png) berasal dari render nyata Godot 4.7.2 Compatibility, 1280×720 (Radeon RX 5500M), exit 0 tanpa error/warning. Referensi warna ada di [palet pengguna](../desain/palettes/README.md).
+
+- Material/tekstur model asal dipertahankan; lantai/display/background memakai warna acuan. Kesesuaian akhir warna dan pilihan pemain **menunggu review pengguna**.
+- Bar pembanding panjangnya tepat 1 unit/meter. Karakter memakai skala sumber yang sama (`1.0`); perbedaan tinggi termasuk helm/hood tidak dinormalisasi per mesh.
+- Golem memakai skala seragam `0.32` (tinggi AABB sekitar `3.695 m`), posisi vertikal `2.8983` agar titik terendah mesh berada pada lantai. Pohon memakai skala `0.70` dan offset dasar `0.2753`; batu `1.50`. Ini baseline showroom, bukan balancing atau ukuran final dunia.
+- Tidak ada animasi, collision gameplay, attachment senjata, retarget, atau generator procedural pada I01. Status `IMPORTED` tidak dinaikkan menjadi `VERIFIED` hanya karena sampel terlihat di showroom; Gate A/B/C tetap memerlukan pemeriksaan yang belum dilakukan.
