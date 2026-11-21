@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/tests/follow_lab.tscn" id="1_lab"]
+[ext_resource type="Script" path="res://scripts/camera/orbit_camera.gd" id="2_cam"]
+
+[node name="I06_OrbitLab" instance=ExtResource("1_lab")]
+
+[node name="Camera3D" parent="." index="2"]
+script = ExtResource("2_cam")
+min_pitch_degrees = 20.0
+max_pitch_degrees = 65.0
+mouse_sensitivity = 0.003
+stick_speed = 2.0
+
+[node name="Header" parent="HUD" index="0"]
+text = "I06 • KAMERA ORBIT"
+
+[node name="Help" parent="HUD" index="1"]
+text = "WASD: gerak • Space: lompat • Tahan klik tengah: orbit (Esc membatalkan)\nStick kanan gamepad: orbit. Yaw 360°, pitch 20°–65°. Tanpa collision kamera (I07): tembok masih dapat menutupi pemain."
+autowrap_mode = 3
