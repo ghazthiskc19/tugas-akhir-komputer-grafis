@@ -63,10 +63,22 @@ godot --path . res://scenes/tests/asset_lab.tscn
 2. Klik tombol **Idle**, **Jalan**, **Lari**, dan **Serang**. Tiga gerak pertama berulang di tempat; serangan diputar sekali lalu kembali idle.
 3. Periksa pose tubuh, transisi gerak, dan apakah pedang mengikuti tangan kanan tanpa terlepas. Coba pindah dari serangan ke jalan/lari sebelum serangan selesai, serta klik serangan lagi untuk mengulang.
 
-Rogue tanpa hood dipakai sebagai **baseline sementara**, bukan pilihan pemain final yang ditetapkan pengguna. Scene ini hanya preview model/clip: tidak ada kontrol WASD, damage, combo, stamina, animasi Mixamo atau generator pulau. Model sumber dan asset lab I01 tidak diubah. **I03 menunggu review I02.**
+Rogue tanpa hood dipakai sebagai **baseline sementara**, bukan pilihan pemain final yang ditetapkan pengguna. Scene ini hanya preview model/clip: tidak ada kontrol WASD, damage, combo, stamina, animasi Mixamo atau generator pulau. Model sumber dan asset lab I01 tidak diubah. **I02 telah disetujui pengguna; iterasi berikutnya dibatasi ke gerak darat I03.**
 
 ```powershell
 godot --path . res://scenes/tests/animation_lab.tscn
+```
+
+### Review I03: gerak WASD
+
+Buka `scenes/tests/movement_lab.tscn` lalu **F6**. Klik jendela game agar menerima keyboard, kemudian gunakan **W/A/S/D**. W menuju atas layar; arah gerak relatif kamera tetap. Coba diagonal, berbalik arah, lepas tombol, dan berjalan menabrak batas serta dinding oranye. Karakter memakai animasi idle/jalan; belum ada lompat, combat atau kamera follow.
+
+Baseline yang boleh dituning setelah review: kecepatan `4 m/s`, akselerasi `20 m/s²`, perlambatan `25 m/s²`, dan turn rate `12/s`. Tombol diikat lewat physical keycode untuk posisi WASD. Layer world `1`, player `2`, mask player `1`; capsule radius `0.45 m`, tinggi `2.18 m`. Rasa gerak dan foot sliding masih perlu penilaian pengguna; loop jalan bukan bukti stride cocok dengan kecepatan dunia.
+
+[Preview arena I03](docs/implementation/evidence/i03-movement.png). I03 hanya menguji gerak darat dengan gravitasi kontak lantai; **I04/lompat menunggu persetujuan**. I01, I02 dan main scene lama tidak diubah.
+
+```powershell
+godot --path . res://scenes/tests/movement_lab.tscn
 ```
 
 ## Struktur

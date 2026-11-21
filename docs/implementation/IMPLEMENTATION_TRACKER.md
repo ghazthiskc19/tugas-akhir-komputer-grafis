@@ -8,10 +8,10 @@ Dokumen ini menjadi checklist pelaksanaan Level 1, dari pencarian asset hingga d
 
 | Informasi | Status |
 |---|---|
-| Tahap aktif | P02 / I02: preview animasi selesai diuji agent, menunggu review pengguna |
-| Pekerjaan berikutnya | Jalankan `scenes/tests/animation_lab.tscn` dengan F6; cek Idle/Jalan/Lari/Serang, pose dan pedang. Revisi I02 bila perlu; I03 belum diizinkan |
+| Tahap aktif | I03: gerak darat selesai diuji agent, menunggu review pengguna |
+| Pekerjaan berikutnya | Jalankan `scenes/tests/movement_lab.tscn` dengan F6; cek WASD, arah kamera, berhenti/putar, diagonal dan tabrakan dinding. I04/lompat belum diizinkan |
 | Fondasi yang tersedia | Project Godot, scene preview, Git, konfigurasi MCP, dokumen desain, asset pihak ketiga di `assets/third_party/` (ter-import tanpa error) |
-| Gameplay | Belum diimplementasikan |
+| Gameplay | Prototype gerak darat I03 tersedia pada arena terpisah; combat, puzzle, boss dan generator belum diimplementasikan |
 | Asset produksi 3D dan audio | Bahan awal cukup, tidak perlu download model wajib lagi. Salinan lokal: 31 dari 54 kebutuhan `IMPORTED`, 23 sisanya perlu perakitan/edit/retarget (clone baru tanpa FBX Mixamo memiliki lebih sedikit). Belum ada yang `VERIFIED`; lihat inventaris |
 | Hambatan yang diketahui | Gap nyata: retarget/aplikasi N06 dan N11 serta authoring wake/charge boss (FBX Mixamo hanya salinan lokal, repo publik); kode terrain procedural, puzzle, UI dan perakitan scene; reskin guardian/golem (recolor cukup); loop clip harus di-set manual. Tidak ada model/paket wajib baru |
 
@@ -55,7 +55,7 @@ Keputusan pengguna, 21 November 2026: urutan utama dipertahankan, tetapi impleme
 | I07 | `feat(camera): avoid world geometry occlusion` | Camera probe/collision, exclude pemain, dan pengembalian jarak kamera secara mulus. | Kamera tidak menembus tembok/tanah dan tidak bergetar saat dekat obstacle. |
 | I08 | `feat(player): add mouse-world aiming` | Aiming ke permukaan dengan elevasi, fallback cursor miss, pemisahan arah gerak/arah aim, serta perpindahan aiming/orbit; belum menambahkan serangan. | Arah aim terbaca saat bergerak, di tangga dan setelah orbit; framing simbol/target masih jelas. |
 
-**Gate saat ini:** pengguna telah menyetujui I01 (commit `81ddc40`). I02 tersedia di `scenes/tests/animation_lab.tscn`, memakai Rogue tanpa hood sebagai baseline sementara. Uji klik tombol, animasi dan render 1280×720 berhasil; [idle](evidence/i02-idle.png), [lari](evidence/i02-run.png), [serangan](evidence/i02-attack.png). **Menunggu review I02; I03 belum dimulai.**
+**Gate saat ini:** pengguna telah menyetujui I01 (`81ddc40`) dan I02 (`eca321c`) setelah mencoba di Godot. I03 tersedia dan lolos uji input/collision serta render; [bukti arena](evidence/i03-movement.png). **Menunggu review I03; I04 (lompat), kamera follow dan combat belum dimulai.**
 
 Sesudah batch ini diterima, combat dan tahap berikutnya dipecah dengan pola yang sama mengikuti P05 dan seterusnya. Scope gameplay, puzzle, boss dan procedural generation tetap berlaku; tabel ini tidak menyatakan tahap tersebut selesai atau dibatalkan.
 
@@ -409,3 +409,12 @@ Task berikutnya yang dependensinya sudah siap:
 - Pemeriksaan: run nyata Godot 4.7.2 Compatibility / Radeon RX 5500M pada 1280×720, exit 0, tanpa error/warning. Input klik pada keempat Button memulai clip terkait. Attack selesai kembali idle; attack yang dipotong dengan tombol Run tidak mengubah kembali mode Run. Actor tidak berpindah posisi dunia dan tangan bergerak (23 bone).
 - Bukti visual: screenshot idle/lari/serangan pada folder `evidence/`; karakter dan pedang tampak utuh. Kualitas gerak/transisi tetap menunggu penilaian pengguna. Belum ada damage, combo, stamina, WASD, retarget Mixamo atau generator procedural.
 - Commit implementasi menggunakan judul `feat(asset-lab): preview selected character animations`; I03 tetap diblok sampai pengguna menerima I02.
+
+## Hasil I03 — gerak darat relatif kamera
+
+- Implementasi baru: `scenes/tests/movement_lab.tscn`, `scripts/player/ground_player.gd`; empat action `move_*` physical WASD di `project.godot`. Main scene, I01/I02 dan asset sumber tidak diubah.
+- Arena tertutup 14×14 m, kamera tetap, empat boundary collider dan satu dinding tengah. Capsule pemain radius 0.45 m/tinggi 2.18 m; world layer 1, player layer 2/mask 1. Gerak memakai CharacterBody3D/move_and_slide dan gravitasi kontak lantai, tanpa jump.
+- Baseline: kecepatan 4 m/s, akselerasi 20 m/s², perlambatan 25 m/s², turn rate 12/s, blend idle/jalan 0.15 s. Input diproyeksikan ke basis horizontal kamera. Ini angka prototype, bukan balancing final.
+- Uji nyata Godot 4.7.2 Compatibility, Radeon RX 5500M, 1280×720, exit 0 tanpa error/warning. Event physical WASD menggerakkan pemain; uji W dan putar arah lolos. Kecepatan lurus/diagonal terukur sama 4.000/4.000 m/s. Pelepasan tombol menghentikan gerak dan kembali idle. Empat boundary menahan pusat capsule sekitar ±6.55 m; dinding tengah menahan posisi z sekitar -0.248 m. Pemain tetap grounded; simulasi notifikasi focus loss menghentikan gerak. Alt-tab fisik dan rasa gerak masih perlu review pengguna.
+- [Screenshot arena](evidence/i03-movement.png) diperiksa. Foot sliding/kenyamanan belum dinyatakan final. Belum ada kontrol lompat, aiming, orbit/follow, hitbox/damage, musuh atau pulau procedural.
+- I02 diterima pengguna; I03 akan diserahkan lewat commit `feat(player): add camera-relative ground movement`. Tunggu review I03 sebelum I04.

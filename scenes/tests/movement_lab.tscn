@@ -1,0 +1,202 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/ground_player.gd" id="1_player"]
+[ext_resource type="PackedScene" path="res://assets/third_party/kaykit/adventurers/characters/Rogue.glb" id="2_rogue"]
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 1
+background_color = Color(0.7451, 0.8706, 1, 1)
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.35
+tonemap_mode = 2
+reflected_light_source = 1
+
+[sub_resource type="StandardMaterial3D" id="FloorMat"]
+albedo_color = Color(0.6471, 0.8392, 0.6549, 1)
+roughness = 1.0
+metallic_specular = 0.0
+
+[sub_resource type="StandardMaterial3D" id="WallMat"]
+albedo_color = Color(0.25, 0.33, 0.48, 1)
+roughness = 1.0
+metallic_specular = 0.0
+
+[sub_resource type="StandardMaterial3D" id="ObstacleMat"]
+albedo_color = Color(0.95, 0.5, 0.15, 1)
+roughness = 1.0
+metallic_specular = 0.0
+
+[sub_resource type="BoxMesh" id="FloorMesh"]
+material = SubResource("FloorMat")
+size = Vector3(14, 0.2, 14)
+
+[sub_resource type="BoxShape3D" id="FloorShape"]
+size = Vector3(14, 0.2, 14)
+
+[sub_resource type="BoxMesh" id="WideWallMesh"]
+material = SubResource("WallMat")
+size = Vector3(15, 2, 0.5)
+
+[sub_resource type="BoxShape3D" id="WideWallShape"]
+size = Vector3(15, 2, 0.5)
+
+[sub_resource type="BoxMesh" id="InteriorMesh"]
+material = SubResource("ObstacleMat")
+size = Vector3(6, 2, 0.6)
+
+[sub_resource type="BoxShape3D" id="InteriorShape"]
+size = Vector3(6, 2, 0.6)
+
+[sub_resource type="BoxMesh" id="DeepWallMesh"]
+material = SubResource("WallMat")
+size = Vector3(0.5, 2, 14)
+
+[sub_resource type="BoxShape3D" id="DeepWallShape"]
+size = Vector3(0.5, 2, 14)
+
+[sub_resource type="CapsuleShape3D" id="PlayerShape"]
+radius = 0.45
+height = 2.18
+
+[node name="I03_MovementLab" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="KeyLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8829, 0.3504, -0.3175, 0, 0.6691, 0.7431, 0.4745, -0.6561, 0.5907, 0, 5, 0)
+light_energy = 0.1
+shadow_enabled = true
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.6428, 0.7660, 0, -0.7660, 0.6428, 0, 15, 12.6)
+current = true
+fov = 55.0
+
+[node name="World" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/Floor"]
+mesh = SubResource("FloorMesh")
+
+[node name="Collision" type="CollisionShape3D" parent="World/Floor"]
+shape = SubResource("FloorShape")
+
+[node name="NorthWall" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -7.25)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/NorthWall"]
+mesh = SubResource("WideWallMesh")
+
+[node name="Collision" type="CollisionShape3D" parent="World/NorthWall"]
+shape = SubResource("WideWallShape")
+
+[node name="SouthWall" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 7.25)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/SouthWall"]
+mesh = SubResource("WideWallMesh")
+
+[node name="Collision" type="CollisionShape3D" parent="World/SouthWall"]
+shape = SubResource("WideWallShape")
+
+[node name="EastWall" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.25, 1, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/EastWall"]
+mesh = SubResource("DeepWallMesh")
+
+[node name="Collision" type="CollisionShape3D" parent="World/EastWall"]
+shape = SubResource("DeepWallShape")
+
+[node name="WestWall" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.25, 1, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/WestWall"]
+mesh = SubResource("DeepWallMesh")
+
+[node name="Collision" type="CollisionShape3D" parent="World/WestWall"]
+shape = SubResource("DeepWallShape")
+
+[node name="InteriorWall" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1, -1)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/InteriorWall"]
+mesh = SubResource("InteriorMesh")
+
+[node name="Collision" type="CollisionShape3D" parent="World/InteriorWall"]
+shape = SubResource("InteriorShape")
+
+[node name="NorthLabel" type="Label3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.02, -6.4)
+pixel_size = 0.012
+modulate = Color(0.04, 0.16, 0.23, 1)
+outline_size = 0
+text = "BATAS UTARA"
+
+[node name="SouthLabel" type="Label3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.02, 6.4)
+pixel_size = 0.012
+modulate = Color(0.04, 0.16, 0.23, 1)
+outline_size = 0
+text = "BATAS SELATAN"
+
+[node name="WestLabel" type="Label3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, -5.6, 0.02, 0)
+pixel_size = 0.012
+modulate = Color(0.04, 0.16, 0.23, 1)
+outline_size = 0
+text = "BARAT"
+
+[node name="EastLabel" type="Label3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 5.6, 0.02, 0)
+pixel_size = 0.012
+modulate = Color(0.04, 0.16, 0.23, 1)
+outline_size = 0
+text = "TIMUR"
+
+[node name="ObstacleLabel" type="Label3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 2, 0.02, 0.6)
+pixel_size = 0.012
+modulate = Color(0.55, 0.22, 0.02, 1)
+outline_size = 0
+text = "DINDING UJI"
+
+[node name="Player" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 4)
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_player")
+camera_path = NodePath("../Camera3D")
+
+[node name="Collision" type="CollisionShape3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.09, 0)
+shape = SubResource("PlayerShape")
+
+[node name="Rogue" parent="Player" instance=ExtResource("2_rogue")]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Player"]
+root_node = NodePath("../Rogue")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Header" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 18.0
+offset_right = 760.0
+offset_bottom = 58.0
+theme_override_colors/font_color = Color(0.04, 0.16, 0.23, 1)
+theme_override_font_sizes/font_size = 26
+text = "I03 • GERAK DASAR"
+
+[node name="Help" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 62.0
+offset_right = 900.0
+offset_bottom = 120.0
+theme_override_colors/font_color = Color(0.04, 0.16, 0.23, 1)
+theme_override_font_sizes/font_size = 20
+text = "W/A/S/D: gerak relatif kamera (W = ke atas layar) • tanpa lompat"
