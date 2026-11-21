@@ -1,0 +1,43 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/tests/orbit_lab.tscn" id="1_lab"]
+[ext_resource type="Script" path="res://scripts/camera/collision_orbit_camera.gd" id="2_cam"]
+
+[sub_resource type="StandardMaterial3D" id="TallMat"]
+albedo_color = Color(0.95, 0.5, 0.15, 1)
+roughness = 1.0
+metallic_specular = 0.0
+
+[sub_resource type="BoxMesh" id="TallMesh"]
+material = SubResource("TallMat")
+size = Vector3(4, 6, 0.5)
+
+[sub_resource type="BoxShape3D" id="TallShape"]
+size = Vector3(4, 6, 0.5)
+
+[node name="I07_CameraCollisionLab" instance=ExtResource("1_lab")]
+
+[node name="Camera3D" parent="." index="2"]
+near = 0.1
+script = ExtResource("2_cam")
+collision_enabled = true
+world_mask = 1
+probe_radius = 0.25
+probe_margin = 0.1
+return_damping = 4.0
+
+[node name="TallWall" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 3, 6.2)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/TallWall"]
+mesh = SubResource("TallMesh")
+
+[node name="Collision" type="CollisionShape3D" parent="World/TallWall"]
+shape = SubResource("TallShape")
+
+[node name="Header" parent="HUD" index="0"]
+text = "I07 • COLLISION KAMERA"
+
+[node name="Help" parent="HUD" index="1"]
+text = "WASD: gerak • Space: lompat • Tahan klik tengah: orbit (Esc membatalkan)\nKamera mendekat saat tembok oranye tinggi atau dinding berada di antara kamera dan pemain, lalu kembali halus."
+autowrap_mode = 3
