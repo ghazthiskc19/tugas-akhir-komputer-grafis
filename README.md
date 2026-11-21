@@ -47,7 +47,7 @@ Model tersedia tidak berarti puzzle, terrain procedural, retarget animasi atau g
 3. Bandingkan kandidat **Rogue, Rogue Hooded, dan Ranger**, basis musuh, golem serta sampel lingkungan. Periksa ukuran relatif, arah hadap, material dan kecocokan warna dengan [referensi palet pengguna](docs/desain/palettes/README.md).
 4. Sampaikan pilihan pemain serta bagian warna/skala yang perlu direvisi. Ukuran showroom adalah baseline review, bukan ukuran final gameplay.
 
-Scene ini sengaja statis: belum ada kontrol pemain, animasi, combat, collision gameplay atau generator pulau. Material/tekstur model asal dipertahankan sebagai pembanding; palet mengarahkan lantai, display dan suasana, bukan klaim semua model sudah direcolor. **I02 tidak dikerjakan sebelum review I01 diterima pengguna.**
+Scene ini sengaja statis: belum ada kontrol pemain, animasi, combat, collision gameplay atau generator pulau. Material/tekstur model asal dipertahankan sebagai pembanding; palet mengarahkan lantai, display dan suasana, bukan klaim semua model sudah direcolor. **I01 telah disetujui pengguna; kelanjutan dibatasi ke preview animasi I02.**
 
 [Bukti render I01 1280×720](docs/implementation/evidence/i01-asset-lab.png) diambil dari Godot 4.7.2 Compatibility. Ini pemeriksaan visual agent, bukan persetujuan akhir pengguna.
 
@@ -55,6 +55,18 @@ Cara menjalankan langsung lewat terminal:
 
 ```powershell
 godot --path . res://scenes/tests/asset_lab.tscn
+```
+
+### Review I02: preview animasi Rogue
+
+1. Buka `scenes/tests/animation_lab.tscn`, lalu tekan **F6**.
+2. Klik tombol **Idle**, **Jalan**, **Lari**, dan **Serang**. Tiga gerak pertama berulang di tempat; serangan diputar sekali lalu kembali idle.
+3. Periksa pose tubuh, transisi gerak, dan apakah pedang mengikuti tangan kanan tanpa terlepas. Coba pindah dari serangan ke jalan/lari sebelum serangan selesai, serta klik serangan lagi untuk mengulang.
+
+Rogue tanpa hood dipakai sebagai **baseline sementara**, bukan pilihan pemain final yang ditetapkan pengguna. Scene ini hanya preview model/clip: tidak ada kontrol WASD, damage, combo, stamina, animasi Mixamo atau generator pulau. Model sumber dan asset lab I01 tidak diubah. **I03 menunggu review I02.**
+
+```powershell
+godot --path . res://scenes/tests/animation_lab.tscn
 ```
 
 ## Struktur

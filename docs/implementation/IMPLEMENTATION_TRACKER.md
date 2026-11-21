@@ -8,8 +8,8 @@ Dokumen ini menjadi checklist pelaksanaan Level 1, dari pencarian asset hingga d
 
 | Informasi | Status |
 |---|---|
-| Tahap aktif | P02 / I01: asset lab statis selesai diuji agent, menunggu review pengguna |
-| Pekerjaan berikutnya | Pengguna menjalankan `scenes/tests/asset_lab.tscn` dengan F6: cek warna/ukuran relatif dan pilih Rogue, Rogue Hooded, atau Ranger. Revisi I01 bila perlu; I02 belum diizinkan |
+| Tahap aktif | P02 / I02: preview animasi selesai diuji agent, menunggu review pengguna |
+| Pekerjaan berikutnya | Jalankan `scenes/tests/animation_lab.tscn` dengan F6; cek Idle/Jalan/Lari/Serang, pose dan pedang. Revisi I02 bila perlu; I03 belum diizinkan |
 | Fondasi yang tersedia | Project Godot, scene preview, Git, konfigurasi MCP, dokumen desain, asset pihak ketiga di `assets/third_party/` (ter-import tanpa error) |
 | Gameplay | Belum diimplementasikan |
 | Asset produksi 3D dan audio | Bahan awal cukup, tidak perlu download model wajib lagi. Salinan lokal: 31 dari 54 kebutuhan `IMPORTED`, 23 sisanya perlu perakitan/edit/retarget (clone baru tanpa FBX Mixamo memiliki lebih sedikit). Belum ada yang `VERIFIED`; lihat inventaris |
@@ -55,7 +55,7 @@ Keputusan pengguna, 21 November 2026: urutan utama dipertahankan, tetapi impleme
 | I07 | `feat(camera): avoid world geometry occlusion` | Camera probe/collision, exclude pemain, dan pengembalian jarak kamera secara mulus. | Kamera tidak menembus tembok/tanah dan tidak bergetar saat dekat obstacle. |
 | I08 | `feat(player): add mouse-world aiming` | Aiming ke permukaan dengan elevasi, fallback cursor miss, pemisahan arah gerak/arah aim, serta perpindahan aiming/orbit; belum menambahkan serangan. | Arah aim terbaca saat bergerak, di tangga dan setelah orbit; framing simbol/target masih jelas. |
 
-**Gate saat ini:** pengguna telah mengizinkan I01. Scene statis selesai dan diperiksa lewat render nyata Godot 4.7.2 pada 1280×720; [bukti visual](evidence/i01-asset-lab.png). **Menunggu review pengguna atas I01. I02 belum dikerjakan dan tidak dimulai sebelum hasil I01 diterima.**
+**Gate saat ini:** pengguna telah menyetujui I01 (commit `81ddc40`). I02 tersedia di `scenes/tests/animation_lab.tscn`, memakai Rogue tanpa hood sebagai baseline sementara. Uji klik tombol, animasi dan render 1280×720 berhasil; [idle](evidence/i02-idle.png), [lari](evidence/i02-run.png), [serangan](evidence/i02-attack.png). **Menunggu review I02; I03 belum dimulai.**
 
 Sesudah batch ini diterima, combat dan tahap berikutnya dipecah dengan pola yang sama mengikuti P05 dan seterusnya. Scope gameplay, puzzle, boss dan procedural generation tetap berlaku; tabel ini tidak menyatakan tahap tersebut selesai atau dibatalkan.
 
@@ -401,3 +401,11 @@ Masalah / baseline yang berubah:
 Commit:
 Task berikutnya yang dependensinya sudah siap:
 ```
+
+## Hasil I02 — preview animasi
+
+- Implementasi: `scenes/tests/animation_lab.tscn` dan `scripts/tests/animation_lab.gd`. I01, main scene dan asset sumber tidak diubah.
+- Rogue memakai empat salinan clip terpilih: `Idle_A`, `Walking_A`, `Running_A` (loop), dan `Melee_1H_Attack_Slice_Horizontal` (sekali). Library impor tidak dimutasi. Pedang `sword_1handed.gltf` mengikuti `handslot.r` melalui BoneAttachment3D.
+- Pemeriksaan: run nyata Godot 4.7.2 Compatibility / Radeon RX 5500M pada 1280×720, exit 0, tanpa error/warning. Input klik pada keempat Button memulai clip terkait. Attack selesai kembali idle; attack yang dipotong dengan tombol Run tidak mengubah kembali mode Run. Actor tidak berpindah posisi dunia dan tangan bergerak (23 bone).
+- Bukti visual: screenshot idle/lari/serangan pada folder `evidence/`; karakter dan pedang tampak utuh. Kualitas gerak/transisi tetap menunggu penilaian pengguna. Belum ada damage, combo, stamina, WASD, retarget Mixamo atau generator procedural.
+- Commit implementasi menggunakan judul `feat(asset-lab): preview selected character animations`; I03 tetap diblok sampai pengguna menerima I02.

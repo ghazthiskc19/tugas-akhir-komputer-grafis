@@ -1,0 +1,126 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/tests/animation_lab.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/third_party/kaykit/adventurers/characters/Rogue.glb" id="2_rogue"]
+[ext_resource type="PackedScene" path="res://assets/third_party/kaykit/adventurers/props/sword_1handed.gltf" id="3_sword"]
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 1
+background_color = Color(0.7451, 0.8706, 1, 1)
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.35
+tonemap_mode = 2
+reflected_light_source = 1
+
+[sub_resource type="StandardMaterial3D" id="FloorMat"]
+albedo_color = Color(0.6471, 0.8392, 0.6549, 1)
+roughness = 1.0
+metallic_specular = 0.0
+
+[sub_resource type="BoxMesh" id="FloorMesh"]
+material = SubResource("FloorMat")
+size = Vector3(40, 0.2, 40)
+
+[node name="I02_AnimationPreviewLab" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="KeyLight" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-48, -28, 0)
+light_color = Color(1, 1, 1, 1)
+light_energy = 0.1
+shadow_enabled = true
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.1, 0)
+mesh = SubResource("FloorMesh")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.8516, 0.0764, -0.5185, 0, 0.9892, 0.1458, 0.5241, -0.1242, 0.8425, -3.2, 2.0, 5.2)
+current = true
+fov = 40.0
+
+[node name="Actor" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.002, 0)
+
+[node name="Rogue" parent="Actor" instance=ExtResource("2_rogue")]
+
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Actor/Rogue/Rig_Medium/Skeleton3D"]
+bone_name = "handslot.r"
+
+[node name="Sword" parent="Actor/Rogue/Rig_Medium/Skeleton3D/BoneAttachment3D" instance=ExtResource("3_sword")]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Actor"]
+root_node = NodePath("../Rogue")
+
+[node name="ReviewHUD" type="CanvasLayer" parent="."]
+
+[node name="Header" type="Label" parent="ReviewHUD"]
+offset_left = 24.0
+offset_top = 18.0
+offset_right = 640.0
+offset_bottom = 58.0
+theme_override_colors/font_color = Color(0.04, 0.16, 0.23, 1)
+theme_override_font_sizes/font_size = 26
+text = "I02 • PREVIEW ANIMASI"
+
+[node name="ButtonRow" type="HBoxContainer" parent="ReviewHUD"]
+offset_left = 24.0
+offset_top = 66.0
+offset_right = 640.0
+offset_bottom = 114.0
+theme_override_constants/separation = 12
+
+[node name="IdleButton" type="Button" parent="ReviewHUD/ButtonRow"]
+custom_minimum_size = Vector2(120, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Idle"
+
+[node name="WalkButton" type="Button" parent="ReviewHUD/ButtonRow"]
+custom_minimum_size = Vector2(120, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Jalan"
+
+[node name="RunButton" type="Button" parent="ReviewHUD/ButtonRow"]
+custom_minimum_size = Vector2(120, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Lari"
+
+[node name="AttackButton" type="Button" parent="ReviewHUD/ButtonRow"]
+custom_minimum_size = Vector2(120, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Serang"
+
+[node name="StatusLabel" type="Label" parent="ReviewHUD"]
+offset_left = 24.0
+offset_top = 124.0
+offset_right = 1256.0
+offset_bottom = 180.0
+theme_override_colors/font_color = Color(0.04, 0.16, 0.23, 1)
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+text = "Klip aktif: -"
+
+[node name="Footer" type="Label" parent="ReviewHUD"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -64.0
+offset_right = -24.0
+offset_bottom = -20.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.04, 0.16, 0.23, 1)
+theme_override_font_sizes/font_size = 16
+text = "Preview animasi saja, bukan gameplay: tanpa input, hitbox, damage, stamina, atau gerak dunia. Rogue polos masih baseline sementara (bisa ganti setelah review). Klik tombol buat cek tiap gerakan."
+autowrap_mode = 3
+
+[editable path="Actor/Rogue"]
