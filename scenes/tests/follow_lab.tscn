@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/tests/jump_lab.tscn" id="1_lab"]
+[ext_resource type="Script" path="res://scripts/camera/smooth_follow_camera.gd" id="2_cam"]
+
+[node name="I05_FollowLab" instance=ExtResource("1_lab")]
+
+[node name="Camera3D" parent="." index="2"]
+transform = Transform3D(1, 0, 0, 0, 0.83205, 0.5547, 0, -0.5547, 0.83205, -4, 8, 13)
+current = true
+fov = 50.0
+script = ExtResource("2_cam")
+target_path = NodePath("../Player")
+offset = Vector3(0, 7, 9)
+focus_height = 1.0
+horizontal_damping = 8.0
+vertical_damping = 5.0
+
+[node name="Header" parent="HUD" index="0"]
+text = "I05 • KAMERA FOLLOW"
+
+[node name="Help" parent="HUD" index="1"]
+text = "WASD: gerak • Space: lompat\nKamera perspective mengikuti halus, rotasi tetap. Tanpa collision kamera (I07): tembok dapat menutupi pemain."
+autowrap_mode = 3
