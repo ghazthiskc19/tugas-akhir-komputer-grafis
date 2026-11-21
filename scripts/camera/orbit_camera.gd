@@ -95,6 +95,9 @@ func is_mouse_captured() -> bool:
 func get_zoom_distance() -> float:
 	return _ideal_distance
 
+func set_zoom_distance(distance: float) -> void:
+	_ideal_distance = clampf(distance, min_distance, max_distance)
+
 
 ## Titik fokus target (belum di-damping): posisi target + focus_height.
 func get_target_focus() -> Vector3:
@@ -227,7 +230,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _zoom(amount: float) -> void:
-	_ideal_distance = clampf(_ideal_distance + amount, min_distance, max_distance)
+	set_zoom_distance(_ideal_distance + amount)
 
 
 func _process(delta: float) -> void:
