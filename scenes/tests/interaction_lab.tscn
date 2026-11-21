@@ -1,0 +1,63 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/tests/third_person_lab.tscn" id="1_lab"]
+[ext_resource type="Script" path="res://scripts/tests/interaction_lab.gd" id="2_script"]
+[ext_resource type="Script" path="res://scripts/world/session_progress.gd" id="3_session"]
+[ext_resource type="Script" path="res://scripts/interaction/interactor.gd" id="4_inter"]
+[ext_resource type="PackedScene" path="res://scenes/world/potion_pickup.tscn" id="5_potion"]
+[ext_resource type="PackedScene" path="res://scenes/world/artifact_pickup.tscn" id="6_art"]
+[ext_resource type="PackedScene" path="res://scenes/world/checkpoint.tscn" id="7_cp"]
+
+[node name="InteractionLab" instance=ExtResource("1_lab")]
+script = ExtResource("2_script")
+
+[node name="Player" parent="." index="4"]
+position = Vector3(0, 0, 3)
+combat_enabled = true
+
+[node name="Session" type="Node" parent="." index="5"]
+script = ExtResource("3_session")
+player_path = NodePath("../Player")
+
+[node name="Interactor" type="Node" parent="." index="6"]
+script = ExtResource("4_inter")
+player_path = NodePath("../Player")
+
+[node name="PotionA" parent="." index="7" instance=ExtResource("5_potion")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 1)
+pickup_id = &"lab_potion_a"
+
+[node name="PotionB" parent="." index="8" instance=ExtResource("5_potion")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 1)
+pickup_id = &"lab_potion_b"
+
+[node name="Artifact" parent="." index="9" instance=ExtResource("6_art")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
+pickup_id = &"lab_artifact_1"
+
+[node name="Checkpoint" parent="." index="10" instance=ExtResource("7_cp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 1)
+checkpoint_id = &"lab_checkpoint"
+
+[node name="Header" parent="HUD" index="0"]
+text = "INTERAKSI & CHECKPOINT"
+
+[node name="Help" parent="HUD" index="1"]
+text = "Dekati objek lalu tekan E (tekan, bukan tahan) • Ramuan tidak terambil saat penuh\nCheckpoint tidak menyembuhkan • Jatuh di bawah y=-8 = mati, bangkit di checkpoint"
+autowrap_mode = 3
+
+[node name="Prompt" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 130.0
+offset_right = 1000.0
+offset_bottom = 162.0
+theme_override_colors/font_color = Color(0.04, 0.16, 0.23, 1)
+theme_override_font_sizes/font_size = 24
+
+[node name="Status" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 164.0
+offset_right = 1200.0
+offset_bottom = 196.0
+theme_override_colors/font_color = Color(0.04, 0.16, 0.23, 1)
+theme_override_font_sizes/font_size = 20
