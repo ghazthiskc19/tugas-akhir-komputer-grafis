@@ -1104,8 +1104,9 @@ func _update_compass(delta: float) -> void:
 		cardinals.append([atan2(c[0].dot(right), c[0].dot(fwd)), c[1]])
 	var found: Array = []
 	for t in _targets:
-		var node: Node3D = t["node"]
-		var pos: Vector3 = node.global_position if node != null and is_instance_valid(node) else t["pos"]
+		var target_node: Variant = t["node"]
+		var node: Node3D = target_node as Node3D if is_instance_valid(target_node) else null
+		var pos: Vector3 = node.global_position if node != null else t["pos"]
 		var d := pos - origin
 		var flat := Vector3(d.x, 0.0, d.z)
 		var dist := flat.length()
