@@ -231,11 +231,11 @@ Dependensi: P03, P05–P07. Aturan boss mengikuti [snapshot specification](../de
 
 Dependensi: movement/camera dan ukuran karakter terbukti. Belum memasukkan variasi procedural penuh.
 
-- [ ] **P09-01** Blockout area sekitar 250 × 250 meter sebagai baseline, dengan Grassland spawn, cabang Forest/Rocky Highlands, gerbang, dan akses dermaga.
-- [ ] **P09-02** Tetapkan main path, jalur alternatif, landmark, hidden viewpoint, dan shortcut. Ketiga lokasi artifact dapat dijangkau tanpa urutan wajib.
-- [ ] **P09-03** Sediakan ruang/sockets untuk modul dua puzzle, ascent, checkpoint, encounter, dan arena boss. Tentukan slope, clearance, dan jump gap dari hasil P04.
-- [ ] **P09-04** Tentukan graph/route contract untuk terrain generation dan navigation, termasuk koneksi jump yang memang diizinkan.
-- [ ] **P09-05** Uji perjalanan dari kamera permainan dan catat waktu antarobjektif. Kurangi ruang kosong sebelum menambah luas atau konten baru.
+- [x] **P09-01** Pulau baseline 250 × 250 m, spawn Grassland, cabang Forest/Rocky Highlands, pad gerbang dan dock: `scripts/world/island_terrain.gd`.
+- [x] **P09-02** Delapan rute, cabang alternatif, landmark, viewpoint dan koneksi antarpad tersedia; flood fill membuktikan pad artefak tidak membutuhkan pad lain lebih dahulu.
+- [x] **P09-03** Pad objective rata, ruang encounter, collision terrain dan clearance tersedia. Traversal internal objective diuji terpisah pada P10–P12.
+- [x] **P09-04** Graph rute + flood fill heightfield, slope dan obstacle clearance divalidasi; rute dunia tidak membutuhkan jump. Jump internal summit milik P12.
+- [x] **P09-05** Player fisika berjalan seluruh 8 rute dua arah pada baseline dan seed 404/5555: 16/16 per layout, tanpa teleport di tengah rute, jatuh atau stall. Rute terpanjang 150 m sekitar 22,7 s; bukti `evidence/terrain/traversal*.txt`.
 
 **Exit:** seluruh lokasi wajib terjangkau pada map tetap dengan placeholder. Jangan memakai landscape visual sebagai bukti collision dan akses sudah benar.
 
@@ -306,13 +306,13 @@ Dependensi: P09–P13.
 
 Dependensi: traversal P04, route contract P09, dan playable level P14.
 
-- [ ] **P15-01** Implementasikan seed dan random stream yang terkontrol; pisahkan variasi dekorasi dari penempatan objective agar perubahan dekorasi tidak merusak solusi.
-- [ ] **P15-02** Bangun procedural terrain mesh, collision, coastline, biome, dan elevasi moderat. Bentuk jalur dan pads modul mengikuti batas traversal.
+- [x] **P15-01** Seed terrain dan dekorasi terpisah; seed sama memberi hash heightfield/rute/obstacle identik, perubahan dekorasi tidak mengubah terrain/rute.
+- [x] **P15-02** Mesh vertex-color 201 × 201 dan collision dari triangle sama; coastline, biome, elevasi di luar jalur, pads rata dan rute berkemiringan moderat tersedia.
 - [ ] **P15-03** Tempatkan modul objective/arena/checkpoint/shortcut pada lokasi valid dan pertahankan koneksinya. Bersihkan obstacle yang menutup interaksi, clue, atau ruang dodge.
 - [ ] **P15-04** Validasi graph reachability disertai pemeriksaan slope, clearance, collision, serta jump gap. Graph yang tersambung saja belum membuktikan player dapat lewat.
 - [ ] **P15-05** Bangun navigation sesuai terrain/modul, tetapkan perilaku aggro/leash, dan uji melee/ranged pada slope serta cover nyata.
-- [ ] **P15-06** Tambahkan batas percobaan regeneration dan fallback seed/layout yang sudah terbukti valid. Hindari loading yang mengulang tanpa batas.
-- [ ] **P15-07** Jalankan seed matrix yang dicatat pada acceptance. Usulan awal: 20 seed yang dipin; jumlah ini baseline QA baru, bukan bukti bahwa generation sudah valid.
+- [x] **P15-06** Maksimum empat kandidat lalu baseline 20261122. Harness forced-invalid benar-benar mencapai fallback valid pada percobaan kelima, tanpa loop tak terbatas.
+- [ ] **P15-07** Data/geometry seluruh 20 seed checklist lolos, masing-masing first-attempt; belum full objective/boss run per seed. Bukti `evidence/terrain/data_validation_acceptance.txt`. Matrix tambahan 20 seed lain dicatat terpisah, bukan pengganti matrix acceptance.
 - [ ] **P15-08** Uji seed sama setelah reload/respawn, keenam urutan artifact, dan akses shortcut/boss; simpan seed reproduksi setiap kegagalan.
 
 **Exit:** A20–A21 lolos. Generator tidak menyatakan hasil valid jika ada objective wajib yang tidak dapat dicapai.
