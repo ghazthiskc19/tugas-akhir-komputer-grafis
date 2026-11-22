@@ -19,6 +19,13 @@ const AUDIO_CONFIG := "user://audio_preferences.cfg"
 
 const SFX_POOL_SIZE := 8
 const ARTIFACTS_NEEDED := 3
+## Ids owned by scripts/objectives/*.gd (ARTIFACT_ID) and puzzle_progress keys they write.
+const OBJECTIVE_ARTIFACTS := {"Pilar Simbol": &"forest_artifact", "Jalur Energi": &"energy_artifact", "Puncak": &"summit_artifact"}
+const PUZZLE_KEYS: Array[StringName] = [&"symbol_pillars", &"energy_path"]
+const GATEKEEPER_DEFEATED_KEY := &"gatekeeper_defeated"
+const GATE_ANCHOR_LABEL := "Gerbang Pulau"
+const SPAWN_ANCHOR_LABEL := "Titik Awal"
+const VIEWPOINT_ANCHOR_LABEL := "Titik Pandang"
 const SEED_MIN := -2147483648
 const SEED_MAX := 2147483647
 
@@ -991,6 +998,8 @@ func _update_controls_hint() -> void:
 
 func _refresh_targets() -> void:
 	_targets.clear()
+	var raw: Array[Dictionary] = []
+	var terrain_node: Node = null
 	if _game != null:
 		var terrain: Node = null
 		if "terrain" in _game:
@@ -1000,19 +1009,66 @@ func _refresh_targets() -> void:
 		if terrain == null or not terrain.has_method(&"get_compass_targets"):
 			terrain = _game.find_child("IslandTerrain", true, false)
 		if terrain != null and terrain.has_method(&"get_compass_targets"):
+			terrain_node = terrain
 			for entry: Dictionary in terrain.get_compass_targets():
 				var pos: Vector3 = entry.get("position", Vector3.INF)
 				if pos != Vector3.INF:
-					_targets.append({"label": String(entry.get("label", "Tujuan")), "pos": pos, "region": String(entry.get("region", "")), "hint": String(entry.get("hint", "")), "node": null})
+					var label := String(entry.get("label", "Tujuan"))
+					raw.append({"label": label, "pos": pos, "region": String(entry.get("region", "")), "hint": String(entry.get("hint", "")), "node": null, "id": _artifact_id(label, entry.get("artifact_id", &""))})
 	for node in get_tree().get_nodes_in_group(&"compass_target"):
 		var n3 := node as Node3D
 		if n3 == null or not n3.is_inside_tree() or _target_done(n3):
 			continue
-		_targets.append({"label": String(n3.get_meta(&"label", n3.name)), "pos": n3.global_position, "region": String(n3.get_meta(&"region", "")), "hint": String(n3.get_meta(&"hint", "")), "node": n3})
+		var label := String(n3.get_meta(&"label", n3.name))
+		raw.append({"label": label, "pos": n3.global_position, "region": String(n3.get_meta(&"region", "")), "hint": String(n3.get_meta(&"hint", "")), "node": n3, "id": _artifact_id(label, n3.get_meta(&"artifact_id", &""))})
 	var artifacts: int = _session.count_kind(&"artifact") if _session != null else 0
+	var gate_phase := artifacts >= ARTIFACTS_NEEDED
+	var won := _boss_won()
+	var gate_anchor := {}
+	for t: Dictionary in raw:
+		var label: String = t["label"]
+		if label == GATE_ANCHOR_LABEL:
+			gate_anchor = t
+			continue
+		if label == SPAWN_ANCHOR_LABEL or (gate_phase and label == VIEWPOINT_ANCHOR_LABEL):
+			continue
+		var id: StringName = t["id"]
+		if id != &"" and _session != null and _session.is_collected(id):
+			continue  # collected objective and its terrain anchor are no longer goals
+		_targets.append(t)
+	if not gate_phase:
+		return
+	# Three artifacts: the only goal is the gate until the boss is won, then the pier.
+	_targets.clear()
 	var boss3d := _boss as Node3D
-	if boss3d != null and artifacts >= ARTIFACTS_NEEDED and not _boss_dead():
-		_targets.append({"label": "Gerbang", "pos": boss3d.global_position, "region": "", "hint": "Tiga artefak terkumpul. Menuju gerbang.", "node": boss3d})
+	var gate_pos: Vector3 = gate_anchor.get("pos", Vector3.INF)
+	var gate_node: Node3D = null
+	if boss3d != null and boss3d.is_inside_tree():
+		gate_node = boss3d
+		gate_pos = boss3d.global_position
+	if won:
+		# The pier is the terrain's real dock_end anchor, not the gate/boss anchor.
+		var dock_end: Variant = terrain_node.anchor_positions.get(&"dock_end", null) if terrain_node != null and "anchor_positions" in terrain_node else null
+		if dock_end is Vector3:
+			_targets.append({"label": "Dermaga", "pos": terrain_node.to_global(dock_end) if terrain_node.is_inside_tree() else dock_end, "region": "", "hint": "Gerbang terbuka. Menuju dermaga untuk pulang.", "node": null, "id": &""})
+		return
+	if gate_pos == Vector3.INF:
+		return
+	_targets.append({"label": "Gerbang", "pos": gate_pos, "region": "", "hint": "Tiga artefak terkumpul. Menuju gerbang.", "node": gate_node, "id": &""})
+
+
+## Stable id of the artifact behind a compass target: explicit artifact_id from the owner, else the central table
+## keyed by the exact label both the terrain anchors and the module markers use.
+func _artifact_id(label: String, explicit: Variant) -> StringName:
+	if String(explicit) != "":
+		return StringName(String(explicit))
+	return OBJECTIVE_ARTIFACTS.get(label, &"")
+
+
+func _boss_won() -> bool:
+	if _boss_dead():
+		return true
+	return _session != null and _session.puzzle_progress.get(GATEKEEPER_DEFEATED_KEY, false) == true
 
 
 func _target_done(node: Node) -> bool:
@@ -1075,7 +1131,7 @@ func _update_compass(delta: float) -> void:
 	var nearest_d := INF
 	for f: Dictionary in kept:
 		var label: String = f["t"]["label"]
-		markers.append([f["angle"], label, int(f["dist"]), COL_GOLD if label == "Gerbang" else COL_FOAM])
+		markers.append([f["angle"], label, int(f["dist"]), COL_GOLD if label == "Gerbang" or label == "Dermaga" else COL_FOAM])
 		if f["dist"] < nearest_d:
 			nearest_d = f["dist"]
 			nearest = f["t"]
@@ -1103,7 +1159,7 @@ func _objective_text(nearest: Dictionary, dist: float) -> String:
 	else:
 		lines.append("Semua artefak terkumpul. Menuju gerbang.")
 	if puzzles > 0:
-		lines.append("Puzzle selesai: %d" % puzzles)
+		lines.append("Puzzle selesai: %d/%d" % [puzzles, PUZZLE_KEYS.size()])
 	return "\n".join(lines)
 
 
@@ -1122,31 +1178,27 @@ func _snapshot_session() -> void:
 	_base_artifacts = _session.count_kind(&"artifact")
 	_base_potions = _session.count_kind(&"potion")
 	_base_kills = _session.killed_enemy_ids.size()
-	_base_puzzle_hash = _session.puzzle_progress.hash()
+	_base_puzzle_hash = _puzzle_hash(_session.puzzle_progress)
 	_base_puzzle_done = _count_done(_session.puzzle_progress)
 	_base_checkpoint = _session.checkpoint_id
 
 
+## Counts ONLY the two real puzzles; shortcut, sockets and boss flags in puzzle_progress are not puzzles.
 func _count_done(progress: Variant) -> int:
 	var n := 0
 	if progress is Dictionary:
-		for value in (progress as Dictionary).values():
-			if _is_done_value(value):
+		for key: StringName in PUZZLE_KEYS:
+			if (progress as Dictionary).get(key, false) == true:
 				n += 1
 	return n
 
 
-func _is_done_value(value: Variant) -> bool:
-	if value is bool:
-		return value
-	if value is Dictionary:
-		for key in [&"solved", &"done", &"complete", &"completed", "solved", "done", "complete", "completed"]:
-			if (value as Dictionary).get(key, false) == true:
-				return true
-		return false
-	if value is String or value is StringName:
-		return String(value) in ["solved", "done", "complete", "completed"]
-	return false
+func _puzzle_hash(progress: Variant) -> int:
+	var states: Array[bool] = []
+	if progress is Dictionary:
+		for key: StringName in PUZZLE_KEYS:
+			states.append((progress as Dictionary).get(key, false) == true)
+	return states.hash()
 
 
 func _poll_session() -> void:
@@ -1155,7 +1207,7 @@ func _poll_session() -> void:
 	var artifacts: int = _session.count_kind(&"artifact")
 	var potions: int = _session.count_kind(&"potion")
 	var kills: int = _session.killed_enemy_ids.size()
-	var puzzle_hash: int = _session.puzzle_progress.hash()
+	var puzzle_hash := _puzzle_hash(_session.puzzle_progress)
 	var done := _count_done(_session.puzzle_progress)
 	if artifacts > _base_artifacts:
 		play_event(&"artifact")
