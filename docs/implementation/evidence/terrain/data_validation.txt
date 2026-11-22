@@ -1,0 +1,32 @@
+== 20 pinned seeds (procedural=true) ==
+seed 101: valid=true fallback=false attempts=1 active_seed=101 ms=1252 route_max_slope=8.36 relief=7.84 max_h=8.46 obstacles=319 flood_ok=true errors=[]
+seed 202: valid=true fallback=false attempts=1 active_seed=202 ms=1274 route_max_slope=6.99 relief=8.11 max_h=8.77 obstacles=320 flood_ok=true errors=[]
+seed 303: valid=true fallback=false attempts=1 active_seed=303 ms=1263 route_max_slope=8.24 relief=7.47 max_h=8.09 obstacles=332 flood_ok=true errors=[]
+seed 404: valid=true fallback=false attempts=1 active_seed=404 ms=1250 route_max_slope=7.24 relief=9.59 max_h=10.20 obstacles=301 flood_ok=true errors=[]
+seed 505: valid=true fallback=false attempts=1 active_seed=505 ms=1264 route_max_slope=7.47 relief=5.75 max_h=6.42 obstacles=327 flood_ok=true errors=[]
+seed 606: valid=true fallback=false attempts=1 active_seed=606 ms=1269 route_max_slope=7.16 relief=7.87 max_h=8.49 obstacles=331 flood_ok=true errors=[]
+seed 707: valid=true fallback=false attempts=1 active_seed=707 ms=1261 route_max_slope=7.65 relief=7.05 max_h=7.75 obstacles=318 flood_ok=true errors=[]
+seed 808: valid=true fallback=false attempts=1 active_seed=808 ms=1279 route_max_slope=8.45 relief=6.87 max_h=7.49 obstacles=317 flood_ok=true errors=[]
+seed 909: valid=true fallback=false attempts=1 active_seed=909 ms=1268 route_max_slope=7.63 relief=8.80 max_h=9.40 obstacles=315 flood_ok=true errors=[]
+seed 1010: valid=true fallback=false attempts=1 active_seed=1010 ms=1307 route_max_slope=6.88 relief=7.76 max_h=8.39 obstacles=325 flood_ok=true errors=[]
+seed 1111: valid=true fallback=false attempts=1 active_seed=1111 ms=1274 route_max_slope=7.70 relief=8.77 max_h=9.39 obstacles=327 flood_ok=true errors=[]
+seed 2222: valid=true fallback=false attempts=1 active_seed=2222 ms=1250 route_max_slope=8.08 relief=6.96 max_h=7.95 obstacles=303 flood_ok=true errors=[]
+seed 3333: valid=true fallback=false attempts=1 active_seed=3333 ms=1276 route_max_slope=8.12 relief=7.52 max_h=8.07 obstacles=309 flood_ok=true errors=[]
+seed 4444: valid=true fallback=false attempts=1 active_seed=4444 ms=1265 route_max_slope=8.08 relief=7.12 max_h=7.74 obstacles=316 flood_ok=true errors=[]
+seed 5555: valid=true fallback=false attempts=1 active_seed=5555 ms=1262 route_max_slope=9.18 relief=7.29 max_h=7.87 obstacles=307 flood_ok=true errors=[]
+seed 6666: valid=true fallback=false attempts=1 active_seed=6666 ms=1279 route_max_slope=6.86 relief=8.89 max_h=9.49 obstacles=337 flood_ok=true errors=[]
+seed 7777: valid=true fallback=false attempts=1 active_seed=7777 ms=1358 route_max_slope=7.17 relief=6.49 max_h=7.10 obstacles=328 flood_ok=true errors=[]
+seed 8888: valid=true fallback=false attempts=1 active_seed=8888 ms=1486 route_max_slope=7.34 relief=6.11 max_h=6.73 obstacles=305 flood_ok=true errors=[]
+seed 9999: valid=true fallback=false attempts=1 active_seed=9999 ms=1626 route_max_slope=8.45 relief=6.44 max_h=7.05 obstacles=322 flood_ok=true errors=[]
+seed 31415: valid=true fallback=false attempts=1 active_seed=31415 ms=1693 route_max_slope=7.97 relief=7.11 max_h=7.72 obstacles=294 flood_ok=true errors=[]
+SUMMARY: all_valid=true fallbacks=0 distinct_heightfields=20/20 total_ms=26456
+== reproducibility (seed 4242 twice, procedural) ==
+identical heightfield/routes/obstacles: true  (A=[4094059155, 1703318428, 1407031724] B=[4094059155, 1703318428, 1407031724])
+== non-procedural ignores the seed value ==
+baseline identical for seed 1 vs 999 (procedural=false): true, active_seed=20261122
+== decoration-seed independence (seed 4242) ==
+terrain hash same: true  routes hash same: true  obstacles changed: true  still valid: true []
+== different seeds differ ==
+seed 4242 vs baseline heightfield equal: false
+== forced invalid layouts (all non-baseline candidates rejected) ==
+attempts=5 (MAX_ATTEMPTS=4 + 1 fallback) used_fallback=true final_active_seed=20261122 final_valid=true ms=7202 attempt_log_seeds=[[31337, false], [1573961945, false], [2107043715, false], [1200092866, false], [20261122, true]]

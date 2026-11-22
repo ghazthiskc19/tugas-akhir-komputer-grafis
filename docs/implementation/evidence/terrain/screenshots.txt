@@ -1,0 +1,6 @@
+saved view_spawn_to_hub
+saved view_island_south
+saved view_summit_boss_dock
+saved view_symbol_forest
+saved view_energy_plain
+saved overview_topdown(.png|_routes.png)
