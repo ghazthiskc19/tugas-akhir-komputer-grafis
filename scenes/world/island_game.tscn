@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/tests/melee_lab.tscn" id="1_rig"]
+[ext_resource type="Script" path="res://scripts/world/island_game.gd" id="2_game"]
+
+[node name="TheLostIsland" instance=ExtResource("1_rig")]
+script = ExtResource("2_game")
+
+[node name="Player" parent="." index="4"]
+position = Vector3(0, 0.1, 85)
+jump_enabled = true
+
+[node name="Camera3D" parent="." index="2"]
+collision_enabled = false

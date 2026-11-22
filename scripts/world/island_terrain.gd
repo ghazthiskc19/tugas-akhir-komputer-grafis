@@ -29,7 +29,7 @@ const OBJECTIVE_ANCHORS := {
 	&"spawn": Vector3(0, 0, 85),
 	&"symbol": Vector3(-65, 0, 0),
 	&"energy": Vector3(60, 0, 0),
-	&"summit": Vector3(0, 0, -65),
+	&"summit": Vector3(0, 0, -50),
 	&"boss": Vector3(0, 0, -100),
 }
 ## Flat pads (height exactly 0). [center(x,z), radius_x, radius_z, blend_width, coast_margin]
@@ -37,12 +37,13 @@ const PAD_DEFS := {
 	&"spawn": [Vector2(0, 85), 15.0, 15.0, 14.0, 14.0],
 	&"symbol": [Vector2(-65, 0), 26.0, 26.0, 16.0, 14.0],
 	&"energy": [Vector2(60, 0), 26.0, 26.0, 16.0, 14.0],
-	&"summit": [Vector2(0, -65), 28.0, 24.0, 20.0, 14.0],
-	&"boss": [Vector2(0, -100), 28.0, 15.0, 5.0, 4.0],
+	# Rect pads: flat region = module AABB + 2 m (covers triangle interpolation across the edge). Summit AABB x+-28 z-50+-24; boss AABB x+-21 z-100+-17 plus approach to z-78.
+	&"summit": [Vector2(0, -50), 30.0, 26.0, 14.0, 14.0, &"rect"],
+	&"boss": [Vector2(0, -97.5), 23.5, 22.0, 5.0, 0.0, &"rect"],
 	&"encounter_standard": [Vector2(0, 48), 10.0, 10.0, 12.0, 12.0],
 	&"encounter_heavy": [Vector2(0, 25), 10.0, 10.0, 12.0, 12.0],
 	&"encounter_ranged": [Vector2(0, 5), 10.0, 10.0, 12.0, 12.0],
-	&"foothill_checkpoint": [Vector2(0, -36), 6.0, 6.0, 8.0, 12.0],
+	&"foothill_checkpoint": [Vector2(0, -21), 6.0, 6.0, 8.0, 12.0],
 	&"boss_checkpoint": [Vector2(-22, -97), 5.0, 5.0, 6.0, 8.0],
 	&"viewpoint": [Vector2(-84, -42), 6.0, 6.0, 10.0, 12.0],
 }
@@ -50,10 +51,11 @@ const PAD_DEFS := {
 const ROUTE_DEFS := {
 	&"spawn_symbol": [[Vector2(0, 85), true], [Vector2(-30, 62), false], [Vector2(-58, 30), false], [Vector2(-65, 0), true]],
 	&"spawn_energy": [[Vector2(0, 85), true], [Vector2(30, 62), false], [Vector2(56, 30), false], [Vector2(60, 0), true]],
-	&"spawn_summit": [[Vector2(0, 85), true], [Vector2(0, 48), true], [Vector2(0, 25), true], [Vector2(0, 5), true], [Vector2(0, -36), true], [Vector2(0, -65), true]],
-	&"symbol_summit": [[Vector2(-65, 0), true], [Vector2(-60, -32), false], [Vector2(-34, -56), false], [Vector2(0, -65), true]],
-	&"energy_summit": [[Vector2(60, 0), true], [Vector2(52, -34), false], [Vector2(32, -56), false], [Vector2(0, -65), true]],
-	&"summit_boss": [[Vector2(0, -65), true], [Vector2(0, -100), true]],
+	&"spawn_summit": [[Vector2(0, 85), true], [Vector2(0, 48), true], [Vector2(0, 25), true], [Vector2(0, 5), true], [Vector2(0, -21), true], [Vector2(0, -50), true]],
+	&"symbol_summit": [[Vector2(-65, 0), true], [Vector2(-60, -26), false], [Vector2(-38, -46), false], [Vector2(0, -50), true]],
+	&"energy_summit": [[Vector2(60, 0), true], [Vector2(52, -28), false], [Vector2(36, -46), false], [Vector2(0, -50), true]],
+	# Lane through the summit module underpass is global x 1.5 (free x 0..3) for z -50 -> -74; reconnects to the boss at x 0 north of the module.
+	&"summit_boss": [[Vector2(1.5, -50), true], [Vector2(1.5, -62), true], [Vector2(1.5, -74), true], [Vector2(1.5, -80), true], [Vector2(0, -100), true]],
 	&"energy_boss": [[Vector2(60, 0), true], [Vector2(70, -40), false], [Vector2(50, -82), false], [Vector2(26, -98), false], [Vector2(0, -100), true]],
 	&"viewpoint_spur": [[Vector2(-65, 0), true], [Vector2(-80, -20), false], [Vector2(-84, -42), true]],
 }
@@ -65,7 +67,7 @@ const ROUTE_GRAPH_EDGES := [
 	[&"energy", &"boss", &"energy_boss"], [&"symbol", &"viewpoint", &"viewpoint_spur"],
 ]
 const EXTRA_ANCHORS := {
-	&"foothill_checkpoint": Vector3(0, 0, -36),
+	&"foothill_checkpoint": Vector3(0, 0, -21),
 	&"boss_checkpoint": Vector3(-22, 0, -97),
 	&"encounter_standard": Vector3(0, 0, 48),
 	&"encounter_heavy": Vector3(0, 0, 25),
@@ -88,6 +90,10 @@ const MIN_ANCHOR_SHORE := 8.0            # land-field distance (m) anchors must 
 const WALK_SLOPE_DEG := 35.0             # free flood-fill slope limit
 const CORRIDOR_SLOPE_DEG := 20.0         # route-only flood-fill slope limit
 const MAX_JUMP_GAP := 3.0                # documented allowed jump link (none are generated)
+## Summit module AABB (local space): x +-28, z -50 +-24 (parent places the module at the summit anchor).
+## No decoration solid may come within r + SUMMIT_KEEPOUT_MARGIN of it.
+const SUMMIT_FOOTPRINT := Rect2(-28.0, -74.0, 56.0, 48.0)
+const SUMMIT_KEEPOUT_MARGIN := 3.0
 const MIN_RELIEF := 3.0                  # off-route terrain must vary at least this much (not a fake flat plane)
 const MAX_HEIGHT := 16.0
 
@@ -251,7 +257,7 @@ func is_dry_at(x: float, z: float) -> bool:
 
 func get_pad_def(pad: StringName) -> Dictionary:
 	var d: Array = PAD_DEFS[pad]
-	return {"center": d[0], "radius_x": d[1], "radius_z": d[2], "blend": d[3]}
+	return {"center": d[0], "radius_x": d[1], "radius_z": d[2], "blend": d[3], "rect": d.size() > 5}
 
 
 ## Metres beyond the pad edge (negative inside). Minimum over all pads.
@@ -351,6 +357,10 @@ func validate_layout() -> Dictionary:
 				var px: float = c.x + cos(ang) * float(d[1]) * ring
 				var pz: float = c.y + sin(ang) * float(d[2]) * ring
 				max_dev = maxf(max_dev, absf(height_at(px, pz)))
+		if d.size() > 5:
+			for sx in [-1.0, 1.0]:
+				for sz in [-1.0, 1.0]:
+					max_dev = maxf(max_dev, absf(height_at(c.x + sx * (float(d[1]) - 2.0), c.y + sz * (float(d[2]) - 2.0))))
 		var blocked := 0
 		for o in _obstacles:
 			if _pad_dist_one(d, o["pos"].x, o["pos"].y) < float(o["r"]) + PAD_SOLID_MARGIN:
@@ -396,6 +406,13 @@ func validate_layout() -> Dictionary:
 	rep["metrics"]["route_clearance_violations"] = route_viol
 	if route_viol > 0:
 		errors.append("%d obstacles inside route clearance" % route_viol)
+	var footprint_viol := 0
+	for o in _obstacles:
+		if SUMMIT_FOOTPRINT.grow(float(o["r"]) + SUMMIT_KEEPOUT_MARGIN - 0.01).has_point(o["pos"]):
+			footprint_viol += 1
+	rep["metrics"]["summit_footprint_violations"] = footprint_viol
+	if footprint_viol > 0:
+		errors.append("%d obstacles inside summit module footprint" % footprint_viol)
 	rep["metrics"]["obstacle_count"] = _obstacles.size()
 	rep["metrics"]["relief_off_route"] = _relief
 	rep["metrics"]["max_height"] = _max_h
@@ -728,9 +745,7 @@ func _land_field(x: float, z: float, route_d: float) -> float:
 	var s := -sd + _noise_coast.get_noise_2d(x, z) * 9.0
 	for name: StringName in PAD_DEFS:
 		var d: Array = PAD_DEFS[name]
-		var c: Vector2 = d[0]
-		var dn := Vector2((x - c.x) / float(d[1]), (z - c.y) / float(d[2])).length()
-		s = maxf(s, float(d[4]) + (1.0 - dn) * minf(float(d[1]), float(d[2])))
+		s = maxf(s, float(d[4]) - _pad_dist_one(d, x, z))
 	return maxf(s, 16.0 - route_d)
 
 
@@ -752,6 +767,9 @@ func _biome_weights(x: float, z: float) -> Vector4:
 
 func _pad_dist_one(d: Array, x: float, z: float) -> float:
 	var c: Vector2 = d[0]
+	if d.size() > 5:  # axis-aligned rectangle, d[1]/d[2] are half extents (exact signed distance)
+		var q := Vector2(absf(x - c.x) - float(d[1]), absf(z - c.y) - float(d[2]))
+		return Vector2(maxf(q.x, 0.0), maxf(q.y, 0.0)).length() + minf(maxf(q.x, q.y), 0.0)
 	var dn := Vector2((x - c.x) / float(d[1]), (z - c.y) / float(d[2])).length()
 	return (dn - 1.0) * minf(float(d[1]), float(d[2]))
 
@@ -824,8 +842,9 @@ func _clear_for(p: Vector2, r: float, route_margin: float, pad_margin: float, mi
 		return false
 	if pad_distance(p.x, p.y) < r + pad_margin:
 		return false
-	var dock_dx := absf(p.x)
-	if dock_dx < 8.0 + r and p.y < -102.0:
+	if absf(p.x) < 8.0 + r and p.y < -102.0:
+		return false
+	if SUMMIT_FOOTPRINT.grow(r + SUMMIT_KEEPOUT_MARGIN).has_point(p):
 		return false
 	return normal_at(p.x, p.y).y >= min_ny
 
@@ -1262,7 +1281,8 @@ func probe_collision() -> Dictionary:
 			continue
 		var local_y: float = to_local(hit["position"]).y
 		var ground := height_at(p.x, p.y)
-		# Dock tiles sit 3 cm above the boss pad; solids are excluded by the route/pad clearance.
+		if absf(p.x) < 4.0 and p.y < -106.0 and p.y > -122.2:
+			ground = maxf(ground, 0.03)  # dock deck top, 3 cm above the boss pad
 		max_err = maxf(max_err, absf(local_y - ground))
 	return {"checked": pts.size(), "missed": missed, "max_error": max_err}
 

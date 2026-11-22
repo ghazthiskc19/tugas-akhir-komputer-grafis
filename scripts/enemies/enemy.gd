@@ -15,6 +15,7 @@ const MOVEMENT := "res://assets/third_party/kaykit/character_animations/animatio
 const MELEE := "res://assets/third_party/kaykit/character_animations/animations/Rig_Medium/Rig_Medium_CombatMelee.glb"
 const RANGED := "res://assets/third_party/kaykit/character_animations/animations/Rig_Medium/Rig_Medium_CombatRanged.glb"
 const PROJECTILE_SCRIPT := preload("res://scripts/enemies/enemy_projectile.gd")
+const GUARD_APPEARANCE := preload("res://scripts/enemies/guard_appearance.gd")
 
 const WORLD_MASK := 1
 const PLAYER_MASK := 2
@@ -160,6 +161,7 @@ func _ready() -> void:
 	if _skeleton == null:
 		push_error("Enemy %s: Skeleton3D tidak ada di model" % name)
 	_label = get_node_or_null("HealthLabel") as Label3D
+	GUARD_APPEARANCE.apply(_model, _skeleton, archetype)
 	_build_library()
 	_build_telegraph()
 	_build_flash()
@@ -172,6 +174,20 @@ func _ready() -> void:
 	_ray.exclude = [get_rid()]
 	_update_label()
 	_play_loop(&"idle")
+
+
+## The GLB mesh resources are shared between instances: drop this instance's overlay/override materials and tween before it is freed.
+func _exit_tree() -> void:
+	if _flash_tween != null:
+		_flash_tween.kill()
+	if _model == null or not is_instance_valid(_model):
+		return
+	for node in _model.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance := node as MeshInstance3D
+		mesh_instance.material_overlay = null
+		if mesh_instance.mesh != null:
+			for surface in mesh_instance.mesh.get_surface_count():
+				mesh_instance.set_surface_override_material(surface, null)
 
 
 func is_dead() -> bool:
