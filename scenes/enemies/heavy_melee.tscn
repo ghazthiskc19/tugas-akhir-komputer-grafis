@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy.gd" id="1_enemy"]
 [ext_resource type="Script" path="res://scripts/combat/damageable.gd" id="2_health"]
 [ext_resource type="PackedScene" path="res://assets/third_party/kaykit/adventurers/characters/Barbarian.glb" id="3_model"]
 [ext_resource type="PackedScene" path="res://assets/third_party/kaykit/adventurers/props/axe_2handed.gltf" id="4_weapon"]
+[ext_resource type="Script" path="res://scripts/combat/weapon_mount.gd" id="99_mount"]
 
 [sub_resource type="CapsuleShape3D" id="BodyShape"]
 radius = 0.65
@@ -12,7 +13,6 @@ height = 2.4
 [sub_resource type="CapsuleShape3D" id="HurtShape"]
 radius = 0.75
 height = 2.5
-
 [node name="HeavyMelee" type="CharacterBody3D" groups=["enemies"]]
 collision_layer = 8
 collision_mask = 11
@@ -39,10 +39,11 @@ shape = SubResource("HurtShape")
 
 [node name="Model" parent="." instance=ExtResource("3_model")]
 
-[node name="WeaponSlot" type="BoneAttachment3D" parent="Model/Rig_Medium/Skeleton3D"]
-bone_name = "handslot.r"
-
-[node name="Weapon" parent="Model/Rig_Medium/Skeleton3D/WeaponSlot" instance=ExtResource("4_weapon")]
+[node name="WeaponMount" type="Node" parent="."]
+script = ExtResource("99_mount")
+model_path = NodePath("Model")
+weapon = ExtResource("4_weapon")
+weapon_scale = 1.5
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 root_node = NodePath("../Model")

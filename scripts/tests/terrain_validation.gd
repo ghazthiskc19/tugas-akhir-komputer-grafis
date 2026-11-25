@@ -49,11 +49,15 @@ func _save(name: String) -> void:
 func _run(mode: String) -> void:
 	match mode:
 		"data":
-			_data(PINNED_SEEDS, "supplemental pinned seeds")
+			var ok := _data(PINNED_SEEDS, "supplemental pinned seeds", false)
 			_save("data_validation.txt")
+			quit(0 if ok else 1)
+			return
 		"acceptance":
-			_data(ACCEPTANCE_SEEDS, "ACCEPTANCE_CHECKLIST seeds")
+			var ok := _data(ACCEPTANCE_SEEDS, "ACCEPTANCE_CHECKLIST seeds", true)
 			_save("data_validation_acceptance.txt")
+			quit(0 if ok else 1)
+			return
 		"traverse":
 			await _traverse()
 			_save("traversal.txt" if OS.get_cmdline_user_args().size() < 2 else "traversal_seed_%s.txt" % OS.get_cmdline_user_args()[1])
@@ -73,7 +77,8 @@ func _hash_state(t: Node) -> Array:
 	return [hash(t._h.to_byte_array()), hash(routes), hash(obs)]
 
 
-func _data(seeds: Array, title: String) -> void:
+## Returns true only if every check passed. `no_fallback` additionally requires zero fallback layouts across `seeds`.
+func _data(seeds: Array, title: String, no_fallback: bool) -> bool:
 	_p("== %d %s (procedural=true) ==" % [seeds.size(), title])
 	var all_ok := true
 	var fallbacks := 0
@@ -102,6 +107,7 @@ func _data(seeds: Array, title: String) -> void:
 		hashes[hash(t._h.to_byte_array())] = true
 		t.free()
 	_p("SUMMARY: all_valid=%s fallbacks=%d distinct_heightfields=%d/%d total_ms=%d" % [all_ok, fallbacks, hashes.size(), seeds.size(), total_ms])
+	var pass_all: bool = all_ok and (fallbacks == 0 or not no_fallback) and hashes.size() == seeds.size()
 
 	_p("== reproducibility (seed 4242 twice, procedural) ==")
 	var a := S.new()
@@ -110,7 +116,9 @@ func _data(seeds: Array, title: String) -> void:
 	var b := S.new()
 	b.configure(4242, true)
 	b.generate_data()
-	_p("identical heightfield/routes/obstacles: %s  (A=%s B=%s)" % [_hash_state(a) == _hash_state(b), _hash_state(a), _hash_state(b)])
+	var repro_ok: bool = _hash_state(a) == _hash_state(b)
+	_p("identical heightfield/routes/obstacles: %s  (A=%s B=%s)" % [repro_ok, _hash_state(a), _hash_state(b)])
+	pass_all = pass_all and repro_ok
 	_p("== non-procedural ignores the seed value ==")
 	var c := S.new()
 	c.configure(1, false)
@@ -118,16 +126,22 @@ func _data(seeds: Array, title: String) -> void:
 	var d := S.new()
 	d.configure(999, false)
 	d.generate_data()
-	_p("baseline identical for seed 1 vs 999 (procedural=false): %s, active_seed=%d" % [_hash_state(c) == _hash_state(d), c.active_seed])
+	var base_ok: bool = _hash_state(c) == _hash_state(d)
+	_p("baseline identical for seed 1 vs 999 (procedural=false): %s, active_seed=%d" % [base_ok, c.active_seed])
+	pass_all = pass_all and base_ok
 	_p("== decoration-seed independence (seed 4242) ==")
 	var before := _hash_state(a)
 	a.set_decoration_seed(777)
 	var after := _hash_state(a)
+	var deco_ok: bool = before[0] == after[0] and before[1] == after[1] and before[2] != after[2] and a.last_report["valid"]
 	_p("terrain hash same: %s  routes hash same: %s  obstacles changed: %s  still valid: %s %s" % [
 		before[0] == after[0], before[1] == after[1], before[2] != after[2], a.last_report["valid"], a.last_report["errors"]])
+	pass_all = pass_all and deco_ok
 	a.set_decoration_seed(a.decoration_seed)
 	_p("== different seeds differ ==")
-	_p("seed 4242 vs baseline heightfield equal: %s" % (_hash_state(a)[0] == _hash_state(c)[0]))
+	var differ_ok: bool = _hash_state(a)[0] != _hash_state(c)[0]
+	_p("seed 4242 vs baseline heightfield equal: %s" % (not differ_ok))
+	pass_all = pass_all and differ_ok
 	_p("== forced invalid layouts (all non-baseline candidates rejected) ==")
 	var f := ForcedInvalid.new()
 	f.configure(31337, true)
@@ -136,6 +150,14 @@ func _data(seeds: Array, title: String) -> void:
 	_p("attempts=%d (MAX_ATTEMPTS=%d + 1 fallback) used_fallback=%s final_active_seed=%d final_valid=%s ms=%d attempt_log_seeds=%s" % [
 		f.generation_attempts, S.MAX_ATTEMPTS, f.used_fallback, f.active_seed, fr["valid"], Time.get_ticks_msec() - t0,
 		f.attempt_log.map(func(e): return [e["seed"], e["valid"]])])
+	var forced_ok: bool = f.used_fallback and f.generation_attempts == S.MAX_ATTEMPTS + 1 and fr["valid"] and f.active_seed == S.BASELINE_SEED
+	_p("forced fallback contract ok: %s" % forced_ok)
+	pass_all = pass_all and forced_ok
+	# Terrain nodes are never parented; free them explicitly so the harness exits without leaks.
+	for n in [a, b, c, d, f]:
+		n.free()
+	_p("RESULT: %s" % ("PASS" if pass_all else "FAIL"))
+	return pass_all
 
 
 # ---- Traversal ----------------------------------------------------------------------------------------------------

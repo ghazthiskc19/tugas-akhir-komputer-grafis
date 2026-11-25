@@ -9,6 +9,7 @@ extends "res://scripts/camera/smooth_follow_camera.gd"
 ## pause_game(), resume_game(), toggle_pause(), get_pause_panel(), get_resume_button().
 
 const STICK_DEADZONE := 0.2
+const UI_THEME := preload("res://scripts/ui/ui_theme.gd")
 
 @export_range(0.0, 89.0) var min_pitch_degrees := 20.0
 @export_range(0.0, 89.0) var max_pitch_degrees := 65.0
@@ -117,14 +118,18 @@ func get_resume_button() -> Button:
 ## Menjeda SceneTree, menampilkan overlay, melepas mouse. Aman dipanggil berulang.
 func pause_game() -> void:
 	get_tree().paused = true
+	var opening := not _pause_panel.visible or _pause_panel.modulate.a < 1.0
 	_pause_panel.visible = true
+	if opening:
+		UI_THEME.reveal(_pause_panel, _pause_panel.get_node("Frame") as Control)
 	_release_mouse()
 
 
 ## Melanjutkan: tutup overlay, tangkap mouse, buang delta mouse lama.
+## Permainan lanjut seketika; hanya overlay yang memudar keluar.
 func resume_game() -> void:
 	get_tree().paused = false
-	_pause_panel.visible = false
+	UI_THEME.dismiss(_pause_panel, _pause_panel.get_node("Frame") as Control)
 	_captured = true
 	_drop_next_motion = true
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -152,41 +157,53 @@ func _build_pause_ui() -> void:
 	_pause_panel.name = "Panel"
 	_pause_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	_pause_panel.visible = false
+	_pause_panel.theme = UI_THEME.theme()
 	_pause_layer.add_child(_pause_panel)
 	# Camera3D bukan parent Control; ukuran root overlay harus mengikuti viewport secara eksplisit.
 	_pause_panel.size = get_viewport().get_visible_rect().size
 	get_viewport().size_changed.connect(func(): _pause_panel.size = get_viewport().get_visible_rect().size)
 
-	var dim := ColorRect.new()
+	var dim := UI_THEME.backdrop(Color(0.0, 0.0, 0.0, 0.4), 8.0)
 	dim.name = "Dim"
-	dim.color = Color(0.0, 0.0, 0.0, 0.55)
-	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_pause_panel.add_child(dim)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	var frame := PanelContainer.new()
+	frame.name = "Frame"
+	_pause_panel.add_child(frame)
+	frame.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	frame.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	frame.grow_vertical = Control.GROW_DIRECTION_BOTH
+	var margin := MarginContainer.new()
+	for side in ["left", "right"]:
+		margin.add_theme_constant_override("margin_" + side, 48)
+	for side in ["top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 36)
+	frame.add_child(margin)
 
 	var box := VBoxContainer.new()
 	box.name = "Box"
 	box.add_theme_constant_override(&"separation", 16)
-	_pause_panel.add_child(box)
-	box.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	box.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	box.grow_vertical = Control.GROW_DIRECTION_BOTH
+	margin.add_child(box)
 
 	var title := Label.new()
 	title.name = "Title"
 	title.text = "JEDA"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override(&"font_size", 40)
+	title.add_theme_font_override(&"font", UI_THEME.title_font())
+	title.add_theme_font_size_override(&"font_size", 44)
+	title.add_theme_color_override(&"font_color", UI_THEME.GOLD)
 	box.add_child(title)
 
 	_resume_button = Button.new()
 	_resume_button.name = "Resume"
 	_resume_button.text = "Lanjutkan (Esc)"
-	_resume_button.custom_minimum_size = Vector2(240.0, 48.0)
+	_resume_button.custom_minimum_size = Vector2(260.0, 52.0)
 	# Tanpa fokus keyboard: Space/Enter tidak menekan tombol tersembunyi setelah lanjut.
 	_resume_button.focus_mode = Control.FOCUS_NONE
 	_resume_button.pressed.connect(resume_game)
 	box.add_child(_resume_button)
+	UI_THEME.hover_button(_resume_button)
 
 
 func _input(event: InputEvent) -> void:

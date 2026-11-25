@@ -64,3 +64,15 @@ Format runtime diambil dari tiap paket; FBX/OBJ duplikat, versi Unity, sampel, `
 - **Rock Golem:** `.blend` sumber disimpan di `blendswap/rock_golem/source/` dengan `.gdignore`; `rock_golem.glb` sudah dikonversi lewat Blender 4.5.16 LTS dan berhasil dimuat Godot (satu mesh, 28 bone, tanpa animasi). Konversi mempertahankan basis low-poly dan tidak memerlukan tekstur gambar yang hilang dari sumber.
 
 Import `.blend` di Godot dimatikan (`filesystem/import/blender/enabled=false`) supaya anggota tim tanpa Blender tidak gagal import. Folder kerja `tools/`, `downloads/`, dan `tmp/` diberi `.gdignore`.
+
+## Unduhan UI — 23 November 2026
+
+Arsip mentah di `downloads/ui/` (ignored); subset disalin ke `assets/third_party/`.
+
+| Asset | Sumber | Lisensi | SHA-256 arsip/file |
+|---|---|---|---|
+| UI Pack - Adventure 1.0 (PNG Default) → `kenney/ui_pack_adventure/` | https://kenney.nl/assets/ui-pack-adventure | CC0 1.0 | `982e8ab66842509ee9214f9c2038e594cbe029f19d1dc177fecaad3b41a67ed3` (zip) |
+| Fantasy UI Borders (PNG Default) → `kenney/fantasy_ui_borders/` | https://kenney.nl/assets/fantasy-ui-borders | CC0 1.0 | `59532da3bd61195a425585455b40baa6cbf1eda8227c42adcef31a535a737769` (zip) |
+| Cinzel variable → `fonts/cinzel/` | https://github.com/google/fonts/tree/main/ofl/cinzel | SIL OFL 1.1 | `f4d83d34d1f6c741193e4acf4b3dff9531e5a67b6aa65228d00a7db72a4e0f34` (ttf) |
+| Nunito variable → `fonts/nunito/` | https://github.com/google/fonts/tree/main/ofl/nunito | SIL OFL 1.1 | `bb55a5ca5c2042335b3991af27c4d0705d0ef41cac6164ac737fd8f2a1e85207` (ttf) |
+| Ikon SVG terpilih → `game_icons/` | https://github.com/game-icons/icons | CC BY 3.0 (Lorc, Delapouite, Skoll, Sbed), CC0 (Zeromancer) | per file, lihat repo sumber |

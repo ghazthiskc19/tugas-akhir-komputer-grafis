@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/tests/third_person_lab.tscn" id="1_lab"]
 [ext_resource type="Script" path="res://scripts/enemies/enemy_lab.gd" id="2_script"]
@@ -6,12 +6,12 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/heavy_melee.tscn" id="4_heavy"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/ranged_enemy.tscn" id="5_ranged"]
 [ext_resource type="PackedScene" path="res://assets/third_party/kaykit/adventurers/props/sword_1handed.gltf" id="6_sword"]
+[ext_resource type="Script" path="res://scripts/combat/weapon_mount.gd" id="99_mount"]
 
 [sub_resource type="BoxMesh" id="CoverMesh"]
 
 [sub_resource type="BoxShape3D" id="CoverShape"]
 size = Vector3(3, 2, 0.5)
-
 [node name="EnemyLab" instance=ExtResource("1_lab")]
 script = ExtResource("2_script")
 
@@ -19,10 +19,11 @@ script = ExtResource("2_script")
 position = Vector3(0, 0, 5)
 combat_enabled = true
 
-[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Player/Rogue/Rig_Medium/Skeleton3D"]
-bone_name = "handslot.r"
-
-[node name="Sword" parent="Player/Rogue/Rig_Medium/Skeleton3D/BoneAttachment3D" instance=ExtResource("6_sword")]
+[node name="WeaponMount" type="Node" parent="Player"]
+script = ExtResource("99_mount")
+model_path = NodePath("Rogue")
+weapon = ExtResource("6_sword")
+weapon_scale = 1.0
 
 [node name="Cover" type="StaticBody3D" parent="World"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1, 0)

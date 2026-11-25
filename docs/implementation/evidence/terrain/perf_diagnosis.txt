@@ -1,0 +1,10 @@
+Perf diagnosis (BuildIslandWorld). Machine: RX 5500M, Compatibility, 1280x720 window, island_game.tscn seed 42, player at gate (0,0.1,-83).
+Metrics: wall = delta between process_frame (240 frames after 90 warm-up); render cpu/gpu = RenderingServer viewport measured render time.
+TIME_PROCESS / TIME_PHYSICS_PROCESS monitors are unreliable here (vsync wait is included in TIME_PROCESS; values read garbage with vsync off) and were not used for conclusions.
+Condition: exactly 1 other godot.exe process (the user's window, idle), no regression runner active.
+
+Before world geometry change (summit -65), vsync on:  wall med 16.69 p95 17.29, render cpu 0.96 gpu 3.32 ms, 773 draw calls, 639k prims.
+Same, vsync off, variants (wall med ms): base 2.12 | no decoration 1.88 | no terrain mesh 1.83 | no enemies 1.87 | no shadows 1.24 (shadow pass is the largest single render cost).
+Final geometry + corrected energy mesh, vsync on:   wall med 16.65 p95 17.27, render cpu 0.85 gpu 3.27 ms, 584 draw calls, 586k prims.
+Final, vsync off: wall med 2.09 p95 3.65 (~480 fps uncapped), gpu 1.41 ms.
+Conclusion: the reported 68 ms median TIME_PROCESS is not reproducible on an idle machine; terrain is not the culprit (decoration + terrain together cost < 1 ms CPU/GPU). Likely causes: concurrent headless test load, and the earlier energy mesh scaled x100 (since fixed by the objective owner).

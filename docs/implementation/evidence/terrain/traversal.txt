@@ -1,21 +1,21 @@
 terrain built: valid=true seed=20261122 children=[&"Terrain", &"Sea", &"Bounds", &"Dock", &"Anchors", &"Decoration", &"DecorationCollision"]
 == player physics traversal (baseline layout, melee_lab Player rig, camera-relative W input, no teleport after start) ==
-spawn_symbol: ok len=113 traveled=109 sim=16.9s avg=6.45m/s dev=1.54m airborne_frames_max=0 min_clearance=-0.00 wall_ms=692
-spawn_symbol (reverse): ok len=113 traveled=109 sim=16.9s avg=6.45m/s dev=1.44m airborne_frames_max=0 min_clearance=-0.00 wall_ms=716
-spawn_energy: ok len=110 traveled=106 sim=16.4s avg=6.45m/s dev=0.93m airborne_frames_max=0 min_clearance=-0.00 wall_ms=740
-spawn_energy (reverse): ok len=110 traveled=106 sim=16.4s avg=6.45m/s dev=1.06m airborne_frames_max=0 min_clearance=-0.00 wall_ms=684
-spawn_summit: ok len=150 traveled=147 sim=22.7s avg=6.47m/s dev=0.00m airborne_frames_max=0 min_clearance=-0.00 wall_ms=1003
-spawn_summit (reverse): ok len=150 traveled=147 sim=22.7s avg=6.47m/s dev=0.00m airborne_frames_max=0 min_clearance=-0.00 wall_ms=865
-symbol_summit: ok len=104 traveled=99 sim=15.4s avg=6.45m/s dev=1.76m airborne_frames_max=0 min_clearance=-0.00 wall_ms=725
-symbol_summit (reverse): ok len=104 traveled=99 sim=15.4s avg=6.45m/s dev=1.95m airborne_frames_max=0 min_clearance=-0.00 wall_ms=778
-energy_summit: ok len=99 traveled=95 sim=14.7s avg=6.45m/s dev=1.39m airborne_frames_max=0 min_clearance=-0.00 wall_ms=767
-energy_summit (reverse): ok len=99 traveled=95 sim=14.7s avg=6.45m/s dev=1.65m airborne_frames_max=0 min_clearance=-0.00 wall_ms=779
-summit_boss: ok len=35 traveled=32 sim=5.0s avg=6.36m/s dev=0.00m airborne_frames_max=0 min_clearance=0.00 wall_ms=205
-summit_boss (reverse): ok len=35 traveled=32 sim=5.0s avg=6.36m/s dev=0.00m airborne_frames_max=0 min_clearance=0.00 wall_ms=198
-energy_boss: ok len=141 traveled=136 sim=21.0s avg=6.46m/s dev=2.82m airborne_frames_max=0 min_clearance=-0.00 wall_ms=1806
-energy_boss (reverse): ok len=141 traveled=136 sim=21.0s avg=6.46m/s dev=2.44m airborne_frames_max=0 min_clearance=-0.00 wall_ms=958
-viewpoint_spur: ok len=48 traveled=44 sim=6.9s avg=6.40m/s dev=1.82m airborne_frames_max=0 min_clearance=-0.00 wall_ms=389
-viewpoint_spur (reverse): ok len=48 traveled=44 sim=6.9s avg=6.40m/s dev=1.74m airborne_frames_max=0 min_clearance=-0.00 wall_ms=417
+spawn_symbol: ok len=113 traveled=109 sim=16.9s avg=6.45m/s dev=1.54m airborne_frames_max=0 min_clearance=-0.00 wall_ms=727
+spawn_symbol (reverse): ok len=113 traveled=109 sim=16.9s avg=6.45m/s dev=1.44m airborne_frames_max=0 min_clearance=-0.00 wall_ms=601
+spawn_energy: ok len=110 traveled=106 sim=16.4s avg=6.45m/s dev=0.93m airborne_frames_max=0 min_clearance=-0.00 wall_ms=685
+spawn_energy (reverse): ok len=110 traveled=106 sim=16.4s avg=6.45m/s dev=1.06m airborne_frames_max=0 min_clearance=-0.00 wall_ms=646
+spawn_summit: ok len=135 traveled=132 sim=20.4s avg=6.47m/s dev=0.00m airborne_frames_max=0 min_clearance=-0.00 wall_ms=662
+spawn_summit (reverse): ok len=135 traveled=132 sim=20.4s avg=6.47m/s dev=0.00m airborne_frames_max=0 min_clearance=-0.00 wall_ms=652
+symbol_summit: ok len=95 traveled=90 sim=14.0s avg=6.44m/s dev=1.89m airborne_frames_max=0 min_clearance=-0.00 wall_ms=725
+symbol_summit (reverse): ok len=95 traveled=90 sim=14.0s avg=6.44m/s dev=2.19m airborne_frames_max=0 min_clearance=-0.00 wall_ms=584
+energy_summit: ok len=91 traveled=86 sim=13.3s avg=6.45m/s dev=2.03m airborne_frames_max=0 min_clearance=-0.00 wall_ms=522
+energy_summit (reverse): ok len=91 traveled=86 sim=13.3s avg=6.45m/s dev=2.01m airborne_frames_max=0 min_clearance=-0.00 wall_ms=519
+summit_boss: ok len=50 traveled=47 sim=7.3s avg=6.41m/s dev=0.27m airborne_frames_max=0 min_clearance=-0.00 wall_ms=279
+summit_boss (reverse): ok len=50 traveled=47 sim=7.3s avg=6.41m/s dev=0.29m airborne_frames_max=0 min_clearance=-0.00 wall_ms=262
+energy_boss: ok len=141 traveled=136 sim=21.0s avg=6.46m/s dev=2.81m airborne_frames_max=0 min_clearance=-0.00 wall_ms=737
+energy_boss (reverse): ok len=141 traveled=136 sim=21.0s avg=6.46m/s dev=2.46m airborne_frames_max=0 min_clearance=-0.00 wall_ms=663
+viewpoint_spur: ok len=48 traveled=44 sim=6.9s avg=6.40m/s dev=1.82m airborne_frames_max=0 min_clearance=-0.00 wall_ms=283
+viewpoint_spur (reverse): ok len=48 traveled=44 sim=6.9s avg=6.40m/s dev=1.74m airborne_frames_max=0 min_clearance=-0.00 wall_ms=255
 TRAVERSAL SUMMARY: all_ok=true
 JUMP: start_y=0.000 apex_rise=1.370 (expected ~1.33) landed_on_floor=true
-probe_collision: { "checked": 92, "missed": 0, "max_error": 2.59336463809013 }
+probe_collision: { "checked": 91, "missed": 0, "max_error": 0.02999922633171 }

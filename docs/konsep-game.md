@@ -16,7 +16,7 @@ Grassland menjadi area kedatangan dan pengenalan kontrol. Forest dan Rocky Highl
 
 Pemain memperoleh tiga artefak melalui dua puzzle ringan dan satu exploration challenge. Urutan objektif fleksibel dengan arahan lingkungan. Ketiga artefak mengaktifkan boss di gerbang akhir. Kemenangan atas boss membuka gerbang dan menyelesaikan Level 1.
 
-Campaign, level selection, dan save lintas level belum menjadi scope saat ini. Pengguna mengizinkan durasi permainan lebih panjang daripada usulan awal 15–20 menit; rentang tersebut tidak menjadi batas final. Durasi sesi ditentukan melalui playtest berdasarkan perjalanan, puzzle, encounter, dan boss. Luas pulau tidak digunakan sebagai pengganti pengukuran durasi atau kepadatan aktivitas. Target 5–10 menit pada draft historis juga tidak lagi menjadi acuan.
+Campaign, level selection, dan save lintas level belum menjadi scope saat ini; yang dibangun hanya **Pulau 1**, sedangkan Pulau 2 dan 3 belum dibuat. Pengguna mengizinkan durasi permainan lebih panjang daripada usulan awal 15–20 menit; rentang tersebut tidak menjadi batas final. Durasi sesi ditentukan melalui playtest berdasarkan perjalanan, puzzle, encounter, dan boss. Luas pulau tidak digunakan sebagai pengganti pengukuran durasi atau kepadatan aktivitas. Target 5–10 menit pada draft historis juga tidak lagi menjadi acuan.
 
 ## Cerita dan penyampaian
 
@@ -83,23 +83,23 @@ Senjata pemain telah ditetapkan sebagai pedang satu tangan. Model spesifik, nama
 
 | Tipe | Perilaku yang ditetapkan |
 |---|---|
-| Melee biasa | Mendekati pemain lalu melakukan satu swing singkat dengan recovery pendek. |
-| Heavy melee | Bergerak lebih lambat, mengangkat senjata sebelum hantaman kuat, lalu memasuki recovery panjang. |
-| Ranged | Menembakkan proyektil lurus dengan persiapan yang terbaca. Pemain dapat menghindar atau menggunakan perlindungan. |
+| Melee biasa | Combo dua pukulan; tiap pukulan ber-telegraph baru, recovery akhir terbatas. |
+| Heavy melee | Lebih lambat, tetapi pendekatan dipercepat lalu sapuan lebar tertunda dengan telegraph panjang dan recovery terbatas. |
+| Ranged | Bergerak sambil menembakkan semburan tiga proyektil lurus dengan bidikan terkunci terlambat; cover dan LOS memblokir. |
 
-Rancangan awal ranged tidak memakai proyektil homing dan heavy tidak memakai combo panjang. Perbedaan timing serta posisi menjadi pembeda awal. Istilah ini merupakan tipe perilaku, bukan nama karakter final. Detection range, chase/leash, stagger, serta distribusi ketiga tipe di seluruh pulau masih memerlukan rincian produksi dan playtest.
+Proyektil ranged tidak homing. **Kontrak baru (25 Nov 2026):** musuh biasa memakai kombinasi serangan (rangkaian beberapa pukulan atau tembakan) dengan varian timing agar lebih mengancam tanpa menaikkan HP; heavy tetap lebih lambat dengan telegraph panjang. Angka persis ada di `ARCHETYPES` (`scripts/enemies/enemy.gd`), belum final dan menunggu playtest. Rancangan awal "satu swing singkat" dan "heavy tanpa combo" kini historis. Istilah ini merupakan tipe perilaku, bukan nama karakter final. Detection range, chase/leash, stagger, serta distribusi ketiga tipe di seluruh pulau masih memerlukan rincian produksi dan playtest.
 
 ## Boss akhir
 
 **Penjaga Gerbang** telah ditetapkan sebagai boss akhir. Setelah tiga artefak dipasang, pemain berinteraksi untuk membangunkan golem batu dengan inti energi di pelataran gerbang. Arena rata menyediakan ruang menghindar, checkpoint sebelum arena, dan batas yang jelas. Pertarungan tidak menambahkan musuh lain.
 
-Boss memakai sapuan lengan, hantaman tanah, dan terjangan lurus dengan telegraph yang sesuai area damage. Target serangan dikunci menjelang pelepasan. Pada HP di atas 50%, boss menyerang sekali lalu recovery; pada HP 50% atau kurang, boss sesekali merangkai dua serangan. Telegraph dan timing dasar tetap dipertahankan. Recovery hantaman memungkinkan combo tiga hit jika posisi serta timing pemain sesuai.
+Boss memakai sapuan lengan, hantaman tanah, dan terjangan lurus dengan telegraph yang sesuai area damage. Target serangan dikunci menjelang pelepasan dan tidak mengikuti pemain. **Kontrak baru (25 Nov 2026):** pada HP di atas 50% (fase 1) boss merangkai **dua pukulan beruntun**; pada HP 50% atau kurang (fase 2) **dua atau tiga pukulan (dibatasi, tidak selalu tiga)**, dengan windup cepat/tertunda, telegraph baru per pukulan, recovery penuh di akhir rangkaian, dan pemilihan serangan sadar-jarak. HP (420), damage dan ambang 50% tidak berubah; kesulitan naik lewat rangkaian dan timing. Recovery akhir memungkinkan combo tiga hit jika posisi serta timing pemain sesuai. (Rancangan lama: satu serangan lalu recovery; kini historis.) Uji menunggu bukti parent.
 
 Retry menggunakan snapshot HP, stamina, dan jumlah potion sebelum pertarungan pertama. Kegagalan mengembalikan resource pemain ke nilai snapshot dan mereset boss, sementara progres pulau tetap tersimpan. Kemenangan membuka gerbang; melewati gerbang menyelesaikan Level 1. Aturan lengkap tersedia pada [desain Penjaga Gerbang](desain/boss-penjaga-gerbang.md).
 
 ## Defense dan resource
 
-Block dan dodge menggunakan satu pool stamina. Block mengurangi damage dari semua arah untuk melee dan proyektil, serta menguras stamina selama ditahan. Dodge memakai biaya tetap saat dimulai dan memberikan i-frames singkat. Stamina beregenerasi setelah jeda singkat sejak berhenti block atau dodge. Jika stamina tidak mencukupi, aksi defense ditolak; movement dan attack tetap tersedia.
+Block dan dodge menggunakan satu pool stamina. Block mengurangi damage dari semua arah untuk melee dan proyektil serta menguras stamina selama ditahan. **Kontrak baru (25 Nov 2026):** tiap hit yang diblok juga memakai stamina `max(8, damage × 0,8)`; bila stamina tidak cukup terjadi guard break dan damage penuh masuk, bila terbayar pengurangan omni-arah 25% tetap berlaku. Dodge memakai biaya tetap saat dimulai dan memberikan i-frames singkat. Stamina beregenerasi setelah jeda singkat sejak berhenti block atau dodge. Jika stamina tidak mencukupi, aksi defense ditolak; movement dan attack tetap tersedia.
 
 HP ditampilkan dengan bar dan angka. Potion healing terbatas ditemukan di dunia atau dari drop musuh, disimpan, lalu digunakan manual. Besaran HP, kapasitas healing, drop rate, dan angka stamina masih memerlukan baseline playtesting.
 
@@ -111,7 +111,17 @@ Saat eksplorasi biasa, mati mengembalikan pemain ke checkpoint terakhir dengan H
 
 Retry boss menggunakan pengecualian snapshot: HP, stamina, dan jumlah potion dikembalikan persis ke kondisi sebelum pertarungan pertama. Snapshot tidak memberikan healing gratis dan tidak diperbarui oleh percobaan gagal. Pemulihan menetapkan jumlah potion ke nilai snapshot agar tidak terjadi penggandaan. Boss kembali ke HP penuh dan fase pertama. Artefak, puzzle, shortcut, dan progres eksplorasi tetap tersimpan; pemasangan artefak serta animasi pembuka tidak diulang. Setelah menang, resource yang tersisa dari percobaan berhasil dipertahankan.
 
-Aktivasi checkpoint belum ditetapkan sebagai sumber healing. Pada Jalur Menuju Puncak, musuh yang telah dikalahkan tetap mati selama sesi. Aturan reset musuh di area lain, proteksi respawn, jumlah checkpoint keseluruhan, serta save permanen belum final.
+Aktivasi checkpoint belum ditetapkan sebagai sumber healing. Pada Jalur Menuju Puncak, musuh yang telah dikalahkan tetap mati selama sesi. Aturan reset musuh di area lain, proteksi respawn dan jumlah checkpoint keseluruhan belum final.
+
+### Save lokal dan Continue (diimplementasikan untuk Pulau 1)
+
+Progres Pulau 1 disimpan sebagai JSON lokal `user://island_save.json`: autosave tiap 5 detik dan pada milestone, serta simpan manual dari menu jeda. **Continue** memulihkan dari checkpoint dengan HP, stamina, dan potion persis seperti tersimpan. Bila save dibuat setelah boss dimulai, Continue memulihkan snapshot retry boss yang asli. Menu awal tidak menimpa save; **New Run** meminta konfirmasi sebelum menggantinya. Save bersifat lokal per perangkat dan belum mencakup lintas level.
+
+### Layout prosedural (perilaku saat ini)
+
+Seed menggeser secara deterministik akar modul, jalan, 3–5 pack encounter, potion, checkpoint, biome, dan dermaga, semuanya sejajar sumbu. Puzzle internal dan boss tetap authored/fixed agar solusi dan aturan tidak berubah. Setiap biome memiliki landmark dan sign untuk orientasi; serangan yang mengenai target memberi hitmarker dan SFX. Pernyataan lama tentang layout tetap atau tanpa save adalah riwayat.
+
+Modul Pilar Simbol dan Jalur Energi bertukar sisi barat–timur secara deterministik per seed (terukur agen: 103 bertukar / 97 normal pada 200 seed, tanpa kegagalan generate); rute, viewpoint, dan biome mengikuti sisi sebenarnya. Checkpoint puncak dan boss memakai offset authored (puncak +(−4, 18), boss +(−10, 12,5)). Menutup jendela game (X/Alt+F4) memakai jalur simpan-lalu-keluar yang sama dengan menu.
 
 ## Keputusan untuk finalisasi
 
@@ -124,4 +134,4 @@ Angka movement, damage, HP, stamina, dan timing dapat disusun sebagai baseline y
 
 ## Status implementasi
 
-Fondasi Godot, scene preview, konfigurasi Git, serta integrasi MCP sudah tersedia. Sistem gameplay pada dokumen ini belum diimplementasikan. Rincian dan asal keputusan dipertahankan pada [catatan brainstorming](brainstorming/konteks-lanjutan-the-lost-island.md).
+Gameplay Level 1 pada dokumen ini sudah diimplementasikan untuk **Pulau 1** (lihat README dan Implementation Tracker untuk status dan bukti). Pulau 2 dan 3 belum dibuat. Belum ada review subjektif manusia untuk kontrol/audio, uji gamepad fisik, atau uji di komputer anggota lain. Rincian dan asal keputusan dipertahankan pada [catatan brainstorming](brainstorming/konteks-lanjutan-the-lost-island.md).

@@ -8,6 +8,7 @@ signal gate_opened
 signal dock_entered(body: Node3D)
 
 const CONSOLE := preload("res://scripts/boss/gate_console.gd")
+const UI_THEME := preload("res://scripts/ui/ui_theme.gd")
 const HALF_X := 18.0
 const HALF_Z := 15.0
 const ENTRANCE_HALF := 5.5
@@ -433,6 +434,7 @@ func _label(parent: Node3D, pos: Vector3) -> Label3D:
 	var label := Label3D.new()
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.pixel_size = 0.007
+	label.font = UI_THEME.body_font()
 	label.font_size = 44
 	label.outline_size = 12
 	label.modulate = Color(0.9, 0.95, 1.0)

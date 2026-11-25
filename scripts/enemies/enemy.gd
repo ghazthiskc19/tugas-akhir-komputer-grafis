@@ -1,8 +1,7 @@
 extends CharacterBody3D
-## Configurable enemy. One module, three archetypes ("standard", "heavy", "ranged") whose differences are DATA
-## (ARCHETYPES): health, speed, ranges, attack timing, hit volume, stagger rules, projectile and clips.
-##
-## States: IDLE -> CHASE -> WINDUP -> ACTIVE -> RECOVERY -> CHASE ... ; STAGGER (hurt); RETURN (leash); DEAD.
+## Configurable enemy: standard two-hit combo, heavy closing chop/sweep, ranged mobile aimed burst.
+## Every strike has a fresh windup/commit point and one contact; bounded chains end in full recovery.
+## States: IDLE -> CHASE -> WINDUP -> ACTIVE -> RECOVERY -> (WINDUP followup / CHASE); STAGGER; RETURN; DEAD.
 ## Attack contract: all damage goes through player.receive_damage(int) (never Health directly), so block/dodge work.
 ## The telegraph shows the real hit volume (melee box / projectile lane), clipped by world geometry the same way the
 ## damage query is clipped, so nothing hits through a wall. Contacts layers: world 1, player 2, hurtbox 4, enemy body 8.
@@ -16,6 +15,7 @@ const MELEE := "res://assets/third_party/kaykit/character_animations/animations/
 const RANGED := "res://assets/third_party/kaykit/character_animations/animations/Rig_Medium/Rig_Medium_CombatRanged.glb"
 const PROJECTILE_SCRIPT := preload("res://scripts/enemies/enemy_projectile.gd")
 const GUARD_APPEARANCE := preload("res://scripts/enemies/guard_appearance.gd")
+const Vfx := preload("res://scripts/vfx/combat_vfx.gd")
 
 const WORLD_MASK := 1
 const PLAYER_MASK := 2
@@ -37,7 +37,8 @@ const ARCHETYPES := {
 		"detect_range": 11.0, "leash_range": 20.0, "attack_range": 1.7, "stop_distance": 1.3,
 		"windup": 0.6, "active": 0.15, "recovery": 0.75, "cooldown": 0.8,
 		"damage": 12, "hit_width": 1.6, "hit_height": 1.5, "hit_length": 2.0,
-		"track_until": 0.6, "windup_turn_rate": 3.0,
+		"track_until": 0.72, "windup_turn_rate": 3.0,
+		"chain_count": 2, "chain_gap": 0.14, "followup_windup": 0.36,
 		"stagger_time": 0.45, "stagger_interrupts_windup": true, "stagger_interrupts_active": true,
 		"stagger_immunity": 0.4,
 		"model_scale": 1.0, "walk_anim_speed": 1.2,
@@ -54,7 +55,10 @@ const ARCHETYPES := {
 		"detect_range": 10.0, "leash_range": 18.0, "attack_range": 2.5, "stop_distance": 1.9,
 		"windup": 1.15, "active": 0.2, "recovery": 1.6, "cooldown": 1.2,
 		"damage": 32, "hit_width": 2.6, "hit_height": 1.8, "hit_length": 3.0,
-		"track_until": 0.45, "windup_turn_rate": 2.0,
+		"track_until": 0.75, "windup_turn_rate": 2.0,
+		"chain_count": 2, "chain_gap": 0.24, "followup_windup": 0.78,
+		"closing_speed": 3.8, "closing_distance": 3.5, "approach_speed": 2.6,
+		"sweep_width": 4.4, "sweep_length": 2.8,
 		"stagger_time": 0.3, "stagger_interrupts_windup": false, "stagger_interrupts_active": false,
 		"stagger_immunity": 0.8,
 		"model_scale": 1.25, "walk_anim_speed": 0.8,
@@ -74,7 +78,8 @@ const ARCHETYPES := {
 		"damage": 10, "hit_width": 0.44, "hit_height": 0.44, "hit_length": 22.0,
 		"projectile_speed": 13.0, "projectile_lifetime": 1.7, "projectile_radius": 0.22,
 		"muzzle_height": 1.3, "muzzle_forward": 0.6,
-		"track_until": 0.7, "windup_turn_rate": 5.0,
+		"track_until": 0.78, "windup_turn_rate": 5.0,
+		"chain_count": 3, "chain_gap": 0.16, "followup_windup": 0.38,
 		"stagger_time": 0.5, "stagger_interrupts_windup": true, "stagger_interrupts_active": true,
 		"stagger_immunity": 0.4,
 		"model_scale": 1.0, "walk_anim_speed": 1.1,
@@ -121,6 +126,8 @@ var _last_hp := 0
 var _defeated_emitted := false
 var _hit_done := false
 var _fired := false
+var _glinted := false
+var _chain_step := 0
 var _aim_dir := Vector3.FORWARD
 var _clip_len := 1.0
 var _hit_shape := BoxShape3D.new()
@@ -165,6 +172,7 @@ func _ready() -> void:
 	_build_library()
 	_build_telegraph()
 	_build_flash()
+	Vfx.hub_for(self)
 	_hit_query.shape = _hit_shape
 	_hit_query.collision_mask = PLAYER_MASK
 	_hit_query.collide_with_bodies = true
@@ -197,14 +205,25 @@ func is_dead() -> bool:
 func get_state_name() -> StringName:
 	return StringName(State.keys()[state].to_lower())
 
+## Current strike's real warning/volume; recovery is a safe punish only when no followup remains.
+func get_attack_windup() -> float:
+	return _windup_duration()
+
+
+func get_attack_reach() -> float:
+	return _attack_reach()
+
+
+func has_pending_followup() -> bool:
+	return state in [State.WINDUP, State.ACTIVE, State.RECOVERY] and _has_followup()
+
+
 
 ## Restores a LIVING enemy to its spawn: position, HP, state, cooldowns, projectiles. Dead enemies stay dead.
 func reset_encounter() -> void:
 	if state == State.DEAD or _health.is_dead:
 		return
-	for projectile in get_tree().get_nodes_in_group(&"enemy_projectiles"):
-		if projectile.get("shooter") == self:
-			projectile.queue_free()
+	_cancel_attack()
 	global_transform = _spawn_xform
 	velocity = Vector3.ZERO
 	_health.current_health = _health.max_health
@@ -236,6 +255,11 @@ func _physics_process(delta: float) -> void:
 	var player_alive := _player != null and not _player_is_dead()
 	if not player_alive:
 		_aggro = false
+	if state in [State.WINDUP, State.ACTIVE, State.RECOVERY]:
+		if not player_alive or not _player_within_leash() or _flat_distance_to(_spawn_xform.origin) > float(cfg["leash_range"]):
+			_cancel_attack()
+			_aggro = false
+			_set_state(State.RETURN)
 	match state:
 		State.IDLE:
 			_tick_idle(delta, player_alive)
@@ -294,7 +318,10 @@ func _tick_chase(delta: float, player_alive: bool) -> void:
 		wanted = dir
 	_face(dir, float(cfg["turn_rate"]), delta)
 	if wanted != Vector3.ZERO:
-		_move_toward_dir(wanted, float(cfg["move_speed"]), delta)
+		var speed := float(cfg["move_speed"])
+		if archetype == "heavy" and dist > float(cfg["closing_distance"]):
+			speed = float(cfg["closing_speed"])
+		_move_toward_dir(wanted, speed, delta)
 	else:
 		_apply_move(Vector3.ZERO, delta, 12.0)
 		_play_loop(&"idle")
@@ -330,28 +357,77 @@ func _can_start_attack(dir: Vector3, dist: float) -> bool:
 # ---------------------------------------------------------------- attack phases
 
 func _start_attack() -> void:
+	_chain_step = 0
+	_start_strike()
+
+
+func _start_strike() -> void:
 	_hit_done = false
 	_fired = false
+	_glinted = false
 	_aim_dir = _flat_forward()
 	_set_state(State.WINDUP)
+	_show_telegraph(0.0, false)
 	_play_attack_pose(0.0)
 
 
+func _windup_duration() -> float:
+	return float(cfg["windup"] if _chain_step == 0 else cfg["followup_windup"])
+
+
+func _has_followup() -> bool:
+	return _chain_step + 1 < int(cfg["chain_count"])
+
+
+func _attack_width() -> float:
+	return float(cfg["sweep_width"] if archetype == "heavy" and _chain_step > 0 else cfg["hit_width"])
+
+
+func _attack_reach() -> float:
+	return float(cfg["sweep_length"] if archetype == "heavy" and _chain_step > 0 else cfg["hit_length"])
+
+
+## Clear both queued strikes and airborne pressure synchronously, including reset/death inside a physics callback.
+func _cancel_attack() -> void:
+	_chain_step = 0
+	_hit_done = false
+	_fired = false
+	_hide_telegraph()
+	for projectile in get_tree().get_nodes_in_group(&"enemy_projectiles"):
+		if projectile.get("shooter") == self:
+			projectile.set_physics_process(false)
+			projectile.queue_free()
+
+
 func _tick_windup(delta: float) -> void:
-	var windup := float(cfg["windup"])
-	var progress := clampf(_state_time / windup, 0.0, 1.0)
-	_apply_move(Vector3.ZERO, delta, 18.0)
-	# Tracking stops at track_until: the telegraph then shows the committed lane/box.
-	if progress < float(cfg["track_until"]) and _player != null:
+	var windup := _windup_duration()
+	var progress := clampf(_state_time / maxf(windup, 0.01), 0.0, 1.0)
+	# Track late, then freeze BOTH the origin and direction so the final warning remains trustworthy.
+	var tracking := progress < clampf(float(cfg["track_until"]), 0.0, 0.95)
+	if tracking:
 		var dir := _player.global_position - global_position
 		dir.y = 0.0
-		if dir.length() > 0.01:
-			_face(dir.normalized(), float(cfg["windup_turn_rate"]), delta)
-	_aim_dir = _flat_forward()
+		var dist := dir.length()
+		dir /= maxf(dist, 0.001)
+		_face(dir, float(cfg["windup_turn_rate"]), delta)
+		var movement := Vector3.ZERO
+		if archetype == "heavy" and _chain_step == 0 and dist > float(cfg["stop_distance"]):
+			movement = _steer(dir) * float(cfg["approach_speed"])
+		elif archetype == "ranged":
+			movement = _steer(_ranged_movement(dir, dist, delta)) * float(cfg["move_speed"]) * 0.7
+		_apply_move(movement, delta, 18.0)
+		_aim_dir = _flat_forward()
+	else:
+		velocity.x = 0.0
+		velocity.z = 0.0
 	_show_telegraph(progress, false)
+	if not _glinted and progress >= 0.72:
+		_glinted = true
+		_vfx_glint()
 	_play_attack_pose(progress * float(cfg["strike"].x) * _clip_len)
 	if _state_time >= windup:
 		_set_state(State.ACTIVE)
+		_vfx_strike()
 
 
 func _tick_active() -> void:
@@ -373,22 +449,35 @@ func _tick_active() -> void:
 
 
 func _tick_recovery(delta: float) -> void:
-	var recovery := float(cfg["recovery"])
-	var progress := clampf(_state_time / recovery, 0.0, 1.0)
-	_apply_move(Vector3.ZERO, delta, 18.0)
+	var following := _has_followup()
+	var recovery := float(cfg["chain_gap"] if following else cfg["recovery"])
+	var progress := clampf(_state_time / maxf(recovery, 0.01), 0.0, 1.0)
+	if archetype == "ranged" and _player != null:
+		var dir := _player.global_position - global_position
+		dir.y = 0.0
+		var dist := dir.length()
+		dir /= maxf(dist, 0.001)
+		_face(dir, float(cfg["turn_rate"]), delta)
+		_apply_move(_steer(_ranged_movement(dir, dist, delta)) * float(cfg["move_speed"]), delta, 18.0)
+	else:
+		_apply_move(Vector3.ZERO, delta, 18.0)
 	_hide_telegraph()
 	var strike: Vector2 = cfg["strike"]
 	_play_attack_pose(lerpf(strike.y, 1.0, progress) * _clip_len)
 	if _state_time >= recovery:
+		if following:
+			_chain_step += 1
+			_start_strike()
+			return
 		_cooldown = float(cfg["cooldown"])
 		_set_state(State.CHASE if _aggro else State.RETURN)
 
 
 ## One query per swing: box in front of the enemy, clipped by world. Needs a clear chest-to-chest line.
 func _melee_hit() -> bool:
-	var reach := _clipped_reach(float(cfg["hit_length"]))
+	var reach := _clipped_reach(_attack_reach())
 	var height := float(cfg["hit_height"])
-	_hit_shape.size = Vector3(float(cfg["hit_width"]), height, reach)
+	_hit_shape.size = Vector3(_attack_width(), height, reach)
 	_hit_query.transform = Transform3D(
 		global_basis, global_position + _aim_dir * (reach * 0.5) + Vector3.UP * (height * 0.5 + 0.1))
 	var hits := get_world_3d().direct_space_state.intersect_shape(_hit_query, 8)
@@ -406,6 +495,9 @@ func _melee_hit() -> bool:
 func _fire_projectile() -> void:
 	if _fired:
 		return
+	# A close obstacle may sit between the body and the muzzle. Never spawn on its far side.
+	if not _has_los_to_point(global_position + Vector3.UP * float(cfg["muzzle_height"]), _muzzle_position()):
+		return
 	_fired = true
 	var projectile := Node3D.new()
 	projectile.set_script(PROJECTILE_SCRIPT)
@@ -418,6 +510,7 @@ func _fire_projectile() -> void:
 	var host := get_parent()
 	host.add_child(projectile)
 	projectile.global_position = _muzzle_position()
+	_vfx_muzzle()
 
 
 func _muzzle_position() -> Vector3:
@@ -461,8 +554,11 @@ func _telegraph_material() -> StandardMaterial3D:
 ## Outline = full hit volume (already clipped by world); fill grows along the facing during wind-up and
 ## fills completely (brighter, red) while the hit is live.
 func _show_telegraph(progress: float, active: bool) -> void:
-	var reach := _clipped_reach(float(cfg["hit_length"]), _telegraph_origin())
-	var width := float(cfg["hit_width"])
+	if archetype == "ranged" and not _has_los_to_point(global_position + Vector3.UP * float(cfg["muzzle_height"]), _muzzle_position()):
+		_hide_telegraph()
+		return
+	var reach := _clipped_reach(_attack_reach(), _telegraph_origin())
+	var width := _attack_width()
 	var height := float(cfg["hit_height"])
 	var base := global_position + Vector3.UP * (height * 0.5 + 0.1)
 	if archetype == "ranged":
@@ -636,6 +732,47 @@ func _find_damageable_player(collider: Node) -> Node3D:
 	return null
 
 
+# ---------------------------------------------------------------- VFX hooks (drawing lives in scripts/vfx/combat_vfx.gd)
+
+## Right-hand slot of the rig (where the weapon is held); falls back to a point in front of the chest.
+func _weapon_point() -> Vector3:
+	if _skeleton != null:
+		var bone := _skeleton.find_bone("handslot.r")
+		if bone >= 0:
+			return (_skeleton.global_transform * _skeleton.get_bone_global_pose(bone)).origin
+	return global_position + _flat_forward() * 0.6 + Vector3.UP * 1.2
+
+
+func _vfx_glint() -> void:
+	var tint: Color = cfg["telegraph_windup"]
+	tint.a = 1.0
+	var at := _muzzle_position() if archetype == "ranged" else _weapon_point()
+	Vfx.burst(self, Vfx.Kind.FLASH, at, Vector3.UP, tint.lightened(0.35), 1.1 if archetype == "heavy" else 0.8)
+	Vfx.burst(self, Vfx.Kind.GLOW, at, Vector3.UP, tint, 1.0)
+
+
+func _vfx_strike() -> void:
+	var forward := _flat_forward()
+	var yaw := global_rotation.y
+	var reach := _clipped_reach(_attack_reach())
+	match archetype:
+		"standard":
+			Vfx.slash(self, global_position + Vector3(0.0, 1.05, 0.0) + forward * 0.2, yaw, reach * 0.9, 140.0,
+				Vfx.ENEMY_ORANGE, 0.24, -38.0, false)
+		"heavy":
+			Vfx.slash(self, global_position + Vector3(0.0, 1.3, 0.0) + forward * 0.3, yaw, reach * 0.65, 150.0,
+				Color(1.0, 0.72, 0.3), 0.3, 90.0 if _chain_step == 0 else 0.0, true)
+			Vfx.ground_impact(self, global_position + forward * reach * 0.7, 1.9, Color(1.0, 0.4, 0.15))
+
+
+func _vfx_muzzle() -> void:
+	var at := _muzzle_position()
+	var tint := Color(1.0, 0.6, 0.25)
+	Vfx.burst(self, Vfx.Kind.FLASH, at, Vector3.UP, tint, 1.3)
+	Vfx.burst(self, Vfx.Kind.SPARK, at, _aim_dir, tint, 0.9)
+	Vfx.burst(self, Vfx.Kind.GLOW, at, Vector3.UP, tint, 1.0)
+
+
 # ---------------------------------------------------------------- damage reactions
 
 func _on_health_changed(current: int, maximum: int) -> void:
@@ -661,7 +798,7 @@ func _on_health_changed(current: int, maximum: int) -> void:
 				return
 		State.STAGGER:
 			return
-	_hide_telegraph()
+	_cancel_attack()
 	_immunity = float(cfg["stagger_time"]) + float(cfg["stagger_immunity"])
 	_set_state(State.STAGGER)
 	var hurt := _anim.get_animation(&"hurt")
@@ -672,6 +809,7 @@ func _on_health_changed(current: int, maximum: int) -> void:
 func _on_health_dead() -> void:
 	if state == State.DEAD:
 		return
+	_cancel_attack()
 	_set_state(State.DEAD)
 	_hide_telegraph()
 	velocity = Vector3.ZERO
@@ -680,6 +818,7 @@ func _on_health_dead() -> void:
 	_current_clip = &"death"
 	_anim.play(&"death", 0.1, 1.0)
 	_update_label()
+	Vfx.poof(self, global_position + Vector3(0.0, 0.9, 0.0))
 	if not _defeated_emitted:
 		_defeated_emitted = true
 		defeated.emit(enemy_id)

@@ -44,10 +44,21 @@ static func apply(model: Node3D, skeleton: Skeleton3D, archetype: String) -> voi
 			_attach(skeleton, "head", "RuneEyes", _box(Vector3(0.3, 0.05, 0.05), glow), Vector3(0, 0.34, 0.5))
 
 
+## Weapons hang under a BoneAttachment3D named "WeaponSlot" inside the skeleton, so find_children("Model") reaches them:
+## without this exemption they were repainted in the same stone tone as the guard body and camouflaged against it.
+static func _is_weapon(node: Node, model: Node) -> bool:
+	var parent := node.get_parent()
+	while parent != null and parent != model:
+		if parent.name == &"WeaponSlot":
+			return true
+		parent = parent.get_parent()
+	return false
+
+
 static func _stone_pass(model: Node3D) -> void:
 	for node in model.find_children("*", "MeshInstance3D", true, false):
 		var mesh_instance := node as MeshInstance3D
-		if mesh_instance.mesh == null:
+		if mesh_instance.mesh == null or _is_weapon(mesh_instance, model):
 			continue
 		var tone := CLOTH_TONE
 		for part: String in STONE_TONES:

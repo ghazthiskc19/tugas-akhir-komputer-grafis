@@ -15,8 +15,10 @@ extends Node
 ##   Export:  the-lost-island.exe --headless --fixed-fps 60 -- --qa-playthrough
 ## User args: --shots, --attempts=N (boss tries, default 4). Exit code 0 = ending reached, 1 = failure (last log line names
 ## stage, position, reason). Log + screenshots: res://tmp/island_playthrough/ in the editor, user://island_playthrough/ exported.
-## Order: spawn potion -> Symbol Pillars -> artifact -> Energy Path -> artifact -> Summit climb (jump gap) + artifact + lever ->
-## shortcut bridge -> main lane -> boss arena: 3 sockets, altar, fight (retries) -> gate -> dock ending.
+## Order: spawn potion -> Symbol Pillars (via spawn_symbol) -> artifact -> back through spawn (reverse spawn_symbol, spawn_energy) ->
+## Energy Path -> artifact -> energy_summit route to the summit south entry -> Summit climb (jump gap) + artifact + lever ->
+## shortcut bridge -> main lane -> summit_boss route -> boss arena: 3 sockets, altar, fight (retries) -> gate -> dock ending.
+## All anchors come from game.get_world_anchor() / module global positions, so any generated layout/seed works.
 ## The boss draws its attacks from an unseeded RNG, so the fight is not bit-for-bit repeatable; the bot reacts to it.
 
 const ENC := preload("res://scripts/boss/gatekeeper_encounter.gd")
@@ -59,11 +61,13 @@ var _kills := 0
 var _boss_attempts := 0
 var _deaths := 0
 var _react := true
+var _restart := false  # set after an exploration death + respawn: the running stage unwinds and is re-entered
+var _max_deaths := 3
+var _explore_deaths := 0
 
 # boss-fight scratch state
 var _b_act := &""
 var _b_kind := &""
-var _b_act_frame := 0
 var _b_dodged := false
 var _b_evade_dir := Vector3.ZERO
 
@@ -99,16 +103,28 @@ func _run() -> void:
 	_stage = "spawn"
 	var start := player.global_position
 	_say("start pos=%s hp=%d potions=%d camera_yaw=%.2f" % [start, player.get_health().current_health, player.potion_count, camera.get_yaw()])
-	if absf(start.x) > 0.5 or absf(start.z - 85.0) > 0.5 or not player.is_on_floor():
-		await _fail("not standing on the initial spawn (0,~0,85): %s floor=%s" % [start, player.is_on_floor()])
+	var spawn_anchor: Vector3 = game.get_world_anchor(&"spawn")
+	if _flat(start - spawn_anchor).length() > 0.5 or not player.is_on_floor():
+		await _fail("not standing on the initial spawn anchor %s: %s floor=%s" % [spawn_anchor, start, player.is_on_floor()])
 	await _shot("00-spawn")
 
-	await _stage_spawn_potion()
-	await _stage_symbol_puzzle()
-	await _stage_energy_puzzle()
-	await _stage_summit()
-	await _stage_boss()
+	await _play(_stage_spawn_potion)
+	await _play(_stage_symbol_puzzle)
+	await _play(_stage_energy_puzzle)
+	await _play(_stage_summit)
+	await _play(_stage_boss)
 	await _stage_ending()
+
+
+## Runs a stage; if the player died during it (real death -> checkpoint respawn), the stage is re-entered from the
+## checkpoint. Every stage skips what the session already has (artifacts, solved puzzles, open bridge).
+func _play(stage: Callable) -> void:
+	while true:
+		_restart = false
+		await stage.call()
+		if not _restart:
+			return
+		_say("resuming stage from checkpoint '%s' at %s" % [session.checkpoint_id, player.global_position])
 
 
 func _bind() -> void:
@@ -134,7 +150,7 @@ func _bind() -> void:
 		"symbol": [symbol, ["get_pillar_interactable", "get_solution", "get_progress", "is_solved", "get_artifact"]],
 		"energy": [energy, ["get_panel_interactable", "get_orientations", "get_panel_kinds", "is_rotating", "is_solved", "get_artifact"]],
 		"summit": [summit, ["get_route_waypoints", "get_lever_position", "is_shortcut_open", "get_artifact"]],
-		"boss": [boss, ["get_attack_state", "get_attack_kind", "get_telegraph", "get_boss", "get_mode_name", "get_arena", "is_won"]],
+		"boss": [boss, ["get_attack_state", "get_attack_kind", "get_attack_timing", "get_telegraph", "get_boss", "get_mode_name", "get_arena", "is_won"]],
 		"interactor": [interactor, ["get_target", "get_prompt"]],
 	}
 	for key in needs:
@@ -165,6 +181,8 @@ func _stage_spawn_potion() -> void:
 	if potion == null:
 		_say("no spawn potion found, skipping")
 		return
+	if session.is_collected(&"island_potion_0"):
+		return
 	var before: int = player.potion_count
 	await _walk_to(potion.global_position, 1.4, false)
 	await _interact(potion, "potion at camp", func() -> bool: return session.is_collected(&"island_potion_0"))
@@ -173,6 +191,8 @@ func _stage_spawn_potion() -> void:
 
 func _stage_symbol_puzzle() -> void:
 	_stage = "symbol_puzzle"
+	if session.is_collected(&"forest_artifact"):
+		return
 	var center: Vector3 = symbol.global_position
 	await _follow(_route_world(&"spawn_symbol", false, center, 26.0), 2.0, true)
 	await _walk_to(symbol.to_global(Vector3(0, 0, 14)), 1.0, true)
@@ -181,7 +201,9 @@ func _stage_symbol_puzzle() -> void:
 	_say("pillar solution (symbol ids) = %s" % [solution])
 	var corners: Array[Vector3] = [Vector3(-2.7, 0, -2.7), Vector3(2.7, 0, -2.7), Vector3(2.7, 0, 2.7), Vector3(-2.7, 0, 2.7)]
 	var at := -1
-	for step in solution.size():
+	for step in range(symbol.get_progress().size() if not symbol.is_solved() else solution.size(), solution.size()):
+		if _restart:
+			return
 		var id: int = solution[step]
 		# walk the square ring (clear of the seal in the middle and the pillar collision) to this pillar's corner
 		if at < 0:
@@ -196,25 +218,46 @@ func _stage_symbol_puzzle() -> void:
 		await _interact(item, "pillar %d (step %d/4)" % [id, expect],
 			func() -> bool: return symbol.get_progress().size() >= expect or symbol.is_solved())
 		await _wait(0.25)
+	if _restart:
+		return
 	if not symbol.is_solved():
 		await _fail("all four pillars pressed in order but the puzzle is not solved; progress=%s" % [symbol.get_progress()])
 	_say("symbol puzzle solved")
 	await _shot("01-symbol-solved")
 	await _wait(1.4)  # seal fades (collision is already gone)
+	if _restart:
+		return
 	var artifact: Node3D = symbol.get_artifact()
 	await _walk_to(symbol.to_global(Vector3(0, 0, 1.9)), 0.5, false)
 	await _interact(artifact, "forest artifact", func() -> bool: return session.is_collected(&"forest_artifact"))
 	_say("forest_artifact collected")
 	await _shot("02-forest-artifact")
-	# leave through the gap between the two north walls
-	await _walk_to(symbol.to_global(Vector3(-2, 0, -2.5)), 0.8, false)
-	await _walk_to(symbol.to_global(Vector3(-2, 0, -13)), 1.2, true)
+	# leave the way we came in (south-east entrance), then the reverse spawn_symbol road in the next stage
+	await _walk_to(symbol.to_global(corners[2]), 0.8, false)
+	await _walk_to(symbol.to_global(Vector3(0, 0, 8)), 1.0, false)
+	await _walk_to(symbol.to_global(Vector3(0, 0, 14)), 1.2, true)
 
 
 func _stage_summit() -> void:
 	_stage = "summit_climb"
 	var wps: Array[Vector3] = summit.get_route_waypoints()
-	# wps[0..1] are the south entry used by the main road; coming from the east foot we join at the foot of the west ramp.
+	if not summit.is_shortcut_open():
+		await _summit_up_and_over(wps)
+		if _restart:
+			return
+	else:
+		_say("bridge already open: taking the main lane from the foothill")
+		_react = true
+		await _walk_to(summit.to_global(Vector3(-6.0, 0.0, 12.0)), 1.5, true)
+	await _walk_to(summit.to_global(Vector3(1.5, 0.0, 6.0)), 1.0, true)
+	await _shot("05-main-lane")
+	await _walk_to(summit.to_global(Vector3(1.5, 0.0, -22.0)), 1.0, true)
+
+
+func _summit_up_and_over(wps: Array[Vector3]) -> void:
+	# wps[0..1] are the authored south entry (local z +20/+16); we arrive at local (0,0,22) from the energy_summit route.
+	await _walk_to(summit.to_global(wps[0]), 1.5, true)
+	await _walk_to(summit.to_global(wps[1]), 1.5, true)
 	await _walk_to(summit.to_global(wps[2]), 1.5, true)
 	for i in range(3, wps.size() - 1):
 		var a: Vector3 = wps[i - 1]
@@ -230,19 +273,31 @@ func _stage_summit() -> void:
 	_say("summit plateau reached at %s" % [player.global_position])
 	await _shot("03-summit-top")
 	_stage = "summit_artifact"
+	if _restart:
+		return
 	var artifact: Node3D = summit.get_artifact()
 	await _walk_to(summit.to_global(Vector3(-15.7, 8.2, -17.0)), 0.5, false)
-	await _interact(artifact, "summit artifact", func() -> bool: return session.is_collected(&"summit_artifact"))
+	if _restart:
+		return
+	if not session.is_collected(&"summit_artifact"):
+		await _interact(artifact, "summit artifact", func() -> bool: return session.is_collected(&"summit_artifact"))
 	_say("summit_artifact collected")
 	await _shot("04-summit-artifact")
 	_stage = "summit_lever"
+	if _restart:
+		return
 	var lever_stand: Vector3 = summit.get_lever_position() + Vector3(0.9, 0.0, -1.7)
 	await _walk_to(summit.to_global(Vector3(-14.5, 8.2, -15.0)), 1.0, false)
 	await _walk_to(summit.to_global(lever_stand), 0.5, false)
+	if _restart:
+		return
 	var lever := _find_interactable_near(summit.to_global(summit.get_lever_position() + Vector3(0.9, 0, 0)), 0.3)
 	if lever == null:
 		await _fail("lever interactable not found near the summit lever position")
-	await _interact(lever, "bridge lever", func() -> bool: return summit.is_shortcut_open())
+	if not summit.is_shortcut_open():
+		await _interact(lever, "bridge lever", func() -> bool: return summit.is_shortcut_open())
+	if _restart:
+		return
 	await _wait(1.8)  # segments appear one by one (0.12 s each)
 	_stage = "summit_descent"
 	_say("descending the shortcut bridge into the main lane")
@@ -251,21 +306,45 @@ func _stage_summit() -> void:
 	await _walk_to(summit.to_global(Vector3(-11.5, 0.0, 9.9)), 1.2, false)
 	await _walk_to(summit.to_global(Vector3(-6.0, 0.0, 12.0)), 1.0, true)
 	_react = true
-	await _walk_to(summit.to_global(Vector3(1.5, 0.0, 6.0)), 1.0, true)
-	await _shot("05-main-lane")
-	await _walk_to(summit.to_global(Vector3(1.5, 0.0, -22.0)), 1.0, true)
 
 
 func _stage_energy_puzzle() -> void:
 	_stage = "energy_puzzle"
 	var s_center: Vector3 = summit.global_position
 	var e_center: Vector3 = energy.global_position
-	# symbol exit -> road to the summit foot -> east along the foot -> energy road (arriving from the north)
-	await _follow(_route_world(&"symbol_summit", false, symbol.global_position, 26.0, s_center, 36.0), 2.0, true)
-	await _walk_to(summit.to_global(Vector3(-24, 0, 10.5)), 2.0, true)
-	await _walk_to(summit.to_global(Vector3(0, 0, 10.5)), 2.0, true)
-	await _walk_to(summit.to_global(Vector3(30, 0, 10.5)), 2.0, true)
-	await _follow(_route_world(&"energy_summit", true, s_center, 36.0, e_center, 24.0), 2.0, true)
+	if session.is_collected(&"energy_artifact"):
+		# resumed after a death on the way to the summit: spawn -> energy by the named route, then leave by the north side
+		await _follow(_route_world(&"spawn_energy", false, game.get_world_anchor(&"spawn"), 0.0, e_center, 24.0), 2.0, true)
+		await _walk_to(energy.to_global(Vector3(-6.5, 0, -12)), 2.0, true)
+	else:
+		await _energy_puzzle_front(e_center)
+	if _restart:
+		return
+	if _restart:
+		return
+	# back out the north way, then the named energy_summit route to the summit's south entry (summit-local z +22)
+	if _flat(energy.to_local(player.global_position) - Vector3(0, 0, 0)).length() < 8.0:
+		await _walk_to(energy.to_global(Vector3(3.6, 0, -2.0)), 0.8, false)
+		await _walk_to(energy.to_global(Vector3(-3.5, 0, -2.5)), 1.0, false)
+		await _walk_to(energy.to_global(Vector3(-6.5, 0, -4.5)), 1.0, false)
+		await _walk_to(energy.to_global(Vector3(-6.5, 0, -12)), 1.2, true)
+	var back := _route_world(&"energy_summit", false, e_center, 24.0, s_center, 36.0)
+	await _follow(back, 2.0, true)
+	await _walk_to(summit.to_global(Vector3(32, 0, 22)), 2.0, true)
+	await _walk_to(summit.to_global(Vector3(0, 0, 22)), 1.5, true)
+
+
+func _energy_puzzle_front(e_center: Vector3) -> void:
+	# symbol -> back through spawn (reverse spawn_symbol, then spawn_energy); never crosses the summit
+	await _follow(_route_world(&"spawn_symbol", true, symbol.global_position, 26.0), 2.0, true)
+	var via: Array[Vector3] = _route_world(&"spawn_energy", false, game.get_world_anchor(&"spawn"), 0.0, e_center, 24.0)
+	await _follow(via, 2.0, true)
+	# the puzzle is entered from its authored north side (energy-local z -12); go round the footprint (x +-9, z +-7) if needed
+	var arrive_z: float = energy.to_local(player.global_position).z
+	if arrive_z > -10.0:
+		await _walk_to(energy.to_global(Vector3(16, 0, 12)), 2.0, true)
+		await _walk_to(energy.to_global(Vector3(-14, 0, 12)), 2.0, true)
+		await _walk_to(energy.to_global(Vector3(-14, 0, -12)), 2.0, true)
 	await _walk_to(energy.to_global(Vector3(-6.5, 0, -12)), 1.5, true)
 	await _walk_to(energy.to_global(Vector3(-6.5, 0, -4.5)), 1.0, false)
 	await _walk_to(energy.to_global(Vector3(-3.5, 0, -2.5)), 0.8, false)
@@ -274,6 +353,8 @@ func _stage_energy_puzzle() -> void:
 		await _walk_to(energy.to_global(stands[panel]), 0.5, false)
 		var item: Node3D = energy.get_panel_interactable(panel)
 		while true:
+			if _restart:
+				return
 			var need := _presses_needed(panel)
 			if need == 0:
 				break
@@ -286,31 +367,40 @@ func _stage_energy_puzzle() -> void:
 				wait_frames += 1
 				await _step()
 	await _wait(0.5)
+	if _restart:
+		return
 	if not energy.is_solved():
 		await _fail("panels set per trace() but the energy puzzle is not solved; orientations=%s" % [energy.get_orientations()])
 	_say("energy puzzle solved, orientations=%s" % [energy.get_orientations()])
 	await _shot("06-energy-solved")
 	await _wait(1.4)
+	if _restart:
+		return
 	var artifact: Node3D = energy.get_artifact()
 	await _walk_to(energy.to_global(Vector3(4.6, 0, -2.0)), 0.4, false)
 	await _interact(artifact, "energy artifact", func() -> bool: return session.is_collected(&"energy_artifact"))
 	_say("energy_artifact collected")
 	await _shot("07-energy-artifact")
-	# back out the way we came and over to the summit foot, then up the corridor between ledge and courtyard
-	await _walk_to(energy.to_global(Vector3(3.6, 0, -2.0)), 0.8, false)
-	await _walk_to(energy.to_global(Vector3(-3.5, 0, -2.5)), 1.0, false)
-	await _walk_to(energy.to_global(Vector3(-6.5, 0, -4.5)), 1.0, false)
-	await _walk_to(energy.to_global(Vector3(-6.5, 0, -12)), 1.2, true)
-	var back := _route_world(&"energy_summit", false, e_center, 24.0, s_center, 36.0)
-	await _follow(back, 2.0, true)
-	await _walk_to(summit.to_global(Vector3(30, 0, 10.5)), 2.0, true)
-	await _walk_to(summit.to_global(Vector3(0, 0, 10.5)), 2.0, true)
-	await _walk_to(summit.to_global(Vector3(-19, 0, 10.5)), 1.5, true)
 
 
 func _stage_boss() -> void:
 	_stage = "boss_approach"
+	# Summit main lane exits north through the underpass (lane x = summit-local 1.5). Follow the named summit_boss route,
+	# skipping what is inside/at the summit footprint (we are already at local z -22) and what is inside the boss arena
+	# (the authored south entrance at boss-local z +13 takes over).
+	var s_origin: Vector3 = summit.global_position
+	var b_origin: Vector3 = boss.global_position
+	var lane: Array[Vector3] = []
+	for p in _route_world(&"summit_boss", false, s_origin, 0.0):
+		if p.z - s_origin.z > -22.5:
+			continue
+		if p.z - b_origin.z < 14.5:
+			continue
+		lane.append(p)
+	await _follow(lane, 2.0, true)
 	await _walk_to(boss.to_global(Vector3(2.0, 0, 13.0)), 1.0, true)
+	if _restart:
+		return
 	await _shot("08-arena-entrance")
 	_stage = "boss_sockets"
 	var consoles: Dictionary = boss.get_arena().consoles
@@ -323,10 +413,18 @@ func _stage_boss() -> void:
 		var id: StringName = entry[0]
 		if not consoles.has(id):
 			await _fail("arena has no socket console for %s" % id)
+		if _restart:
+			return
+		if boss.get("_installed").has(id):
+			continue
 		await _walk_to(boss.to_global(entry[1]), 0.5, false)
+		if _restart:
+			return
 		await _interact(consoles[id], "install " + String(id), func() -> bool: return not consoles[id].can_interact(player))
 		_say("socket installed: %s" % id)
 	await _shot("09-sockets-installed")
+	if _restart:
+		return
 	_stage = "boss_fight"
 	var won := false
 	for attempt in _opt_attempts:
@@ -447,7 +545,6 @@ func _boss_fight() -> String:
 		if act != _b_act or (act == &"windup" and kind != _b_kind):
 			_b_act = act
 			_b_kind = kind if kind != &"" else _b_kind
-			_b_act_frame = Engine.get_physics_frames()
 			if act == &"windup":
 				_b_dodged = false
 				_b_evade_dir = Vector3.ZERO
@@ -502,16 +599,18 @@ func _boss_defend(act: StringName, kind: StringName) -> void:
 func _boss_time_to_hit(act: StringName, kind: StringName, cfg: Dictionary, bpos: Vector3, ppos: Vector3) -> float:
 	if cfg.is_empty():
 		return 9.9
-	var elapsed := float(Engine.get_physics_frames() - _b_act_frame) / float(Engine.physics_ticks_per_second)
-	var hit_delay := float(cfg["hit_at"]) * float(cfg["active"])
+	var timing: Dictionary = boss.get_attack_timing()
+	var elapsed: float = float(timing["elapsed"])
+	var duration: float = float(timing["duration"])
+	var hit_delay: float = float(cfg["hit_at"]) * (duration if act == &"active" else float(cfg["active"]))
 	if kind == &"charge":
 		var forward: Vector3 = boss.get_boss().global_basis.z
 		forward.y = 0.0
 		forward = forward.normalized()
 		var ahead := _flat(ppos - bpos).dot(forward)
 		var run := maxf(0.0, ahead - float(cfg["front"])) / float(cfg["speed"])
-		return (float(cfg["windup"]) - elapsed + run) if act == &"windup" else run
-	return (float(cfg["windup"]) - elapsed + hit_delay) if act == &"windup" else maxf(0.0, hit_delay - elapsed)
+		return (duration - elapsed + run) if act == &"windup" else run
+	return (duration - elapsed + hit_delay) if act == &"windup" else maxf(0.0, hit_delay - elapsed)
 
 
 func _boss_engage(act: StringName) -> void:
@@ -519,15 +618,17 @@ func _boss_engage(act: StringName) -> void:
 	var ppos: Vector3 = player.global_position
 	var to := _flat(bpos - ppos)
 	var d := to.length()
-	# Potion only at the start of a long recovery window (the boss cannot start a new telegraph before it ends).
-	var elapsed := float(Engine.get_physics_frames() - _b_act_frame) / float(Engine.physics_ticks_per_second)
+	# Interstrike recovery is still part of the combo: save the punish/heal for its final recovery.
+	var timing: Dictionary = boss.get_attack_timing()
+	if act == &"recovery" and not bool(timing["final_recovery"]):
+		_stop()
+		return
 	if player.is_drinking():
 		_stop()
 		return
 	if player.get_health().current_health <= 50 and player.potion_count > 0 and act == &"recovery" and _b_kind != &"":
-		var cfg: Dictionary = ENC.ATTACKS[_b_kind]
-		var pause := 0.6 if boss.phase == 2 else 0.85
-		if float(cfg["recovery"]) + pause - elapsed >= 1.8 and d > 3.0:
+		var pause: float = ENC.PAUSE_PHASE_TWO if boss.phase == 2 else ENC.PAUSE_PHASE_ONE
+		if float(timing["duration"]) - float(timing["elapsed"]) + pause >= 1.8 and d > 3.0:
 			_stop()
 			_pulse(&"potion")
 			return
@@ -565,39 +666,70 @@ func _threat() -> Node3D:
 	return best
 
 
-## Kites a melee enemy: back off while it winds up, rush in and swing while it recovers. Ranged enemies are rushed.
-func _fight(enemy: Node3D) -> void:
-	var label := "%s(%s)" % [enemy.name, enemy.archetype]
-	var cfg: Dictionary = enemy.cfg
-	var ranged: bool = enemy.archetype == "ranged"
+## Kites melee followups, then rushes in during final recovery. Ranged bursts are rushed and dodged shot by shot.
+func _fight(first: Node3D) -> void:
+	var enemy := first
 	var start := _now()
 	var last_hp: int = player.get_health().current_health
-	_say("fight begins: %s at %s, my hp=%d" % [label, enemy.global_position, last_hp])
-	while not enemy.is_dead():
-		if player.global_position.y - enemy.global_position.y > 0.4:
+	_say("fight begins: %s(%s) at %s, my hp=%d" % [enemy.name, enemy.archetype, enemy.global_position, last_hp])
+	while true:
+		if _restart:
 			break
+		if enemy == null or not is_instance_valid(enemy) or enemy.is_dead() or player.global_position.y - enemy.global_position.y > 0.4:
+			var next := _threat()
+			if next == null:
+				break
+			if next != enemy:
+				_kills += 1 if enemy != null and is_instance_valid(enemy) and enemy.is_dead() else 0
+				enemy = next
+				_say("  retarget: %s(%s) at %s, my hp=%d" % [enemy.name, enemy.archetype, enemy.global_position, player.get_health().current_health])
+		var closest := _threat()
+		if closest != null and closest != enemy and _flat(closest.global_position - player.global_position).length() < 3.5 \
+				and _flat(enemy.global_position - player.global_position).length() > 4.5:
+			enemy = closest  # something is on top of us: deal with it before chasing the archer
 		if _now() - start > 90.0:
-			await _fail("fight with %s lasted over 90 s (enemy hp=%d)" % [label, enemy.get_node("Health").current_health])
+			await _fail("fight with %s lasted over 90 s (enemy hp=%d)" % [enemy.name, enemy.get_node("Health").current_health])
+		var ranged: bool = enemy.archetype == "ranged"
 		var to := _flat(enemy.global_position - player.global_position)
 		var d := to.length()
 		var state: StringName = enemy.get_state_name()
 		var hp: int = player.get_health().current_health
+		if hp < last_hp:
+			_say("  hit: hp %d -> %d; near=%s" % [last_hp, hp, _near_enemies()])
+		last_hp = hp
 		if player.is_drinking():
 			_stop()
 			await _step()
 			continue
-		if hp <= 40 and player.potion_count > 0:
-			if d > 8.0 or state == &"idle":
+		# Any melee enemy (not just the target) about to land its swing: read its telegraph and dodge away from it.
+		var striker := _imminent_striker()
+		if striker != null and player.stamina >= 25.0 and not player.is_dodging():
+			var away := _flat(player.global_position - striker.global_position)
+			_drive(away, false)
+			_pulse(&"dodge")
+			await _step()
+			continue
+		var shot := _incoming_projectile()
+		if shot != null and player.stamina >= 25.0 and not player.is_dodging():
+			# sidestep across the line of flight
+			var v: Vector3 = _flat(shot.get("velocity")).normalized()
+			var side := Vector3(-v.z, 0.0, v.x)
+			if side.dot(_flat(player.global_position - shot.global_position)) < 0.0:
+				side = -side
+			_drive(side, false)
+			_pulse(&"dodge")
+			await _step()
+			continue
+		if hp <= 60 and player.potion_count > 0:
+			if not enemy.has_pending_followup() and (d > 8.0 or state == &"idle" or (state == &"recovery" and d > 3.0)):
 				_stop()
 				_pulse(&"potion")
 			else:
 				_drive(-to, true)
 			await _step()
 			continue
-		if int(_now() * 2.0) % 6 == 0 and Engine.get_physics_frames() % 30 == 0:
-			_say("  %s state=%s d=%.2f dy=%.2f face_err=%.2f attacking=%s enemy_hp=%d" % [label, state, d, enemy.global_position.y - player.global_position.y, absf(angle_difference(player.rotation.y, atan2(to.x, to.z))), player.is_attacking(), enemy.get_node("Health").current_health])
-		var winding := state == &"windup" or state == &"active"
-		var reach := float(cfg.get("hit_length", 2.0)) + 0.9
+		var winding: bool = state == &"windup" or state == &"active" or (state == &"recovery" and bool(enemy.has_pending_followup()))
+		var reach: float = float(enemy.get_attack_reach()) + 0.9
 		if winding and not ranged and d < reach:
 			_drive(-to, true)
 		elif d > 2.0:
@@ -609,9 +741,57 @@ func _fight(enemy: Node3D) -> void:
 			_swing()
 		await _step()
 	_stop()
-	_kills += 1
-	_say("fight won: %s, my hp=%d" % [label, player.get_health().current_health])
+	_say("fight over, my hp=%d kills=%d" % [player.get_health().current_health, _kills])
 	await _wait(0.4)
+	if player.get_health().current_health <= 60 and player.potion_count > 1 and _threat() == null:
+		_pulse(&"potion")
+		await _wait(1.2)
+
+
+## An enemy projectile that will pass through the player within ~0.3 s (read from its position and velocity).
+func _incoming_projectile() -> Node3D:
+	for node in get_tree().get_nodes_in_group(&"enemy_projectiles"):
+		var p := node as Node3D
+		if p == null or not is_instance_valid(p):
+			continue
+		var v: Vector3 = _flat(p.get("velocity"))
+		var speed := v.length()
+		if speed < 0.5:
+			continue
+		var rel := _flat(player.global_position - p.global_position)
+		var t := rel.dot(v) / (speed * speed)
+		if t <= 0.0 or t > 0.3:
+			continue
+		if (rel - v * t).length() < 1.1:
+			return p
+	return null
+
+
+func _near_enemies() -> PackedStringArray:
+	var near := PackedStringArray()
+	for other in get_tree().get_nodes_in_group(&"enemies"):
+		if is_instance_valid(other) and not other.is_dead():
+			var od := _flat(other.global_position - player.global_position).length()
+			if od < 20.0:
+				near.append("%s(%s) %s d=%.1f" % [other.name, other.archetype, other.get_state_name(), od])
+	return near
+
+
+## A living melee enemy whose swing lands within ~0.15 s and whose telegraph box reaches the player.
+func _imminent_striker() -> Node3D:
+	for node in get_tree().get_nodes_in_group(&"enemies"):
+		var e := node as Node3D
+		if e == null or not is_instance_valid(e) or e.is_dead() or e.archetype == "ranged":
+			continue
+		var st: StringName = e.get_state_name()
+		var dd := _flat(e.global_position - player.global_position).length()
+		if dd > float(e.get_attack_reach()) + 1.2:
+			continue
+		if st == &"active":
+			return e
+		if st == &"windup" and float(e.get_attack_windup()) - float(e.get("_state_time")) <= 0.14:
+			return e
+	return null
 
 
 # ======================================================================================================================
@@ -626,6 +806,9 @@ func _walk_to(target: Vector3, tol: float, sprint: bool, timeout := 0.0, jump_wh
 	var jumped := false
 	var limit := timeout if timeout > 0.0 else _flat(target - player.global_position).length() / 4.5 + 14.0
 	while true:
+		if _restart:
+			_stop()
+			return
 		var delta := _flat(target - player.global_position)
 		var dist := delta.length()
 		if dist <= tol:
@@ -641,9 +824,22 @@ func _walk_to(target: Vector3, tol: float, sprint: bool, timeout := 0.0, jump_wh
 			_stop()
 			await _fail("stuck %.1f m from %s (no progress for 4 s)" % [dist, target])
 		var threat := _threat() if _react else null
+		if threat == null and player.get_health().current_health <= 60 and player.potion_count > 0 and not player.is_drinking():
+			_stop()
+			_pulse(&"potion")
+			for i in 4:
+				await _step()
+			while player.is_drinking() and not _restart:
+				await _step()
+			best = 1.0e9
+			best_time = _now()
+			start += 1.7
+			continue
 		if threat != null:
 			_stop()
+			var fight_start := _now()
 			await _fight(threat)
+			start += _now() - fight_start  # fighting does not eat the walking budget
 			best = 1.0e9
 			best_time = _now()
 			continue
@@ -656,8 +852,19 @@ func _walk_to(target: Vector3, tol: float, sprint: bool, timeout := 0.0, jump_wh
 
 
 func _follow(points: Array[Vector3], tol: float, sprint: bool) -> void:
-	for point in points:
-		await _walk_to(point, tol, sprint)
+	var from := 0
+	if _deaths > 0 and points.size() > 2:
+		# resumed from a checkpoint: join the road at the point nearest to where we stand
+		var best := 1.0e9
+		for i in points.size():
+			var d := _flat(points[i] - player.global_position).length()
+			if d < best:
+				best = d
+				from = i
+	for i in range(from, points.size()):
+		if _restart:
+			return
+		await _walk_to(points[i], tol, sprint)
 
 
 ## Terrain route in world space. Reversed on request; drops the points within `cut_from` of the origin-end centre and
@@ -717,11 +924,15 @@ var _target_orient: Array = [0, 0, 0]
 
 
 func _interact(node: Node3D, label: String, done: Callable) -> void:
+	if _restart:
+		return
 	for attempt in 4:
 		var waited := 0
 		while interactor.get_target() != node and waited < 40:
 			waited += 1
 			await _step()
+		if _restart:
+			return
 		if interactor.get_target() == node:
 			break
 		if attempt == 3:
@@ -738,6 +949,8 @@ func _interact(node: Node3D, label: String, done: Callable) -> void:
 	_say("E: %s  ['%s']" % [label, prompt])
 	var frames := 0
 	while not done.call():
+		if _restart:
+			return
 		frames += 1
 		if frames > 150:
 			await _fail("interact '%s' had no effect after E (prompt '%s')" % [label, prompt])
@@ -875,6 +1088,8 @@ func _wait(seconds: float) -> void:
 	var frames := int(ceil(seconds * Engine.physics_ticks_per_second))
 	for i in frames:
 		await _step()
+		if _restart:
+			return
 
 
 func _step() -> void:
@@ -890,6 +1105,8 @@ func _step() -> void:
 	if _now() > SIM_LIMIT:
 		await _fail("simulation time limit %d s exceeded" % int(SIM_LIMIT))
 	if get_tree().paused and not _expect_pause:
+		if _paused_frames == 0:
+			_release_all()
 		_paused_frames += 1
 		if _paused_frames > 20 and _paused_frames % 30 == 0:
 			if _esc_sent >= 3:
@@ -905,9 +1122,41 @@ func _step() -> void:
 			esc.pressed = false
 			_pending.append([2, esc, &"_esc"])
 	else:
+		if _paused_frames > 0:
+			# Focus loss can release Input's keys without updating our cache. The next decision must press them afresh.
+			_release_all()
+			if camera != null and camera.is_mouse_captured():
+				# resume_game deliberately discards one mouse event after recapture, just like initial attach().
+				_mouse_motion(Vector2(1.0, 0.0))
 		_paused_frames = 0
-	if not _allow_death and player != null and player.is_dead():
-		await _fail("player died (hp 0)")
+	if not _allow_death and not _restart and player != null and player.is_dead():
+		await _recover_from_death()
+
+
+## Exploration death is a real game mechanic: wait out the respawn at the checkpoint (no input, no cheats), then let the
+## current stage unwind and re-enter. Too many deaths fail the run.
+func _recover_from_death() -> void:
+	_release_all()
+	_deaths += 1
+	_explore_deaths += 1
+	var died_at := player.global_position
+	var near := _near_enemies()
+	_say("PLAYER DIED #%d at %s (checkpoint '%s'); enemies near=%s" % [_deaths, died_at, session.checkpoint_id, near])
+	if _explore_deaths > _max_deaths:
+		await _fail("died %d times (cap %d) at %s" % [_explore_deaths, _max_deaths, died_at])
+		return
+	var frames := 0
+	while player.is_dead() or session.is_respawn_pending():
+		frames += 1
+		if frames > 60 * 12:
+			await _fail("respawn never completed after death at %s" % died_at)
+			return
+		await get_tree().physics_frame
+	for i in 30:
+		await get_tree().physics_frame
+	_react = true
+	_restart = true
+	_say("respawned at %s hp=%d potions=%d" % [player.global_position, player.get_health().current_health, player.potion_count])
 
 
 func _say(text: String) -> void:
@@ -930,6 +1179,8 @@ func _shot(label: String) -> void:
 
 
 func _fail(reason: String) -> void:
+	if _restart:
+		return  # unwinding after a death; the stage will be re-entered
 	_release_all()
 	var where := player.global_position if player != null else Vector3.ZERO
 	var hp: Variant = player.get_health().current_health if player != null and player.get_health() != null else "?"
@@ -948,23 +1199,14 @@ func _finish(ok: bool) -> void:
 	if file != null:
 		file.store_string("\n".join(_log) + "\n")
 		file.close()
-	# Clean shutdown so the exit report lists only real leaks: stop audio, free the game, let the audio server drop
-	# finished playbacks (~0.5 s real time), then quit. The runner moves to the root first because it may live under the game.
+	# Exercise the real quit flow, including explicit confirmation when QA cannot save an active attempt.
 	var tree := get_tree()
-	if get_parent() != tree.root:
-		reparent(tree.root, false)
-	tree.paused = false
-	for kind in ["AudioStreamPlayer", "AudioStreamPlayer3D"]:
-		for node in tree.root.find_children("*", kind, true, false):
-			node.stop()
-	for child in tree.root.get_children():
-		if child != self:
-			child.queue_free()
-	for i in 10:
-		await tree.physics_frame
-	OS.delay_msec(500)
-	for i in 10:
-		await tree.physics_frame
-	tree.quit(0 if ok else 1)
+	var exit_code: int = 0 if ok else 1
+	if presentation != null:
+		presentation.request_quit(exit_code)
+		if not bool(presentation.get("_quitting")):
+			presentation.request_quit(exit_code)
+	else:
+		game.quit_run(exit_code)
 	while true:
 		await tree.physics_frame

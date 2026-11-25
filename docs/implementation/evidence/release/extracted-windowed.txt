@@ -1,0 +1,67 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 Core Profile Context 22.20.44.221025 - Compatibility - Using Device: ATI Technologies Inc. - Radeon RX 5500M
+
+[    1.5s spawn          ] start pos=(0.0, 0.000182, 85.0) hp=100 potions=3 camera_yaw=0.00
+[    1.5s spawn          ] screenshot C:/Users/HP/AppData/Roaming/Godot/app_userdata/The Lost Island/island_playthrough/00-spawn.png
+[    2.0s spawn_potion   ] E: potion at camp  ['[E] Ambil Ramuan']
+[    2.0s spawn_potion   ] potion taken: 3 -> 4
+[   13.1s symbol_puzzle  ] pillar solution (symbol ids) = [2, 0, 3, 1]
+[   14.1s symbol_puzzle  ] E: pillar 2 (step 1/4)  ['[E] Aktifkan Pilar Segitiga']
+[   16.0s symbol_puzzle  ] E: pillar 0 (step 2/4)  ['[E] Aktifkan Pilar Lingkaran']
+[   17.0s symbol_puzzle  ] E: pillar 3 (step 3/4)  ['[E] Aktifkan Pilar Cincin']
+[   18.8s symbol_puzzle  ] E: pillar 1 (step 4/4)  ['[E] Aktifkan Pilar Kotak']
+[   19.1s symbol_puzzle  ] symbol puzzle solved
+[   19.1s symbol_puzzle  ] screenshot C:/Users/HP/AppData/Roaming/Godot/app_userdata/The Lost Island/island_playthrough/01-symbol-solved.png
+[   21.3s symbol_puzzle  ] E: forest artifact  ['[E] Ambil Artefak Simbol']
+[   21.3s symbol_puzzle  ] forest_artifact collected
+[   21.3s symbol_puzzle  ] screenshot C:/Users/HP/AppData/Roaming/Godot/app_userdata/The Lost Island/island_playthrough/02-forest-artifact.png
+[   31.4s energy_puzzle  ] fight begins: summit_melee_foot(standard) at (10.0, 0.0, -41.0), my hp=100
+[   33.5s energy_puzzle  ]   summit_melee_foot(standard) state=stagger d=1.58 dy=-0.00 face_err=0.00 attacking=true enemy_hp=40
+[   35.2s energy_puzzle  ] fight won: summit_melee_foot(standard), my hp=100
+[   45.3s energy_puzzle  ] panel 1 (straight): orientations=[0, 1, 2], 1 more press(es)
+[   45.3s energy_puzzle  ] E: rotate panel 1  ['[E] Putar panel 1 (lurus) 90°']
+[   46.1s energy_puzzle  ] panel 2 (elbow): orientations=[1, 1, 2], 2 more press(es)
+[   46.1s energy_puzzle  ] E: rotate panel 2  ['[E] Putar panel 2 (siku) 90°']
+[   46.4s energy_puzzle  ] panel 2 (elbow): orientations=[1, 2, 2], 1 more press(es)
+[   46.4s energy_puzzle  ] E: rotate panel 2  ['[E] Putar panel 2 (siku) 90°']
+[   47.1s energy_puzzle  ] panel 3 (elbow): orientations=[1, 3, 2], 3 more press(es)
+[   47.1s energy_puzzle  ] E: rotate panel 3  ['[E] Putar panel 3 (siku) 90°']
+[   47.3s energy_puzzle  ] panel 3 (elbow): orientations=[1, 3, 3], 2 more press(es)
+[   47.3s energy_puzzle  ] E: rotate panel 3  ['[E] Putar panel 3 (siku) 90°']
+[   47.6s energy_puzzle  ] panel 3 (elbow): orientations=[1, 3, 0], 1 more press(es)
+[   47.6s energy_puzzle  ] E: rotate panel 3  ['[E] Putar panel 3 (siku) 90°']
+[   48.3s energy_puzzle  ] energy puzzle solved, orientations=[1, 3, 1]
+[   48.3s energy_puzzle  ] screenshot C:/Users/HP/AppData/Roaming/Godot/app_userdata/The Lost Island/island_playthrough/06-energy-solved.png
+[   49.9s energy_puzzle  ] E: energy artifact  ['[E] Ambil Artefak Energi']
+[   49.9s energy_puzzle  ] energy_artifact collected
+[   49.9s energy_puzzle  ] screenshot C:/Users/HP/AppData/Roaming/Godot/app_userdata/The Lost Island/island_playthrough/07-energy-artifact.png
+[   67.5s summit_climb   ] jump gap: from (-1.5, 4.2, -7.0) to (4.5, 4.6, -7.0)
+[   71.9s summit_climb   ] summit plateau reached at (-8.880467, 7.907753, -65.98077)
+[   71.9s summit_climb   ] screenshot C:/Users/HP/AppData/Roaming/Godot/app_userdata/The Lost Island/island_playthrough/03-summit-top.png
+[   73.0s summit_artifact] E: summit artifact  ['[E] Ambil Artefak Puncak']
+[   73.0s summit_artifact] summit_artifact collected
+[   73.0s summit_artifact] screenshot C:/Users/HP/AppData/Roaming/Godot/app_userdata/The Lost Island/island_playthrough/04-summit-artifact.png
+[   73.8s summit_lever   ] E: bridge lever  ['[E] Tarik tuas: turunkan jembatan shortcut']
+[   75.6s summit_descent ] descending the shortcut bridge into the main lane
+[   80.9s summit_descent ] screenshot C:/Users/HP/AppData/Roaming/Godot/app_userdata/The Lost Island/island_playthrough/05-main-lane.png
+[   85.2s boss_approach  ] screenshot C:/Users/HP/AppData/Roaming/Godot/app_userdata/The Lost Island/island_playthrough/08-arena-entrance.png
+[   86.5s boss_sockets   ] E: install forest_artifact  ['[E] Pasang Artefak Hutan']
+[   86.5s boss_sockets   ] socket installed: forest_artifact
+[   87.7s boss_sockets   ] E: install summit_artifact  ['[E] Pasang Artefak Puncak']
+[   87.7s boss_sockets   ] socket installed: summit_artifact
+[   88.7s boss_sockets   ] E: install energy_artifact  ['[E] Pasang Artefak Energi']
+[   88.7s boss_sockets   ] socket installed: energy_artifact
+[   88.7s boss_sockets   ] screenshot C:/Users/HP/AppData/Roaming/Godot/app_userdata/The Lost Island/island_playthrough/09-sockets-installed.png
+[   90.2s boss_fight     ] E: altar (wake the Gatekeeper)  ['[E] Bangunkan Penjaga Gerbang']
+[   90.2s boss_fight     ] screenshot C:/Users/HP/AppData/Roaming/Godot/app_userdata/The Lost Island/island_playthrough/10-boss-wake-1.png
+[   94.2s boss_fight     ] boss hp=420/420 phase=1 act=pause/ | player hp=100 stamina=100 potions=4 pos=(1.608924, 0.000109, 2.650299)
+[   98.3s boss_fight     ] boss hp=360/420 phase=1 act=recovery/slam | player hp=100 stamina=100 potions=4 pos=(-1.983719, 0.000936, -4.418518)
+[  102.3s boss_fight     ] boss hp=210/420 phase=2 act=recovery/sweep | player hp=100 stamina=100 potions=4 pos=(2.359206, 0.000109, -3.282249)
+[  106.3s boss_fight     ] boss hp=60/420 phase=2 act=windup/slam | player hp=100 stamina=100 potions=4 pos=(-2.016524, 0.000109, -4.818672)
+[  110.1s boss_fight     ] boss attempt 1 result: won
+[  110.1s boss_fight     ] screenshot C:/Users/HP/AppData/Roaming/Godot/app_userdata/The Lost Island/island_playthrough/11-boss-defeated.png
+[  110.1s ending         ] boss defeated; waiting for the gate
+[  116.2s ending         ] screenshot C:/Users/HP/AppData/Roaming/Godot/app_userdata/The Lost Island/island_playthrough/12-gate-open.png
+[  120.2s ending         ] screenshot C:/Users/HP/AppData/Roaming/Godot/app_userdata/The Lost Island/island_playthrough/13-ending.png
+[  120.2s ending         ] ENDING reached: completion screen shown, tree paused=true
+[  120.2s ending         ] RESULT PASS | sim 120.2 s | kills=1 boss_attempts=1 deaths=0 | artifacts=3 | Checkpoint: awal • Artefak: 3 • Ramuan diambil: 1 • Musuh kalah: 1

@@ -10,6 +10,7 @@ const ENEMY_ONLY_LAYER := 8
 const DUNGEON := "res://assets/third_party/kaykit/dungeon/%s.gltf"
 const NATURE := "res://assets/third_party/kaykit/forest_nature/%s.gltf"
 const CRYSTAL := "res://assets/third_party/polypizza/crystal_ipoly3d.glb"
+const UI_THEME := preload("res://scripts/ui/ui_theme.gd")
 const INTERACTABLE := preload("res://scripts/objectives/objective_interactable.gd")
 
 const SFX_GEM := "res://assets/third_party/audio/rpg_sfx_rubberduck/item_gem_02.ogg"
@@ -192,6 +193,7 @@ static func label(parent: Node, text: String, pos: Vector3, size_px := 40, pixel
 	lab.font_size = size_px
 	lab.pixel_size = pixel
 	lab.modulate = color
+	lab.font = UI_THEME.body_font()
 	lab.outline_size = 10
 	lab.outline_modulate = Color(0.05, 0.05, 0.08)
 	if billboard:

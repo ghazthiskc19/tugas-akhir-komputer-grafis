@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ## Run (Godot 4.7.2, from the project root):
 ##   C:/Godot/godot.exe --headless --fixed-fps 60 --path . --script res://scripts/tests/combat_edge_regression.gd
-## Optional user args after `--`:   --only=potion,schedule,iframes,projectile,boss,stamina,death
+## Optional user args after `--`:   --only=potion,schedule,iframes,projectile,boss,stamina,guard,death
 ## Exit code 0 = every check passed, 1 = at least one failed. A summary is also written to user://test/combat_edge_regression.log.
 ##
 ## HOW IT DRIVES THE GAME
@@ -113,7 +113,7 @@ func _main() -> void:
 	var suites: Array = [
 		["potion", test_potion_basics], ["interrupt", test_potion_interrupts], ["pause", test_potion_pause],
 		["schedule", test_potion_schedule], ["iframes", test_iframes_direct], ["projectile", test_iframes_projectile],
-		["boss", test_iframes_boss], ["stamina", test_stamina], ["death", test_death_hygiene],
+		["boss", test_iframes_boss], ["stamina", test_stamina], ["guard", test_guard_impact], ["death", test_death_hygiene],
 	]
 	for entry in suites:
 		if not wanted.is_empty() and not wanted.has(entry[0]):
@@ -182,6 +182,7 @@ func until(pred: Callable, max_seconds: float) -> bool:
 func new_game() -> Node:
 	var g: Node = (load(GAME_SCENE) as PackedScene).instantiate()
 	g.start_in_menu = false
+	g.procedural = false  # Resource edge cases use the documented fixed START fixture.
 	root.add_child(g)
 	await frames(6)
 	for e in get_nodes_in_group(&"enemies"):
@@ -597,9 +598,13 @@ func test_iframes_direct() -> void:
 	var p = g.player
 	var probe := Probe.new(p)
 	var enemies: Node = g.get_node("Enemies")
-	var melee_damage: int = enemies.get_child(0).cfg["damage"]
-	var heavy_damage: int = enemies.get_child(1).cfg["damage"]
-	check(melee_damage == 12 and heavy_damage == 32, "enemy damage values read from the real archetypes (%d / %d)" % [melee_damage, heavy_damage])
+	var melee_damage := 0
+	var heavy_damage := 0
+	for enemy in enemies.get_children():
+		if enemy.archetype == "standard":
+			melee_damage = int(enemy.cfg["damage"])
+		elif enemy.archetype == "heavy":
+			heavy_damage = int(enemy.cfg["damage"])
 	var avoided: Array[int] = []
 	var landed: Array[int] = []
 	var speed_at: Dictionary = {}
@@ -878,11 +883,122 @@ func test_stamina() -> void:
 	check(probe.refused.count(&"block") == 1, "exactly one block refusal for the whole broken hold (%d)" % probe.refused.count(&"block"))
 	check(trace[resumed_index - 1][0] >= 20.0 and trace[resumed_index - 2][0] < 20.0, "resumes on the first tick after stamina reaches 20 (prev samples %.2f / %.2f)" % [trace[resumed_index - 2][0], trace[resumed_index - 1][0]])
 	check(hit_while_broken, "broken-guard hit was exercised")
+	# Resuming at 20 stamina is not enough to absorb a boss slam's 30.4 stamina impact.
+	probe.damage.clear()
+	var resumed_hp := hp(p)
+	check(p.receive_damage(38) and hp(p) == resumed_hp - 38 and not p.is_blocking() and p.stamina == 0.0
+		and probe.damage.size() == 1 and probe.damage[0][1] == false, "resumed low guard breaks against 38: full damage, no negative stamina")
+	up(&"block")
+	check(await until(func(): return p.stamina >= 40.0, 3.0), "guard replenishes enough stamina for the original blocked-40 control")
+	down(&"block")
+	await frames(3)
 	probe.damage.clear()
 	var before_block := hp(p)
 	check(p.receive_damage(40) and hp(p) == before_block - 10 and probe.damage[0][1] == true, "resumed guard reduces a 40 hit to 10 (HP %d -> %d)" % [before_block, hp(p)])
 	up(&"block")
 	await frames(3)
+	await end_game(g)
+
+
+## Impact costs are tested through receive_damage; guard and dodge are raised with real input, not private state flags.
+func test_guard_impact() -> void:
+	var g := await new_game()
+	var p = g.player
+	var probe := Probe.new(p)
+	p.stamina_regen = 0.0  # Exact resource fixtures: no tick can refill the guard between combo hits.
+
+	await reset_state(p)
+	p.stamina = 80.0
+	probe.clear()
+	check(p.receive_damage(24) and hp(p) == 76 and p.stamina == 80.0 and probe.damage.size() == 1
+		and probe.damage[0][1] == false, "unblocked hit: full damage, no guard stamina cost")
+
+	await reset_state(p)
+	down(&"block")
+	await frames(3)
+	p.stamina = 40.0
+	probe.clear()
+	check(p.is_blocking(), "boss-slam control: real RMB raised the guard")
+	check(not p.receive_damage(0) and not p.receive_damage(-10) and p.stamina == 40.0 and hp(p) == 100
+		and probe.damage.is_empty(), "non-positive damage never spends guard stamina")
+	check(p.receive_damage(38) and hp(p) == 90 and is_equal_approx(p.stamina, 9.6) and probe.damage.size() == 1
+		and probe.damage[0][1] == true and p.is_blocking(), "adequate guard: 38 becomes 10 HP damage and costs 30.4 stamina")
+	up(&"block")
+	await frames(3)
+
+	await reset_state(p)
+	down(&"block")
+	await frames(3)
+	p.stamina = 80.0
+	probe.clear()
+	check(p.receive_damage(24) and hp(p) == 94 and is_equal_approx(p.stamina, 60.8), "combo sweep: 6 HP damage, 19.2 stamina impact")
+	check(p.receive_damage(38) and hp(p) == 84 and is_equal_approx(p.stamina, 30.4), "combo slam: 10 HP damage, 30.4 stamina impact")
+	check(p.receive_damage(30) and hp(p) == 76 and is_equal_approx(p.stamina, 6.4), "combo charge: 8 HP damage, 24 stamina impact")
+	check(probe.damage.size() == 3 and probe.damage[0][1] and probe.damage[1][1] and probe.damage[2][1],
+		"all three adequately funded combo hits report blocked")
+	check(p.receive_damage(24) and hp(p) == 52 and p.stamina == 0.0 and not p.is_blocking()
+		and probe.damage.size() == 4 and probe.damage[3][1] == false and probe.refused == [&"block"],
+		"continued combo exhausts the guard: the breaking hit deals full 24, emits one refusal and clamps stamina to zero")
+	check(p.receive_damage(10) and hp(p) == 42 and p.stamina == 0.0 and probe.damage.size() == 5
+		and probe.damage[4][1] == false, "another hit in the same frame cannot reblock or receive a discount")
+	await frames(10)
+	check(not p.is_blocking() and p.stamina == 0.0 and probe.refused == [&"block"], "broken held guard refuses only once and cannot resume without stamina")
+	up(&"block")
+	await frames(3)
+
+	for available in [7.9, 8.0]:
+		await reset_state(p)
+		down(&"block")
+		await frames(3)
+		p.stamina = available
+		probe.clear()
+		check(p.receive_damage(10), "minimum-cost boundary %.1f: hit applies" % available)
+		var adequate: bool = available == 8.0
+		check(hp(p) == (97 if adequate else 90) and p.stamina == 0.0 and not p.is_blocking()
+			and probe.damage.size() == 1 and probe.damage[0][1] == adequate and probe.refused == [&"block"],
+			"minimum 8 stamina: %.1f %s; guard breaks without negative stamina" % [available, "blocks this hit" if adequate else "takes full damage"])
+		up(&"block")
+		await frames(3)
+
+	await reset_state(p)
+	down(&"block")
+	await frames(3)
+	p.stamina = 20.0
+	probe.clear()
+	check(p.receive_damage(38) and hp(p) == 62 and p.stamina == 0.0 and not p.is_blocking()
+		and probe.damage.size() == 1 and probe.damage[0][1] == false, "low guard: 20 cannot fund a slam, full 38 damage")
+	up(&"block")
+	p.stamina_regen = 25.0
+	await frames(30)
+	check(p.stamina == 0.0, "impact break retains the 0.75 s regeneration delay")
+	check(await until(func(): return p.stamina >= 20.0, 2.0), "impact-broken stamina regenerates back to the existing 20-point resume threshold")
+	p.stamina_regen = 0.0
+
+	await reset_state(p)
+	down(&"block")
+	await frames(3)
+	p.stamina = 100.0
+	# Parsed input may reach the player after another held-guard tick. Observe the last guard resource signal,
+	# then the dodge's immediate resource signal, so ordinary 18/s guard drain is not mistaken for dodge cost.
+	var dodge_resources: Dictionary = {"before": 100.0, "after": -1.0}
+	var sample_dodge: Callable = func() -> void:
+		if p.is_dodging():
+			if float(dodge_resources["after"]) < 0.0:
+				dodge_resources["after"] = p.stamina
+		else:
+			dodge_resources["before"] = p.stamina
+	p.resources_changed.connect(sample_dodge)
+	check(await dodge_now(p) >= 0, "guard-to-dodge: real Alt starts the dodge")
+	p.resources_changed.disconnect(sample_dodge)
+	var after_dodge: float = p.stamina
+	probe.clear()
+	var applied: bool = p.receive_damage(38)
+	check(is_equal_approx(float(dodge_resources["before"]) - float(dodge_resources["after"]), 25.0)
+		and not applied and hp(p) == 100 and p.stamina == after_dodge and probe.damage.is_empty() and probe.refused.is_empty(),
+		"iframe-avoided slam: dodge spends 25, hit adds no cost or damage (before %.3f, after %.3f, current %.3f, applied %s)"
+		% [dodge_resources["before"], dodge_resources["after"], p.stamina, applied])
+	up(&"block")
+	await until(func(): return not p.is_dodging(), 1.0)
 	await end_game(g)
 
 

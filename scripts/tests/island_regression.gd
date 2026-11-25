@@ -37,6 +37,12 @@ const RING: Array[Vector3] = [Vector3(2, 0, 0), Vector3(0, 0, 2), Vector3(-2, 0,
 ## Compass directions of the energy puzzle: 0 N(-z) 1 E(+x) 2 S(+z) 3 W(-x).
 const DIRS: Array[Vector3] = [Vector3(0, 0, -1), Vector3(1, 0, 0), Vector3(0, 0, 1), Vector3(-1, 0, 0)]
 
+const SAVE_SCRIPT := preload("res://scripts/world/island_save.gd")
+const SAVE_SUFFIXES: Array[String] = ["", ".tmp", ".bak"]
+const SCRATCH_SAVE := "user://island_regression_scratch.json"
+var _save_backup := {}
+var _save_real_path := ""
+var _save_guarded := false
 var _checks := 0
 var _failed: Array[String] = []
 var _suite := ""
@@ -54,6 +60,7 @@ func _main() -> void:
 		if a.begins_with("--only="):
 			only = a.substr(7)
 	var wanted := only.split(",", false)
+	guard_user_save()
 	var suites: Array = [
 		["symbol", test_symbol_pillars], ["energy", test_energy_path], ["artifacts", test_artifact_orders],
 		["summit", test_summit_state], ["boss", test_boss], ["newrun", test_new_run], ["seeds", test_seed_matrix],
@@ -64,11 +71,13 @@ func _main() -> void:
 		_suite = entry[0]
 		print("== suite %s" % _suite)
 		await (entry[1] as Callable).call()
+	await shutdown_cleanly()
+	_suite = "save-guard"
+	restore_user_save()
 	print("")
 	print("island_regression: %d checks, %d failed (STATE regression with teleports; not a full playthrough)" % [_checks, _failed.size()])
 	for line in _failed:
 		print("  FAIL " + line)
-	await shutdown_cleanly()
 	quit(0 if _failed.is_empty() else 1)
 
 
@@ -81,6 +90,51 @@ func shutdown_cleanly() -> void:
 	await frames(10)
 	OS.delay_msec(500)
 	await frames(10)
+
+
+# ============================================================================================================ user save guard
+# Games started here autosave. The real user save must never be touched: the save path is redirected to a scratch file
+# and the original bytes of the real save (+ .tmp/.bak) are restored exactly (and verified) at the end.
+
+func guard_user_save() -> void:
+	if _save_guarded:
+		return
+	_save_real_path = SAVE_SCRIPT.save_path
+	for suffix in SAVE_SUFFIXES:
+		var file := _save_real_path + suffix
+		if FileAccess.file_exists(file):
+			_save_backup[file] = FileAccess.get_file_as_bytes(file)
+	_save_guarded = true
+	SAVE_SCRIPT.save_path = SCRATCH_SAVE
+	for suffix in SAVE_SUFFIXES:
+		DirAccess.remove_absolute(SCRATCH_SAVE + suffix)
+
+
+## Idempotent. Redirects back, deletes scratch files, restores the real save bytes and verifies them.
+func restore_user_save() -> void:
+	if not _save_guarded:
+		return
+	_save_guarded = false
+	SAVE_SCRIPT.save_path = _save_real_path
+	for suffix in SAVE_SUFFIXES:
+		if FileAccess.file_exists(SCRATCH_SAVE + suffix):
+			DirAccess.remove_absolute(SCRATCH_SAVE + suffix)
+	for suffix in SAVE_SUFFIXES:
+		var file := _save_real_path + suffix
+		if _save_backup.has(file):
+			var out := FileAccess.open(file, FileAccess.WRITE)
+			if out != null:
+				out.store_buffer(_save_backup[file])
+				out.close()
+		elif FileAccess.file_exists(file):
+			DirAccess.remove_absolute(file)
+		var same: bool = (FileAccess.file_exists(file) == _save_backup.has(file)) \
+			and (not _save_backup.has(file) or FileAccess.get_file_as_bytes(file) == _save_backup[file])
+		check(same, "user save file %s restored to its original bytes" % file)
+
+
+func _finalize() -> void:
+	restore_user_save()
 
 
 # ============================================================================================================ helpers
@@ -886,9 +940,10 @@ func test_new_run() -> void:
 	check(await use(g, sym.get_artifact(), RING), "dirty run: forest artifact collected")
 	var camp: Node3D = g.terrain.get_node("CampCheckpoint")
 	check(await use(g, camp, NEAR), "dirty run: camp checkpoint activated")
+	var potion_id: StringName = g.terrain.layout["potions"][0]["id"]
 	var potion: Node3D = null
 	for node in g.terrain.get_children():
-		if node.get("pickup_id") == &"island_potion_0":
+		if node.get("pickup_id") == potion_id:
 			potion = node
 	if potion != null:
 		await use(g, potion, NEAR)
@@ -926,7 +981,7 @@ func test_new_run() -> void:
 	check(fresh.boss.get_mode_name() == &"dormant" and fresh.boss.get_snapshot().is_empty(), "new boss dormant without snapshot")
 	var np = fresh.player
 	check(np.potion_count == 3 and np.get_health().current_health == np.max_hp and not np.is_dead(), "new player has starting resources")
-	check(np.global_position.distance_to(Vector3(0, 0.1, 85)) < 2.5, "new player starts at the spawn")
+	check(np.global_position.distance_to(fresh.get_world_anchor(&"spawn")) < 2.5, "new player starts at the spawn anchor")
 	check(fresh.terrain.requested_seed == 777 and fresh.terrain.procedural, "new run uses the requested seed")
 	check(not paused, "tree is not left paused")
 	await end_game(fresh)
@@ -951,6 +1006,7 @@ func terrain_signature(t: Node) -> String:
 		obs.append(o["pos"].y)
 		obs.append(o["r"])
 	acc.append("obs:%d:%d" % [obs.size(), hash(obs)])
+	acc.append("layout:%d" % hash(str(t.layout)))
 	return ";".join(acc)
 
 
@@ -963,14 +1019,14 @@ func make_terrain(seed_value: int, procedural: bool) -> Node3D:
 
 ## Module footprints (module-local extents from each module's header) placed at the terrain's own anchors.
 func module_rects(t: Node3D) -> Dictionary:
-	var a: Dictionary = t.anchor_positions
+	var a: Dictionary = t.layout["anchors"]
 	var sy: Vector3 = a[&"symbol"]
 	var en: Vector3 = a[&"energy"]
 	var su: Vector3 = a[&"summit"]
 	var bo: Vector3 = a[&"boss"]
 	return {
-		"symbol": Rect2(sy.x - 12, sy.z - 12, 24, 24), "energy": Rect2(en.x - 9, en.z - 7, 18, 14),
-		"summit": Rect2(su.x - 25, su.z - 22, 50, 44), "boss": Rect2(bo.x - 18, bo.z - 15, 36, 30),
+		&"symbol": Rect2(sy.x - 12, sy.z - 12, 24, 24), &"energy": Rect2(en.x - 9, en.z - 7, 18, 14),
+		&"summit": Rect2(su.x - 25, su.z - 22, 50, 44), &"boss": Rect2(bo.x - 18, bo.z - 15, 36, 30),
 	}
 
 
@@ -979,10 +1035,30 @@ func check_terrain_constraints(t: Node3D, label: String) -> void:
 	var rep: Dictionary = t.last_report
 	check(rep["valid"] == true, "%s: layout reports valid (%s)" % [label, rep["errors"]])
 	# Anchors fixed for every seed and on y = 0.
-	for name in T.OBJECTIVE_ANCHORS:
-		var a: Vector3 = T.OBJECTIVE_ANCHORS[name]
-		check(t.anchor_positions[name].is_equal_approx(a), "%s: anchor %s fixed" % [label, name])
-		check(absf(t.height_at(a.x, a.z)) <= T.PAD_FLAT_TOLERANCE, "%s: anchor %s on y=0" % [label, name])
+	var anchors: Dictionary = t.layout["anchors"]
+	for name in [&"spawn", &"symbol", &"energy", &"summit", &"boss"]:
+		check(anchors.has(name) and anchors[name] is Vector3, "%s: layout has anchor %s" % [label, name])
+	for name in anchors:
+		var a: Vector3 = anchors[name]
+		if name == &"dock_end":
+			# Out over water: its surface is the dock deck (boss + 6..22 m toward -Z, 8 m wide, top y 0.03), not the heightfield.
+			# make_terrain builds data only (no nodes), so assert the anchor sits on that deck footprint.
+			var off: Vector3 = a - (anchors[&"boss"] as Vector3)
+			check(absf(off.x) <= 4.0 and off.z <= -6.0 + 0.01 and off.z >= -22.0 - 0.01, "%s: anchor dock_end lies on the dock deck footprint" % label)
+			continue
+		check(absf(t.height_at(a.x, a.z) - a.y) <= T.PAD_FLAT_TOLERANCE, "%s: anchor %s stands on the terrain surface" % [label, name])
+	check(t.layout["camp"] is Vector3 and t.layout["encounters"].size() > 0 and t.layout["potions"].size() > 0, "%s: layout has camp, encounters and potions" % label)
+	var ids := {}
+	var placed: Array = [{"id": &"camp", "position": t.layout["camp"]}]
+	placed.append_array(t.layout["encounters"])
+	placed.append_array(t.layout["potions"])
+	for entry: Dictionary in placed:
+		var pos: Vector3 = entry["position"]
+		var ground: float = t.height_at(pos.x, pos.z)
+		check(not ids.has(entry["id"]), "%s: layout id %s is unique" % [label, entry["id"]])
+		ids[entry["id"]] = true
+		check(pos.y >= ground - 0.3 and pos.y <= ground + 2.0, "%s: %s at y=%.2f is neither buried nor floating over ground %.2f" % [label, entry["id"], pos.y, ground])
+		check(t.is_dry_at(pos.x, pos.z), "%s: %s is on dry land" % [label, entry["id"]])
 	# Routes: slope along the centerline and lateral edges measured by this runner from height_at.
 	var worst := 0.0
 	var worst_edge := 0.0
@@ -1017,21 +1093,21 @@ func check_terrain_constraints(t: Node3D, label: String) -> void:
 	check(min_h >= T.ROUTE_MIN_HEIGHT - 0.05, "%s: routes stay above the waterline (min %.2f)" % [label, min_h])
 	# Objective pads flat; module footprints flat where the module floor sits.
 	for name in [&"spawn", &"symbol", &"energy", &"summit", &"boss"]:
-		var def: Array = T.PAD_DEFS[name]
-		var c: Vector2 = def[0]
+		var c: Vector3 = t.layout["anchors"][name]
 		for k in 12:
 			var ang := TAU * k / 12.0
-			var h: float = t.height_at(c.x + cos(ang) * def[1] * 0.9, c.y + sin(ang) * def[2] * 0.9)
-			check(absf(h) <= 0.05, "%s: pad %s flat at angle %d (%.3f)" % [label, name, k, h])
+			var h: float = t.height_at(c.x + cos(ang) * 3.0, c.z + sin(ang) * 3.0)
+			check(absf(h - c.y) <= 0.05, "%s: pad %s flat at angle %d (%.3f vs anchor %.3f)" % [label, name, k, h, c.y])
 	var rects := module_rects(t)
 	for name in rects:
 		var r: Rect2 = rects[name]
+		var base_y: float = (t.layout["anchors"][name] as Vector3).y
 		var x := r.position.x
 		while x <= r.end.x:
 			var z := r.position.y
 			while z <= r.end.y:
 				var h2: float = t.height_at(x, z)
-				check(absf(h2) <= 1.5, "%s: %s footprint ground near y=0 at (%.0f,%.0f): %.2f" % [label, name, x, z, h2])
+				check(absf(h2 - base_y) <= 1.5, "%s: %s footprint ground near the anchor level %.2f at (%.0f,%.0f): %.2f" % [label, name, base_y, x, z, h2])
 				z += 6.0
 			x += 6.0
 	# Solid decoration never blocks a route corridor nor sits in a module footprint.
@@ -1046,6 +1122,7 @@ func check_terrain_constraints(t: Node3D, label: String) -> void:
 func test_seed_matrix() -> void:
 	var full := has_flag("seeds-full")
 	var baseline := make_terrain(1, false)
+	var baseline_layout := str(baseline.layout)
 	var baseline_sig := terrain_signature(baseline)
 	var other := make_terrain(99999, false)
 	check(terrain_signature(other) == baseline_sig, "non-procedural runs ignore the seed (baseline layout)")
@@ -1064,7 +1141,7 @@ func test_seed_matrix() -> void:
 		if a.used_fallback:
 			fallbacks += 1
 			check(a.active_seed == TERRAIN_SCRIPT.BASELINE_SEED, "seed %d: fallback uses the baseline seed" % sd)
-			check(sig_a.get_slice(";", 1) == baseline_sig.get_slice(";", 1), "seed %d: fallback terrain equals the baseline terrain" % sd)
+			check(str(a.layout) == baseline_layout, "seed %d: fallback layout (anchors, encounters, potions, camp) equals the baseline layout" % sd)
 			for i in range(attempts_log.size() - 1):
 				check(attempts_log[i]["valid"] == false, "seed %d: attempt %d before fallback was invalid" % [sd, i])
 		else:

@@ -2,18 +2,19 @@
 
 Proyek: **The Lost Island** · Tim: **Aku Suka Embegeh** · Dibuat: **17 November 2026**.
 
-Dokumen ini menjadi checklist pelaksanaan Level 1, dari pencarian asset hingga distribusi build. Scope mengikuti [konsep aktif](../konsep-game.md). Rencana ini belum menyatakan gameplay sudah dibuat.
+Dokumen ini melacak implementasi Level 1 dan bukti verifikasinya. Bagian iterasi lama tetap historis; status aktif dan acceptance di bawah tidak menyatakan review manusia sudah selesai.
 
 ## Start Here
 
-| Informasi | Status |
+| Informasi | Status (25 November 2026) |
 |---|---|
-| Tahap aktif | Batch arena gabungan, fast-paced controls dan menu preferensi diterima pengguna pada 22 November 2026 |
-| Pekerjaan berikutnya | Commit/push batch yang diterima, compact dengan `SESSION_HANDOFF.md`, lalu P09: blockout pulau tetap dan jalur eksplorasi |
-| Fondasi yang tersedia | Project Godot, scene preview, Git, konfigurasi MCP, dokumen desain, asset pihak ketiga di `assets/third_party/` (ter-import tanpa error) |
-| Gameplay | Combo, block/dodge/stamina, potion, tiga archetype musuh, interaksi/pickup, checkpoint/respawn sesi dan preferensi kontrol tersedia di arena tetap. Pulau/procedural, puzzle, boss dan shader polish belum dibuat |
-| Asset produksi 3D dan audio | Bahan awal cukup, tidak perlu download model wajib lagi. Salinan lokal: 31 dari 54 kebutuhan `IMPORTED`, 23 sisanya perlu perakitan/edit/retarget (clone baru tanpa FBX Mixamo memiliki lebih sedikit). Belum ada yang `VERIFIED`; lihat inventaris |
-| Hambatan yang diketahui | Gap nyata: retarget/aplikasi N06 dan N11 serta authoring wake/charge boss (FBX Mixamo hanya salinan lokal, repo publik); kode terrain procedural, puzzle, UI dan perakitan scene; reskin guardian/golem (recolor cukup); loop clip harus di-set manual. Tidak ada model/paket wajib baru |
+| Tahap aktif | **Penutupan Pulau 1 selesai secara implementasi:** fitur terkirim (layout prosedural, save/Continue, peta M, UI font/ikon, blur transisi, landmark/hint biome) plus kontrak combat baru (musuh, boss fase 1 dua pukulan / fase 2 dua atau tiga, guard per hit), terbukti harness + playthrough dirender + EXE `exports/island-one/the-lost-island.exe` (SHA-256 `81ed42e9…4449`, seed 42 PASS). Build tidak di-commit. Rilis `90d2976` adalah historis |
+| Pekerjaan berikutnya | **Hanya manual QA:** gamepad fisik, audio/kesulitan/kontrol subjektif, komputer anggota lain, review visual asset. Build, hash dan verifikasi selesai |
+| Fondasi yang tersedia | Godot 4.7.2 Compatibility, main scene `scenes/world/island_game.tscn`, modul terrain/objective/boss/UI/save/peta, template export resmi terverifikasi |
+| Gameplay | **Hanya Pulau 1** (Pulau 2/3 dan save lintas pulau di luar scope). Seed prosedural menggeser akar modul, jalan, 3–5 pack encounter, potion, checkpoint, biome, dermaga (axis-aligned); puzzle internal dan boss **authored/fixed**. Dua puzzle, pendakian/shortcut, tiga artefak, boss dua fase, snapshot retry, ending tersedia |
+| Simpan | JSON lokal `user://island_save.json`; autosave 5 detik + milestone; simpan manual di jeda; Continue di checkpoint dengan resource persis, snapshot boss asli bila boss sudah dimulai; menu awal tidak menimpa save, New Run meminta konfirmasi |
+| UI dan asset | Font Cinzel + Nunito (OFL) dan ikon game-icons dimuat runtime via `scripts/ui/ui_theme.gd`; UI/border Kenney; HUD, menu, peta (M), blur latar menu/jeda dan transisi. 53/54 kebutuhan asset IMPORTED, M27 MISSING (opsional), **0 VERIFIED** (Gate B/C terbuka). Raw Mixamo bukan dependency |
+| Hambatan yang diketahui | Semua pemeriksaan sumber, playthrough dirender seed 42 dan EXE export lulus. Belum (manual): gamepad fisik, review audio/kontrol/kesulitan manusia, komputer anggota lain, logo runtime. Crash import pertama fresh clone (historis, intermiten) tidak direproduksi |
 
 Urutan utama: **asset sample → import audit → player/camera → combat → progress/retry → level blockout → objective/boss → playable level → procedural generation → final art → polish/QA → release**.
 
@@ -32,9 +33,9 @@ Pencarian asset berjalan bersama prototype. Tidak perlu menunggu seluruh dekoras
 5. Jika asset atau sistem yang sudah diterima diganti, buka kembali pemeriksaan yang terdampak. Jangan mempertahankan centang lama untuk hasil yang belum diuji ulang.
 6. Angka dan aturan yang belum dipilih pada desain dicatat sebagai **baseline prototype**, beserta alasan dan hasil uji. Perubahan desain inti diperbarui ke dokumen konsep sebelum dianggap final.
 
-## Iterasi kecil dan persetujuan pengguna
+## Iterasi kecil dan persetujuan pengguna (historis)
 
-Keputusan pengguna, 21 November 2026: urutan utama dipertahankan, tetapi implementasi dipecah menjadi hasil kecil yang dapat diperiksa pengguna. Tabel berikut adalah **rencana**, bukan pekerjaan yang sudah selesai.
+**Historis:** aturan review satu iterasi pada 21 November. Pada 22 November pengguna mengizinkan seluruh backlog dikerjakan otonom, commit per milestone terverifikasi dan push tanpa gate review sela. Tuning konservatif boleh; kontrol yang diterima tidak boleh diregresikan.
 
 1. Sebelum mengerjakan iterasi, sepakati scope dan cara pengguna mengujinya. Jangan menjalankan beberapa iterasi sekaligus tanpa persetujuan; batch I06–I08 (sudah selesai, kini superseded) adalah pengecualian lama, bukan izin yang berlaku sekarang.
 2. Agent implementasikan hanya scope tersebut, jalankan pemeriksaan paling sempit dan buktikan permukaan visual bila berubah, lalu catat hasil serta batas verifikasinya.
@@ -55,7 +56,7 @@ Keputusan pengguna, 21 November 2026: urutan utama dipertahankan, tetapi impleme
 | I07 | `feat(camera): avoid world geometry occlusion` | Camera probe/collision, exclude pemain, dan pengembalian jarak kamera secara mulus. | Kamera tidak menembus tembok/tanah dan tidak bergetar saat dekat obstacle. |
 | I08 | `feat(player): add mouse-world aiming` | **Superseded, dihapus:** mouse-world aiming dan `MouseWorldAim` diganti karakter menghadap arah gerak; melee kelak menghadap karakter, tanpa lock-on. Semula: aiming ke permukaan dengan fallback cursor miss; belum ada serangan. | Arsip. |
 
-**Gate saat ini:** pengguna menerima batch gabungan setelah playtest, mengizinkan commit/push dan kelanjutan. Simpan konteks pada [Session Handoff](SESSION_HANDOFF.md), compact terlebih dahulu, lalu lanjut P09 blockout pulau tetap. Shader tetap polish akhir; penerimaan prototype tidak berarti seluruh acceptance/release sudah lolos.
+**Gate aktif:** implementasi otonom disetujui pengguna. Full-input playthrough telah mencapai ending pada renderer nyata dan executable release; penerimaan visual/feel oleh pengguna dan sign-off distribusi tim tetap terpisah.
 
 Polish shader dikerjakan **setelah gameplay inti stabil**, sebelum regresi/export akhir. Pertahankan palet pengguna dan Compatibility; nilai visual serta frame time diuji bersama, bukan menambah efek berat di tengah prototype.
 
@@ -75,7 +76,7 @@ Default gerak `6 m/s`, sprint Shift `9 m/s`, dodge Alt `12 m/s / 0,25 s` dengan 
 
 Esc → Pengaturan: slider gerak, sprint, durasi swing `0,1–0,6 s`, sensitivitas dan jarak kamera; Terapkan menyimpan ConfigFile lokal, Reset Default menyiapkan default untuk diterapkan. Swing aktif tidak di-retime; perubahan mulai swing berikutnya.
 
-Runtime Godot 4.7.2 Compatibility membuktikan gerak 6/sprint 9, Running_A, sprint tetap saat menyerang, Alt dodge; timescale `6,8333×` memainkan klip pertama penuh dalam 0,2 s, combo tiga hit memberi 75 damage tepat satu per swing dan layer selesai. GUI diuji dengan klik tombol dan keyboard slider: Apply, file save, reload scene dan Reset Default lolos; mengganti durasi 0,2→0,3 saat pause tidak mengubah ayunan aktif. [Sprint](evidence/fast-sprint.png) · [Pengaturan](evidence/preferences-menu.png). Batch gabungan tetap belum dipush selama review.
+Runtime Godot 4.7.2 Compatibility membuktikan gerak 6/sprint 9, Running_A, sprint tetap saat menyerang, Alt dodge; timescale `6,8333×` memainkan klip pertama penuh dalam 0,2 s, combo tiga hit memberi 75 damage tepat satu per swing dan layer selesai. GUI diuji dengan klik tombol dan keyboard slider: Apply, file save, reload scene dan Reset Default lolos; mengganti durasi 0,2→0,3 saat pause tidak mengubah ayunan aktif. [Sprint](evidence/fast-sprint.png) · [Pengaturan](evidence/preferences-menu.png). Batch ini sudah dipush; review arena lama tetap historis.
 
 ### Revisi kontrol kamera (21 November 2026)
 
@@ -95,7 +96,7 @@ Disetujui pengguna dan diimplementasikan; review dilakukan di `scenes/tests/thir
 - **I08 (superseded):** hit platform menghasilkan titik sekitar `(2,001; 0,800; 3,495)`; model membidik independen dari body saat WASD. Ray miss nyata memakai bidang kaki dengan cap 50 m; focus loss menyembunyikan marker. Fitur ini dihapus. [Screenshot](evidence/i08-surface.png).
 - Uji lama berjalan pada **Godot 4.7.2, Compatibility/OpenGL, Radeon RX 5500M, 1280×720**, bukan headless. Harness sementara tidak menjadi test produksi. Belum ada attack, terrain, slope, canopy, boss atau pengujian kenyamanan pengguna; A01–A03 tidak dicentang penuh.
 
-## Baseline Audit
+## Baseline Audit (historis, 17 November 2026)
 
 Audit membaca file repository, tidak menjalankan ulang Godot atau MCP. Folder cache, addon, laporan, dan hasil export dikecualikan dari pencarian asset gameplay.
 
@@ -216,20 +217,20 @@ Dependensi: P05–P06. Model dapat berbagi rig/fondasi AI, tetapi perilaku harus
 
 Dependensi: P03, P05–P07. Aturan boss mengikuti [snapshot specification](../desain/boss-penjaga-gerbang.md).
 
-- [ ] **P08-01** Simpan solved puzzle dan collected artifact sebagai state terpisah dengan stable IDs. Artifact hanya dapat dikoleksi sekali.
+- [x] **P08-01** Solved puzzle dan collected artifact memakai dictionary terpisah dengan stable IDs; solved-but-uncollected, pickup sekali dan rebuild modul diuji.
 - [x] **P08-02** Checkpoint dan respawn eksplorasi tersedia: jeda 2 s, teleport aman, HP/stamina penuh serta reset transient.
 - [x] **P08-03** Potion tersisa dipertahankan; checkpoint tidak memberi heal/potion gratis. Runtime pemakaian 5→4 lalu death/respawn mempertahankan 4 lolos.
-- [ ] **P08-04** Simpan killed-enemy state pada Jalur Menuju Puncak. Putuskan dan dokumentasikan reset musuh/pickup area lain; jangan memperluas aturan rute itu tanpa catatan baseline.
-- [ ] **P08-05** Buat snapshot HP, stamina, dan potion sebelum boss attempt pertama. Snapshot tidak memberi heal gratis dan tidak ditimpa oleh retry gagal.
-- [ ] **P08-06** Pada kegagalan boss, tetapkan resource ke nilai snapshot; reset HP/fase boss, projectile, hitbox aktif, timer, target, dan event tertunda. Progres pulau tetap tersimpan.
-- [ ] **P08-07** Pada kemenangan, pertahankan resource tersisa dan hentikan restore snapshot. Catat aturan keluar sukarela/quit serta resource/pickup di area retry sebelum mengimplementasikannya.
+- [x] **P08-04** Killed IDs bertahan untuk semua musuh eksplorasi selama sesi, termasuk pendakian. Musuh hidup reset ke spawn saat respawn; pickup tetap satu kali. Baseline ini sengaja berlaku untuk seluruh pulau.
+- [x] **P08-05** Snapshot tepat sebelum aktivasi pertama/wake, bukan sesudah regen selama wake. HP70/stamina45/potion5 tidak ditimpa retry.
+- [x] **P08-06** Retry menetapkan resource snapshot tepat, boss penuh/fase1, serta membersihkan attack/telegraph. Tiga kegagalan berulang lolos regression.
+- [x] **P08-07** Menang mempertahankan resource dan membuang snapshot. Tidak ada keluar sukarela dari arena aktif; Esc hanya pause, quit membuang sesi. Tidak ada pickup resource di arena retry.
 - [ ] **P08-08** Uji death saat attack, dodge, potion, interaction, dan projectile aktif; respawn tidak boleh memicu damage lama atau interaksi ganda.
 
 **Exit / M1:** test arena mendukung combat, interaksi, dan retry yang dapat diulang; jalankan A11–A13.
 
 ## P09 — Fixed World Blockout
 
-Dependensi: movement/camera dan ukuran karakter terbukti. Belum memasukkan variasi procedural penuh.
+Dependensi: movement/camera dan ukuran karakter terbukti. Belum memasukkan variasi procedural penuh. *Catatan:* bagian ini mencatat blockout baseline historis; layout prosedural saat ini dicatat di P15 dan Start Here.
 
 - [x] **P09-01** Pulau baseline 250 × 250 m, spawn Grassland, cabang Forest/Rocky Highlands, pad gerbang dan dock: `scripts/world/island_terrain.gd`.
 - [x] **P09-02** Delapan rute, cabang alternatif, landmark, viewpoint dan koneksi antarpad tersedia; flood fill membuktikan pad artefak tidak membutuhkan pad lain lebih dahulu.
@@ -243,11 +244,11 @@ Dependensi: movement/camera dan ukuran karakter terbukti. Belum memasukkan varia
 
 Dependensi: P05, P08–P09. Acuan: [Pilar Simbol](../desain/puzzle-01-pilar-simbol.md).
 
-- [ ] **P10-01** Buat modul empat pilar, empat simbol berbeda bentuk, relief yang selalu dapat diperiksa, segel, dan artifact.
-- [ ] **P10-02** Simpan solusi dan clue dalam data modul yang sama. Implementasikan urutan interaksi, reset pada input salah, serta feedback cahaya/audio.
-- [ ] **P10-03** Buka segel pada urutan benar tanpa damage, kehilangan item, atau cooldown panjang akibat kesalahan.
-- [ ] **P10-04** Lindungi area dari gangguan musuh dan uji keterbacaan dari kamera Perspective.
-- [ ] **P10-05** Uji solved-but-uncollected, collected, death, dan respawn. Terapkan kembali state tanpa menduplikasi artifact.
+- [x] **P10-01** Empat bentuk pilar, relief permanen, segel collision dan artefak tersedia pada modul reusable.
+- [x] **P10-02** Solusi `[2,0,3,1]` dan clue satu sumber; 24 permutasi dan input acak diperiksa melawan model independen.
+- [x] **P10-03** Urutan benar melepas segel; salah mereset tanpa HP/potion loss atau cooldown panjang.
+- [x] **P10-04** Tidak ada musuh di area puzzle; bentuk/clue diperiksa dari screenshot kamera gameplay 1280 × 720. Penilaian agent, bukan review pengguna.
+- [x] **P10-05** Solved-but-uncollected, collected, death/respawn dan rebuild modul mempertahankan state tanpa duplikasi.
 
 **Exit:** A14 lolos dan modul dapat ditempatkan ulang tanpa kehilangan petunjuk atau akses.
 
@@ -255,11 +256,11 @@ Dependensi: P05, P08–P09. Acuan: [Pilar Simbol](../desain/puzzle-01-pilar-simb
 
 Dependensi: P05, P08–P09. Acuan: [Jalur Energi](../desain/puzzle-02-jalur-energi.md).
 
-- [ ] **P11-01** Buat modul tiga panel, source crystal, altar, segel, dan artifact. Source serta tujuan tetap di dalam modul.
-- [ ] **P11-02** Representasikan connector jalur lurus/siku dan orientasi 90° dalam data. Validasi satu jalur source-to-altar yang dapat dicapai.
-- [ ] **P11-03** Implementasikan rotasi panel per interaksi, cegah input ganda saat rotasi, dan tampilkan aliran hanya sejauh sambungan valid.
-- [ ] **P11-04** Buka segel pada koneksi lengkap. Gunakan ukiran/arah, cahaya, dan audio; tanpa timer, damage, atau batas percobaan.
-- [ ] **P11-05** Uji seluruh kombinasi orientasi panel serta persistence solved/collected. Simulasi sinar, mirror, atau ray tracing tidak diperlukan.
+- [x] **P11-01** Tiga panel, kristal sumber, altar, segel dan artefak berada di modul terkontrol.
+- [x] **P11-02** Port lurus/siku dan orientasi 90° diperiksa dengan trace independen pada seluruh 64 susunan; dua solusi valid.
+- [x] **P11-03** Satu putaran per interaksi, input reentry ditolak selama tween, prefix aliran mengikuti konektivitas.
+- [x] **P11-04** Koneksi lengkap membuka segel; ukiran/chevron dan cahaya tidak bergantung suara saja. Tidak ada timer/damage/batas percobaan.
+- [x] **P11-05** Starting `[0,1,2]` dapat diselesaikan enam press menjadi `[1,3,1]`; 64 kombinasi dan persistence teruji.
 
 **Exit:** A15 lolos; perubahan penempatan/seed tidak membuat modul kehilangan solusi.
 
@@ -267,12 +268,12 @@ Dependensi: P05, P08–P09. Acuan: [Jalur Energi](../desain/puzzle-02-jalur-ener
 
 Dependensi: P07–P09. Acuan: [Jalur Menuju Puncak](../desain/exploration-03-jalur-menuju-puncak.md).
 
-- [ ] **P12-01** Buat modul kaki bukit, jalur tebing, guard courtyard, dan altar puncak dengan checkpoint sebelum rute.
-- [ ] **P12-02** Tempatkan satu melee awal, lalu satu melee + satu ranged pada pelataran lebar dengan cover dan pendekatan samping.
-- [ ] **P12-03** Buat satu atau dua lompatan pendek yang lolos batas traversal. Jangan memaksa combat saat pemain berada pada gap sempit.
-- [ ] **P12-04** Pastikan artifact dapat diambil dengan melewati penjaga dan tanpa menyelesaikan kedua puzzle terlebih dahulu.
-- [ ] **P12-05** Implementasikan bridge shortcut dari sisi puncak, status terbuka, dan collision yang sesuai. Uji shortcut setelah death/respawn.
-- [ ] **P12-06** Uji jatuh, respawn checkpoint, killed-enemy persistence, viewpoint, dan jalur pulang.
+- [x] **P12-01** Kaki bukit/checkpoint, tebing, courtyard, puncak dan viewpoint tersedia; origin modul dipisah dari arena boss ke `(0,0,-50)`.
+- [x] **P12-02** Satu melee kaki dan melee+ranged courtyard, cover serta bypass tersedia; foot guard dijauhkan dari kolong jembatan/leash.
+- [x] **P12-03** Gap nyata 3 m dengan beda tinggi 0,4 m dilalui player fisika lewat input lompat. Tanpa lompat player jatuh; combat tidak dipaksa di gap.
+- [x] **P12-04** Artefak tidak memerlukan solved puzzle atau kill seluruh penjaga; bypass courtyard teruji, full run hanya membunuh satu guard.
+- [x] **P12-05** Tuas puncak membuka jembatan collision persisten. Turun/naik dan exit kaki diuji; rel rendah yang menjepit kapsul dihapus.
+- [x] **P12-06** Fall/checkpoint, killed IDs, shortcut dan jalur pulang diuji. Lane bawah R4 x=1,5 memiliki clearance >=3,95 m dan terhubung ke boss.
 
 **Exit:** A16 lolos, termasuk run tanpa membunuh semua penjaga.
 
@@ -280,13 +281,16 @@ Dependensi: P07–P09. Acuan: [Jalur Menuju Puncak](../desain/exploration-03-jal
 
 Dependensi: P06–P09 dan ruang arena. Acuan: [Penjaga Gerbang](../desain/boss-penjaga-gerbang.md).
 
-- [ ] **P13-01** Buat arena rata, checkpoint sebelum arena, gerbang tiga socket, dan interaksi aktivasi setelah ketiga artifact tersedia.
-- [ ] **P13-02** Implementasikan wake animation singkat, arena lock, state boss, telegraph, dan waktu penguncian target serangan.
-- [ ] **P13-03** Implementasikan arm sweep, ground slam, dan straight charge dengan area damage yang sesuai telegraph. Semua mengikuti block/i-frames umum.
-- [ ] **P13-04** Implementasikan fase pertama di atas 50% HP dan fase kedua pada 50% atau kurang; rangkaian dua serangan tidak menghilangkan telegraph dasar.
-- [ ] **P13-05** Tuning recovery ground slam agar combo tiga hit mungkin dilakukan dengan posisi/timing tepat. Uji boss tanpa potion.
-- [ ] **P13-06** Hubungkan snapshot P08. Retry tidak memasang ulang artifact atau mengulang opening; boss kembali penuh/fase pertama dan tidak membawa attack transient lama.
-- [ ] **P13-07** Implementasikan death boss, energi gerbang padam, gate open, dan satu completion trigger ketika pemain melewati gerbang.
+- [x] **P13-01** Arena rata, checkpoint, tiga socket artefak unik dan aktivasi altar tersedia.
+- [x] **P13-02** Wake authored, arena lock, state dan telegraph dengan target lock tersedia; snapshot diambil sebelum wake.
+- [x] **P13-03** Sweep/slam/charge memberi damage 24/38/30; block 6/10/8, dodge menghindar dalam uji timing. Pylon memotong telegraph dan damage.
+- [x] **P13-04** Threshold 50% tepat masuk fase2; rangkaian tambahan mempertahankan windup/telegraph dasar.
+- [x] **P13-05** Recovery slam 2,4 s menyediakan kesempatan combo. Full input run mengalahkan boss tanpa menggunakan potion.
+- [x] **P13-06** Snapshot retry berulang mempertahankan socket/progres, boss kembali penuh/fase1 tanpa mengulang wake.
+- [x] **P13-07** Boss runtuh, gerbang terbuka dan crossing dock memicu completion sekali; dibuktikan state regression serta full-input run.
+- [x] **P13-08 (kontrak baru, 25 Nov 2026)** Boss fase 1 = dua pukulan beruntun, fase 2 (HP ≤ 50%) = dua atau tiga pukulan; windup cepat/tertunda, telegraph baru per pukulan, recovery penuh di akhir, pemilihan serangan sadar-jarak. HP 420, damage 24/38/30, ambang 50% tidak berubah. Terbukti: `boss_pattern` 122/0 + playthrough dirender seed 42 PASS (boss fase 2). Pemeriksaan manual feel/kesulitan terbuka.
+- [x] **P06-baru (kontrak baru, 25 Nov 2026)** Blok: tiap hit diblok memakai stamina `max(8, damage × 0,8)`; kurang → guard break; terbayar → 25% omni-arah; kontrol dan UI tidak berubah. Terbukti: `combat_edge` 269/0 (harness). Feel manual terbuka.
+- [x] **P07-baru (kontrak baru, 25 Nov 2026)** Standard combo dua pukulan; heavy pendekatan dipercepat + sapuan lebar tertunda; ranged semburan tiga tembakan; telegraph baru, kunci terlambat, recovery terbatas; HP/damage baseline tidak berubah. Terbukti: `enemy_pattern` 72/0 + playthrough dirender PASS. Kesulitan subjektif terbuka.
 
 **Exit:** A17–A19 lolos tanpa musuh tambahan atau pola boss di luar desain.
 
@@ -294,11 +298,11 @@ Dependensi: P06–P09 dan ruang arena. Acuan: [Penjaga Gerbang](../desain/boss-p
 
 Dependensi: P09–P13.
 
-- [ ] **P14-01** Hubungkan spawn, ketiga objective, encounter, checkpoint, gerbang, boss, dan ending pada blockout tetap.
-- [ ] **P14-02** Uji keenam urutan pengambilan ketiga artifact. Semua memberikan tiga artifact unik dan akses boss yang sama.
-- [ ] **P14-03** Uji death setelah puzzle selesai tetapi artifact belum diambil, setelah artifact terkumpul, setelah shortcut dibuka, dan saat menuju boss.
-- [ ] **P14-04** Pastikan death tidak membuat world baru dengan seed/ID berbeda. `New Run` sengaja memulai session baru dengan progres kosong.
-- [ ] **P14-05** Mainkan dari awal hingga ending tanpa debug unlock, noclip, pemberian item, atau perubahan scene manual.
+- [x] **P14-01** Spawn, objective, encounter, checkpoint, gerbang, boss dan ending terhubung di main scene.
+- [x] **P14-02** Keenam urutan pickup melalui Interactor asli memberi tiga ID unik dan entitlement gerbang sama.
+- [x] **P14-03** Death solved-but-uncollected/collected/shortcut dan retry mempertahankan progres; regression state memakai teleport dan bukan bukti traversal.
+- [x] **P14-04** Respawn mempertahankan instance/seed; New Run membuat session kosong dan melepas root lama sebelum root baru.
+- [x] **P14-05** Full-input run tanpa noclip/teleport/item injection mencapai ending: renderer nyata 120,6 s simulasi dan executable release 119,8 s simulasi, tanpa death/potion terpakai.
 
 **Exit / M2:** satu level lengkap bisa ditamatkan. Ini menjadi pembanding sebelum P15 mengubah terrain/penempatan.
 
@@ -308,8 +312,8 @@ Dependensi: traversal P04, route contract P09, dan playable level P14.
 
 - [x] **P15-01** Seed terrain dan dekorasi terpisah; seed sama memberi hash heightfield/rute/obstacle identik, perubahan dekorasi tidak mengubah terrain/rute.
 - [x] **P15-02** Mesh vertex-color 201 × 201 dan collision dari triangle sama; coastline, biome, elevasi di luar jalur, pads rata dan rute berkemiringan moderat tersedia.
-- [ ] **P15-03** Tempatkan modul objective/arena/checkpoint/shortcut pada lokasi valid dan pertahankan koneksinya. Bersihkan obstacle yang menutup interaksi, clue, atau ruang dodge.
-- [ ] **P15-04** Validasi graph reachability disertai pemeriksaan slope, clearance, collision, serta jump gap. Graph yang tersambung saja belum membuktikan player dapat lewat.
+- [x] **P15-03** Pad summit/boss diperbaiki menjadi rectangular keepout sesuai footprint; overlap lama dan route bawah R4 diperbaiki, seluruh 20 seed data divalidasi ulang.
+- [x] **P15-04** Graph/flood fill, slope, footprint, collision dan gap diperiksa. Baseline seluruh rute dilewati player fisika; objective internal dilalui full-input bot.
 - [ ] **P15-05** Bangun navigation sesuai terrain/modul, tetapkan perilaku aggro/leash, dan uji melee/ranged pada slope serta cover nyata.
 - [x] **P15-06** Maksimum empat kandidat lalu baseline 20261122. Harness forced-invalid benar-benar mencapai fallback valid pada percobaan kelima, tanpa loop tak terbatas.
 - [ ] **P15-07** Data/geometry seluruh 20 seed checklist lolos, masing-masing first-attempt; belum full objective/boss run per seed. Bukti `evidence/terrain/data_validation_acceptance.txt`. Matrix tambahan 20 seed lain dicatat terpisah, bukan pengganti matrix acceptance.
@@ -335,12 +339,12 @@ Dependensi: asset lab P02 dan gameplay/world yang sudah terbukti. Pengadaan kebu
 
 Dependensi: session/progression dan gameplay terintegrasi; dapat dikerjakan pada test scenes lebih awal.
 
-- [ ] **P17-01** Buat HUD HP bar + angka, stamina, potion quantity, progres artifact, dan interaction prompt yang mengikuti state sebenarnya.
-- [ ] **P17-02** Buat main menu/New Run, pause/resume, pengaturan audio, control hints, serta completion screen sebagai baseline UX. Pause/focus loss tidak memicu attack atau konsumsi potion tanpa sengaja.
-- [ ] **P17-03** Masukkan pembukaan awak kapal terdampar, environmental clues, dan penutup menuju dermaga sesuai lore. Hint tidak memaksakan urutan artifact.
-- [ ] **P17-04** Integrasikan ambience, musik eksplorasi/boss, dan SFX movement, melee, projectile, block, dodge, potion, puzzle, gate, serta UI; catat sumber/lisensi.
-- [ ] **P17-05** Uji volume, transisi musik, spam SFX, dan keterbacaan saat audio dimute. Informasi penting tetap terlihat melalui bentuk, arah, atau animasi.
-- [ ] **P17-06** Pastikan debug UI, concept-art label laporan, dan instruksi tooling developer tidak muncul dalam alur game pemain.
+- [x] **P17-01** HUD HP/stamina/potion/artefak/prompt mengikuti state nyata; hitung puzzle hanya dua kunci puzzle.
+- [x] **P17-02** Menu, seed/New Run, pause/volume, control hints dan completion bekerja; Keluar memakai satu jalur shutdown bersih.
+- [x] **P17-03** Intro terdampar, clue lingkungan dan outro dermaga tersedia; compass tidak memaksa urutan artefak.
+- [ ] **P17-04** Musik/ambience/SFX terpasang dari sumber berlisensi; mix belum diaudit telinga manusia.
+- [ ] **P17-05** Volume tersimpan dan informasi utama memakai bentuk/teks; review mute dan spam SFX oleh manusia belum.
+- [x] **P17-06** Label debug musuh dan teks lab tidak tampil di main game; runner QA hanya aktif lewat flag CLI.
 
 **Exit / M3:** A22 lolos dan run dapat dipahami tanpa penjelasan lisan pembuat game.
 
@@ -362,11 +366,11 @@ Dependensi: playable content lengkap.
 
 Dependensi: P16–P18.
 
-- [ ] **P19-01** Lengkapi seluruh [Acceptance Checklist](ACCEPTANCE_CHECKLIST.md) dengan bukti yang dapat direproduksi. Pengujian otomatis difokuskan pada state/progression, konektivitas puzzle, damage, snapshot, dan validation seed.
-- [ ] **P19-02** Pasang export templates sesuai **4.7.2**, periksa preset Windows, exclusion addon MCP/dokumen/source kerja, serta resource gameplay yang memang diperlukan build.
-- [ ] **P19-03** Export ke `exports/windows/`; jalankan executable di luar Editor tanpa MCP/server, lalu ulangi run hingga ending dan retry boss.
-- [ ] **P19-04** Uji fresh clone pada komputer anggota: import/run/export menggunakan file yang dilacak Git, tanpa mengandalkan cache atau path mesin pembuat.
-- [ ] **P19-05** Uji paket offline pada komputer target lain bila tersedia. Pastikan tidak perlu Godot, Python, akun, API, atau internet; periksa log/missing resources.
+- [ ] **P19-01** Bukti otomatis (historis 22 Nov, kode lama): state regression 36.099/0, combat edge 248/0, 20 seed data, full-input run. **Untuk kode 25 Nov belum ada hasil**; item manusia (controller fisik, audio, komputer lain) juga belum.
+- [x] **P19-02** Template 4.7.2 resmi terverifikasi SHA-512; preset Windows `all_resources` mengecualikan addon MCP, docs, tools, tmp dan raw Mixamo. Audit paket 1.393 entri bersih.
+- [x] **P19-03** (historis, build `90d2976`) Executable release di luar Editor mencapai ending lewat input QA (119,8 s simulasi), tanpa MCP/server. Tidak berlaku otomatis untuk build 25 Nov.
+- [ ] **P19-04** Fresh remote clone di mesin sama: import bersih, full-input, regression 36.099/0, export (buat `exports/windows/` dulu) dan EXE lolos. Satu crash native awal tidak terulang dalam 16 import bersih. Komputer anggota lain belum.
+- [ ] **P19-05** Paket offline belum diuji di komputer target lain.
 
 **Exit / M4:** A24–A25 lolos dan semua blocker release ditutup.
 
@@ -374,9 +378,9 @@ Dependensi: P16–P18.
 
 Dependensi: build P19 terbukti.
 
-- [ ] **P20-01** Siapkan paket ZIP executable beserta file pendamping yang diperlukan, credits/lisensi, versi, dan petunjuk kontrol/jalankan. Jangan menganggap satu `.exe` cukup sebelum isi paket diuji.
-- [ ] **P20-02** Uji ZIP yang sudah diekstrak ke lokasi baru, termasuk path dengan spasi. Catat commit dan hash paket release.
-- [ ] **P20-03** Perbarui README, inventaris, tracker, known issues, serta status implementasi pada konsep/laporan berdasarkan hasil nyata.
+- [x] **P20-01** ZIP berisi EXE, PLAY, VERSION, notices dan lisensi; isi paket diuji.
+- [x] **P20-02** (historis, build `90d2976`) ZIP diekstrak ke path berspasi dan EXE-nya menamatkan level lewat QA input; hash build final lama dicatat di `VERSION.txt` dan README. Build 25 Nov belum punya hash.
+- [x] **P20-03** README, inventaris, tracker, acceptance dan handoff diperbarui dengan hasil nyata dan known issues.
 - [ ] **P20-04** Lengkapi nama dosen/tahun ajaran laporan, sesuaikan disclaimer AI dan atribusi aktual, lalu export PDF final yang sudah diperiksa.
 - [ ] **P20-05** Simpan build/release dan PDF pada tujuan yang dipakai tim; bagikan link kepada pengguna. Pengunggahan tugas ke portal kampus dilakukan jika diminta terpisah.
 - [ ] **P20-06** Tandai release selesai setelah anggota lain dapat menjalankan paket dan memahami known issues; arsipkan seed/build reproduksi bug yang belum kritis.
@@ -396,7 +400,7 @@ Bagian ini berisi rincian yang belum final pada desain. Isi hasil eksperimen seb
 | D07 | Aggro/leash, stagger, friendly fire, projectile dan navigation pada elevasi | OPEN | — |
 | D08 | Angka balancing, ukuran/coverage modul, seed matrix, mesin/target performa | OPEN | — |
 
-Campaign, multiplayer, player ranged/magic, skill tree, miniboss tambahan, serta save permanen lintas sesi tidak menjadi syarat tracker ini. Full gamepad mapping di luar right-stick orbit juga belum menjadi keputusan desain.
+Campaign, multiplayer, player ranged/magic, skill tree, miniboss tambahan, serta save lintas level tidak menjadi syarat tracker ini (save lokal Pulau 1 sudah ada; lihat Start Here). Pulau 2/3 belum dibuat. Full gamepad mapping di luar right-stick orbit juga belum menjadi keputusan desain.
 
 ## Team Workstreams
 
@@ -423,6 +427,10 @@ Keempat anggota bisa menguji branch anggota lain. Perubahan file pusat seperti `
 | 2026-11-21 | P01 selesai; P02-02; P02-01/04/06/08 (parsial) | OMP | Rock Golem diunduh via akun BlendSwap pengguna; Blender 4.5.16 LTS portable di `tools/` (hash cocok checksum resmi). Subset asset diekstrak ke `assets/third_party/` (1.681 file, 74 MB; musik WAV→OGG, SFX tidak relevan dibuang). Godot 4.7.2 import 1.281 file tanpa error setelah `.gdignore` folder kerja dan `filesystem/import/blender/enabled=false`. Uji muat: golem GLB 28 bone, Rogue 23 bone, clip Rig_Medium/Large, Drinking.fbx. Nama bone karakter = library animasi. `THIRD_PARTY_NOTICES.md` diisi; inventaris diperbarui ke status per kebutuhan. | — | Scene `asset_lab`, cek visual skala/material (P02-03), set loop clip, retarget Mixamo, rework golem |
 | 2026-11-21 | P02-04/06 (parsial), audit kecukupan | OMP | Ambang visual dilonggarkan (model mirip/cukup, recolor diutamakan): tidak ada model/paket baru wajib; M27 opsional; core golem cukup recolor + skala seragam + crystal. Parse statis GLB (satu kali, tanpa Godot): Rogue/Knight/Barbarian/Ranger identik dengan `Rig_Medium_*` (23 joint, nama, parent, rest pose; semua target clip ditemukan) tetapi rest pose berbeda dari `Rig_Large_*` (translasi 1/23 cocok), sehingga klaim Barbarian=Large dikoreksi dan clip Medium dipakai. Kesamaan rest pose bukan bukti visual; loop tidak diverifikasi. Hitungan tetap 31 IMPORTED / 23 MISSING, 0 VERIFIED; angka file mentah (1.681/1.281) bukan kesiapan. Repo GitHub ternyata publik: FBX Mixamo di-gitignore, hanya salinan lokal, clone baru harus mengunduh sendiri. Gameplay belum ada. | — | P02-03 cek visual, wrapper scene, retarget N06/N11, reskin guardian |
 | 2026-11-21 | I01; P02-01/03/08 (parsial) | OMP | Scene statis `scenes/tests/asset_lab.tscn`: Rogue, Rogue Hooded, Ranger, Knight, Barbarian, Rock Golem, pohon, batu, pilar; kamera tetap, label, lighting, lantai dan bar tepat 1 m. Palet pengguna disimpan di `docs/desain/palettes/`. Posisi golem/pohon didasarkan pada AABB nyata dan skala seragam; tidak remodel/recolor asset sumber, tidak animasi/Mixamo/gameplay. Run nyata Godot 4.7.2 Compatibility (Radeon RX 5500M), 1280×720, exit 0, capture PNG berhasil tanpa error/warning; [screenshot](evidence/i01-asset-lab.png). Main scene tidak diubah. | Commit I01 (log commit terkait) | Tunggu pilihan pemain serta review warna/skala dari pengguna; I02 diblok sampai disetujui |
+| 2026-11-23 | Penyelesaian Pulau 1 (dokumentasi) | DocumentIslandOneCompletion | Dokumen disinkronkan dengan perilaku saat ini: layout prosedural deterministik (akar modul, jalan, 3–5 pack encounter, potion, checkpoint, biome, dermaga; axis-aligned; puzzle internal + boss fixed), save JSON lokal + autosave 5 detik/milestone + simpan manual + Continue (resource persis; snapshot boss asli), konfirmasi New Run, hitmarker/SFX, landmark/sign. Fakta uji saat ini: layout data 16 seed lolos; terrain seed 42/777/20261117 lolos sebelum resume; regresi save 82 check, 4 suite, 0 gagal. Lainnya pending/berjalan. Target build `exports/island-one/the-lost-island.exe` (belum dibuat/diverifikasi). Tidak ada tanda lulus baru. | — | Bukti akhir dan hash dari parent |
+| 2026-11-23 | Penyelesaian Pulau 1 (dokumentasi, pembaruan) | DocumentIslandOneCompletion | Ditambahkan: Pilar Simbol/Jalur Energi bertukar barat–timur deterministik (103 bertukar / 97 normal pada 200 seed, tanpa gagal generate, terukur agen); rute/viewpoint/biome mengikuti sisi sebenarnya; checkpoint offset authored puncak +(−4,18), boss +(−10,12,5); X/Alt+F4 jendela = simpan-lalu-keluar seperti menu (uji UI pending). Regresi layout 16 seed dan terrain 42/777/20261117 lolos setelah pembaruan. EXE final belum diklaim. | — | Bukti akhir dan hash dari parent |
+| 2026-11-25 | Penyelesaian Pulau 1 (rekonsiliasi dokumen) | FinalizeIslandProgressDocs | "Start Here" ditulis ulang sebagai status 25 Nov; klaim lama "font belum runtime", "layout tetap", "tanpa save" dihapus dari blok aktif (teks lama jadi riwayat bertanggal). Font, ikon, UI Kenney, peta (M), blur dicatat terkirim. Kontrak combat baru dicatat: musuh (standard 2 pukulan, heavy pendekatan cepat + sapuan tertunda, ranged semburan 3 tembakan), boss (fase 1 dua pukulan, fase 2 dua atau tiga), guard `max(8, damage×0,8)`; bukan buff HP. Tidak ada centang baru. | — | Lihat baris bukti parsial di bawah |
+| 2026-11-25 | Penyelesaian Pulau 1 (bukti final + EXE) | FinalizeIslandProgressDocs | Dilaporkan parent: save 82/0, layout 16 seed 0 gagal, completion 384/0, `--seeds-full` 37.620/0, enemy_pattern 72/0, boss_pattern 122/0, combat_edge 269/0, traversal all_ok, terrain 20 seed PASS; shutdown pause 43/0, menu 36/0, window 38/0, source `--quit-after 5` exit 0 tanpa leak. Playthrough dirender (sumber) seed 42 PASS 229,9 s sim. **EXE `exports/island-one/the-lost-island.exe` SHA-256 `81ed42e9f85ed5754a575a14b3da407549cddacde5ee07b1ee9f72b382364449`: `--qa-playthrough --seed 42` PASS 200,4 s sim** (3 kill, boss attempt 1, 0 kematian, 3 artefak, dua puzzle + shortcut + gerbang + ending, exit 0, tanpa SCRIPT ERROR/leak). Build/ZIP tidak di-commit. Manual QA tetap terbuka. | commit milestone Pulau 1 pada `main` (lihat riwayat Git) | Manual QA: gamepad, audio/kesulitan, komputer lain |
 
 Template catatan sesi:
 

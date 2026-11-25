@@ -1,7 +1,9 @@
 extends CanvasLayer
-## Player-facing presentation for the island game: HUD, compass, prompts, boss bar, main menu / new run, shipwreck intro,
-## pause audio volume, completion outro and bounded audio (music, ambience, SFX).
-## Usage (parent): add to tree, then setup(game, player, session, interactor, boss); show_menu(); listen to new_run_requested.
+## Player-facing presentation for the island game: HUD, compass, prompts, boss bar, main menu (new run + disk Continue),
+## save/pause UX, shipwreck intro, volume, completion outro and bounded audio (music, ambience, SFX).
+## Usage (parent): add to tree, then setup(game, player, session, interactor, boss); show_menu() or begin_play(false);
+## listen to new_run_requested. Game contract used (all optional via has_method): has_saved_run() -> bool,
+## continue_saved_run() -> void (called deferred), save_run() -> bool, begin_run() -> void, get_world_anchor(id) -> Vector3.
 ## Audio is assembled from licensed repo files only; its mix has not been human-audited.
 
 signal new_run_requested(seed: int, procedural: bool)
@@ -28,17 +30,15 @@ const SPAWN_ANCHOR_LABEL := "Titik Awal"
 const VIEWPOINT_ANCHOR_LABEL := "Titik Pandang"
 const SEED_MIN := -2147483648
 const SEED_MAX := 2147483647
+const SLIDE_PX := 18.0
+const TOAST_TOP := 208.0
+const BOSS_TOP := 88.0
 
-const COL_DEEP := Color("1B365D")
-const COL_SEA := Color("005A9C")
-const COL_SHALLOW := Color("60C1E5")
-const COL_FOAM := Color("A0E0EF")
-const COL_SAND := Color("FFEFC4")
-const COL_HP := Color("930031")
-const COL_STAMINA := Color("FFA500")
-const COL_POTION := Color("BEDEFF")
-const COL_GOLD := Color("FFF2A7")
-const COL_MOSS := Color("637545")
+const UiTheme := preload("res://scripts/ui/ui_theme.gd")
+const IslandMap := preload("res://scripts/ui/island_map.gd")
+const MAP_RELEASE_ACTIONS: Array[StringName] = [&"move_forward", &"move_backward", &"move_left", &"move_right", &"sprint", &"attack", &"block", &"dodge", &"potion", &"interact"]
+const ARTIFACT_ORDER: Array[StringName] = [&"forest_artifact", &"energy_artifact", &"summit_artifact"]
+const ARTIFACT_ICONS := {&"forest_artifact": &"artifact_forest", &"energy_artifact": &"artifact_energy", &"summit_artifact": &"artifact_summit"}
 
 const INTRO_TEXT := "Badai merobek kapalmu di tengah malam. Saat fajar kau terbangun di pasir pulau yang tidak ada di peta mana pun, dikelilingi puing kayu dan layar yang robek.\n\nCatatan awak kapal menyebut sebuah gerbang kuno di sisi lain pulau. Ia hanya terbuka bagi pemegang tiga artefak, dan penjaganya tidak pernah tidur.\n\nTemukan ketiga artefak, bangunkan sang penjaga, lalu pulanglah."
 const OUTRO_TEXT := "Penjaga Gerbang runtuh dan cahaya di intinya padam. Gerbang kuno terbuka perlahan, menampakkan jalan menuju lautan lepas.\n\nKau melangkah melewatinya. Di belakangmu, pulau kembali sunyi."
@@ -56,7 +56,6 @@ var _boss: Node
 var _camera: Node
 
 var _built := false
-var _theme: Theme
 var _hud: Control
 var _overlay: CanvasLayer
 var _menu_panel: Control
@@ -65,32 +64,64 @@ var _end_panel: Control
 var _menu_start: Button
 var _menu_block: Dictionary = {}
 var _end_block: Dictionary = {}
-var _end_stats: Label
+var _end_stat_values: Array[Label] = []
 var _intro_done := false
 var _overlay_open := false
 var _completed := false
 var _pause_hooked := false
 var _volume := 0.8
 var _volume_sliders: Array[HSlider] = []
+var _run_active := false  ## true once a run really began (begin_run) and is not completed; gates quit-save
+var _menu_continue: Button
+var _menu_save: Button
+var _menu_status: Label
+var _pause_status: Label
+var _status_labels: Array[Label] = []
+var _volume_labels: Array[Label] = []
+var _armed_key := ""
+var _quit_unsaved_armed := false
+var _hit_mark: TextureRect
+var _hit_tween: Tween
+
+# island map (paused full-screen overlay opened with M during active play)
+var _map: Control
+var _map_open := false
+var _map_prev_mouse_mode := Input.MOUSE_MODE_CAPTURED
 
 # HUD widgets
 var _hp_bar: ProgressBar
 var _hp_label: Label
 var _st_bar: ProgressBar
 var _potion_label: Label
+var _potion_key: Dictionary = {}
+var _puzzle_label: Label
 var _artifact_label: Label
+var _artifact_slots: Array[TextureRect] = []
+var _slot_on: Array[bool] = [false, false, false]
+var _announced: Dictionary = {}
 var _objective_label: Label
 var _controls_label: Label
 var _compass: Compass
+var _prompt_panel: Control
 var _prompt_label: Label
+var _prompt_key: Dictionary = {}
+var _toast_panel: Control
+var _toast_icon: TextureRect
 var _toast_label: Label
 var _toast_tween: Tween
+var _boss_tween: Tween
+var _busy := false  ## a screen transition or run replacement is in flight; further menu actions are ignored
 var _flash: ColorRect
-var _dead_label: Label
+var _dead_panel: Control
 var _boss_panel: Control
 var _boss_name: Label
 var _boss_bar: ProgressBar
 var _boss_status: Label
+var _shown_hp := -1
+var _shown_hp_max := -1
+var _shown_potions := -1
+var _shown_artifacts := -1
+var _shown_puzzles := -1
 
 # state
 var _targets: Array[Dictionary] = []
@@ -127,40 +158,60 @@ var _rng := RandomNumberGenerator.new()
 
 
 class Compass extends Control:
-	var cardinals: Array = []
-	var markers: Array = []
-	var font: Font
+	var cardinals: Array = []  ## [angle to the view axis, letter]
+	var markers: Array = []  ## [angle, label, distance, color, icon id]
+	var _back: StyleBox
+
+	func _ready() -> void:
+		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+		_back = UiTheme.theme().get_stylebox("panel", "HudPanel")
 
 	func _draw() -> void:
 		var w := size.x
 		var h := size.y
 		var cx := w * 0.5
-		var half := cx - 16.0
-		draw_rect(Rect2(0.0, 0.0, w, h), Color(0.106, 0.212, 0.365, 0.6))
-		draw_rect(Rect2(0.0, h - 2.0, w, 2.0), Color(0.627, 0.878, 0.937, 0.7))
-		draw_line(Vector2(cx, h - 9.0), Vector2(cx, h), Color.WHITE, 2.0)
-		if font == null:
-			return
+		var half := cx - 24.0
+		var body := UiTheme.body_font()
+		draw_style_box(_back, Rect2(Vector2.ZERO, size))
+		if not cardinals.is_empty():
+			# Minor ticks every 15 degrees, anchored to north so they slide with the heading.
+			var north: float = cardinals[0][0]
+			for k in 24:
+				var a := wrapf(north + k * PI / 12.0, -PI, PI)
+				if absf(a) > PI * 0.5:
+					continue
+				var x := cx + a / (PI * 0.5) * half
+				draw_line(Vector2(x, h - 12.0), Vector2(x, h - 6.0), Color(UiTheme.FRAME, 0.45), 1.0)
+		draw_colored_polygon(PackedVector2Array([Vector2(cx - 5.0, h - 4.0), Vector2(cx + 5.0, h - 4.0), Vector2(cx, h - 11.0)]), UiTheme.GOLD)
 		for c: Array in cardinals:
 			var a: float = c[0]
 			if absf(a) > PI * 0.5:
 				continue
-			draw_string(font, Vector2(cx + a / (PI * 0.5) * half - 8.0, 21.0), c[1], HORIZONTAL_ALIGNMENT_CENTER, 16.0, 16, Color(1.0, 0.937, 0.769, 0.85))
-		# Every marker gets a tick; only the nearest three get a label, placed greedily without overlapping.
+			var north_letter: bool = c[1] == "U"
+			var col := UiTheme.GOLD if north_letter else UiTheme.TEXT
+			var fs := 20 if north_letter else 16
+			var pos := Vector2(cx + a / (PI * 0.5) * half - 10.0, 24.0)
+			draw_string_outline(body, pos, c[1], HORIZONTAL_ALIGNMENT_CENTER, 20.0, fs, 4, Color(0.0, 0.0, 0.0, 0.8))
+			draw_string(body, pos, c[1], HORIZONTAL_ALIGNMENT_CENTER, 20.0, fs, col)
+		# Every marker gets an icon; only the nearest three get a label, placed greedily without overlapping.
 		var taken: Array[Vector2] = []
 		var labeled := 0
 		for m: Array in markers:
 			var a: float = clampf(m[0], -PI * 0.5, PI * 0.5)
 			var x := cx + a / (PI * 0.5) * half
 			var col: Color = m[3]
-			var y := h * 0.5 - 2.0
-			var s := 5.0 if labeled < 3 else 3.5
-			draw_colored_polygon(PackedVector2Array([Vector2(x, y - s - 1.0), Vector2(x + s, y), Vector2(x, y + s + 1.0), Vector2(x - s, y)]), col if labeled < 3 else Color(col, 0.6))
-			if labeled >= 3:
+			var near := labeled < 3
+			var px := 22.0 if near else 16.0
+			var tex := UiTheme.icon(m[4])
+			var top := 4.0 if near else 8.0
+			if tex != null:
+				draw_circle(Vector2(x, top + px * 0.5), px * 0.5 + 3.0, Color(0.0, 0.0, 0.0, 0.5 if near else 0.3))
+				draw_texture_rect(tex, Rect2(x - px * 0.5, top, px, px), false, col if near else Color(col, 0.7))
+			if not near:
 				continue
 			var text: String = "%s %dm" % [String(m[1]).left(14), m[2]]
-			var tw := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12).x
-			var left := clampf(x - tw * 0.5, 3.0, w - tw - 3.0)
+			var tw := body.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12).x
+			var left := clampf(x - tw * 0.5, 8.0, w - tw - 8.0)
 			var overlaps := false
 			for r in taken:
 				if left < r.y + 6.0 and left + tw > r.x - 6.0:
@@ -170,7 +221,8 @@ class Compass extends Control:
 				continue
 			taken.append(Vector2(left, left + tw))
 			labeled += 1
-			draw_string(font, Vector2(left, h - 5.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12, col)
+			draw_string_outline(body, Vector2(left, h - 8.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12, 3, Color(0.0, 0.0, 0.0, 0.8))
+			draw_string(body, Vector2(left, h - 8.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12, col)
 
 
 func _ready() -> void:
@@ -205,15 +257,19 @@ func setup(game: Node, player: Node, session: Node, interactor: Node, boss: Node
 	_refresh_targets()
 	_hide_debug_labels()
 	_update_controls_hint()
+	_build_map()
 
 
 ## Opens the main menu: pauses the SceneTree, releases the mouse, hides the HUD underneath.
 func show_menu() -> void:
 	_ensure_built()
 	_close_overlays()
-	_menu_start.text = "Lanjutkan" if _intro_done else "Mulai Petualangan"
+	_armed_key = ""
+	_menu_start.text = "Kembali ke Permainan" if _intro_done else "Mulai Petualangan"
+	_refresh_menu_state()
 	_set_block(_menu_block, run_seed, run_procedural)
 	_menu_panel.show()
+	_reveal(_menu_panel)
 	_enter_overlay()
 	_music_to(MUSIC_EXPLORE)
 	play_event(&"menu_open")
@@ -225,6 +281,7 @@ func begin_play(show_intro := true) -> void:
 	_close_overlays()
 	if show_intro and not _intro_done:
 		_intro_panel.show()
+		_reveal(_intro_panel)
 		_enter_overlay()
 		return
 	_resume()
@@ -237,11 +294,12 @@ func show_completion() -> void:
 		return
 	_completed = true
 	_close_overlays()
-	_end_stats.text = _stats_text()
+	_fill_stats()
 	_set_block(_end_block, run_seed, run_procedural)
 	_end_panel.show()
+	_reveal(_end_panel, 0.7)
 	_enter_overlay()
-	_boss_panel.hide()
+	_hide_boss_panel(true)
 	_music_to(MUSIC_EXPLORE)
 	play_event(&"fanfare")
 
@@ -252,18 +310,30 @@ func set_run_options(seed_value: int, procedural: bool) -> void:
 	run_procedural = procedural
 
 
-## Short on-screen message.
-func toast(text: String, seconds := 3.0) -> void:
+## Short on-screen message; icon_id is an UiTheme.icon id (optional).
+func toast(text: String, seconds := 3.0, icon_id: StringName = &"") -> void:
 	_ensure_built()
 	_toast_label.text = text
-	_toast_label.show()
+	_toast_icon.texture = UiTheme.icon(icon_id) if icon_id != &"" else null
+	_toast_icon.visible = icon_id != &""
+	var entering := not _toast_panel.visible or _toast_panel.modulate.a < 1.0
+	_toast_panel.show()
 	if _toast_tween != null:
 		_toast_tween.kill()
-	_toast_label.modulate.a = 1.0
 	_toast_tween = create_tween()
+	if entering and UiTheme.animated():
+		# Drops in from slightly above while fading in; both strip offsets move together so its size holds.
+		_toast_panel.modulate.a = 0.0
+		_toast_tween.set_parallel().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		_toast_tween.tween_property(_toast_panel, "modulate:a", 1.0, 0.25)
+		_toast_tween.tween_method(_slide_strip.bind(_toast_panel, TOAST_TOP), -SLIDE_PX, 0.0, 0.3)
+		_toast_tween.set_parallel(false)
+	else:
+		_toast_panel.modulate.a = 1.0
+		_slide_strip(0.0, _toast_panel, TOAST_TOP)
 	_toast_tween.tween_interval(seconds)
-	_toast_tween.tween_property(_toast_label, "modulate:a", 0.0, 0.6)
-	_toast_tween.tween_callback(_toast_label.hide)
+	_toast_tween.tween_property(_toast_panel, "modulate:a", 0.0, 0.6)
+	_toast_tween.tween_callback(_toast_panel.hide)
 
 
 ## Registers (or replaces) the clip for an audio event, e.g. register_sfx(&"puzzle_solved", "res://....ogg", -4.0).
@@ -306,7 +376,6 @@ func _ensure_built() -> void:
 		return
 	_built = true
 	_load_volume()
-	_build_theme()
 	_build_audio()
 	_build_hud()
 	_overlay = CanvasLayer.new()
@@ -319,237 +388,382 @@ func _ensure_built() -> void:
 	_apply_volume()
 
 
-func _build_theme() -> void:
-	_theme = Theme.new()
-	# Engine default font: Kenney Future renders "K" like "H", which is unreadable in Indonesian text.
-	_theme.default_font_size = 18
-	_theme.set_color("font_color", "Label", COL_SAND)
-	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
-		var box := StyleBoxFlat.new()
-		box.set_corner_radius_all(6)
-		box.set_content_margin_all(10)
-		box.border_color = COL_FOAM
-		match state:
-			"normal":
-				box.bg_color = COL_SEA
-			"hover":
-				box.bg_color = COL_SHALLOW
-				box.set_border_width_all(2)
-			"pressed":
-				box.bg_color = COL_DEEP
-			"disabled":
-				box.bg_color = Color(0.2, 0.25, 0.3)
-			"focus":
-				box.bg_color = Color(0, 0, 0, 0)
-				box.set_border_width_all(2)
-		_theme.set_stylebox(state, "Button", box)
-	_theme.set_color("font_color", "Button", Color.WHITE)
-	_theme.set_color("font_hover_color", "Button", COL_DEEP)
-	_theme.set_font_size("font_size", "Button", 20)
-	_theme.set_stylebox("panel", "PanelContainer", _panel_style(Color(COL_DEEP, 0.8)))
-	var line := StyleBoxFlat.new()
-	line.bg_color = Color(0.05, 0.1, 0.18)
-	line.set_corner_radius_all(4)
-	line.set_content_margin_all(8)
-	line.border_color = COL_FOAM
-	line.set_border_width_all(1)
-	_theme.set_stylebox("normal", "LineEdit", line)
-	_theme.set_stylebox("focus", "LineEdit", line)
-	_theme.set_color("font_color", "LineEdit", Color.WHITE)
-	_theme.set_color("font_color", "CheckBox", COL_SAND)
-	for state in ["normal", "hover", "pressed", "hover_pressed", "focus", "disabled"]:
-		_theme.set_stylebox(state, "CheckBox", StyleBoxEmpty.new())
+func _label(text: String, size := UiTheme.SIZE_BODY, color := UiTheme.TEXT, align := HORIZONTAL_ALIGNMENT_LEFT) -> Label:
+	var label := Label.new()
+	label.text = text
+	if size != UiTheme.SIZE_BODY:
+		label.add_theme_font_size_override("font_size", size)
+	if color != UiTheme.TEXT:
+		label.add_theme_color_override("font_color", color)
+	label.horizontal_alignment = align
+	return label
 
 
-func _panel_style(color: Color) -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = color
-	box.set_corner_radius_all(8)
-	box.set_content_margin_all(12)
-	box.border_color = Color(COL_FOAM, 0.5)
-	box.set_border_width_all(1)
-	return box
+## Dark outline so text stays readable straight over bright terrain.
+func _outlined(label: Label, outline := 4) -> Label:
+	label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.85))
+	label.add_theme_constant_override("outline_size", outline)
+	return label
 
 
-func _bar(color: Color, height: float) -> ProgressBar:
+func _icon_rect(id: StringName, px: float, tint := Color.WHITE) -> TextureRect:
+	var rect := TextureRect.new()
+	rect.texture = UiTheme.icon(id)
+	rect.custom_minimum_size = Vector2(px, px)
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.modulate = tint
+	return rect
+
+
+func _bar(variation: StringName, height: float, width := 0.0) -> ProgressBar:
 	var bar := ProgressBar.new()
+	bar.theme_type_variation = variation
 	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(220.0, height)
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = color
-	fill.set_corner_radius_all(3)
-	var back := StyleBoxFlat.new()
-	back.bg_color = Color(0.05, 0.08, 0.12, 0.85)
-	back.set_corner_radius_all(3)
-	bar.add_theme_stylebox_override("fill", fill)
-	bar.add_theme_stylebox_override("background", back)
+	bar.custom_minimum_size = Vector2(width, height)
+	bar.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return bar
 
 
-func _label(text: String, size := 18, color := COL_SAND, align := HORIZONTAL_ALIGNMENT_LEFT) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", size)
-	label.add_theme_color_override("font_color", color)
-	label.horizontal_alignment = align
-	return label
+## Key art (or "[Key]" text when no art exists) for an input prompt.
+func _key_cap(px: float) -> Dictionary:
+	var box := HBoxContainer.new()
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tex := TextureRect.new()
+	tex.custom_minimum_size = Vector2(px, px)
+	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tex.hide()
+	box.add_child(tex)
+	var text := _label("", UiTheme.SIZE_SMALL, UiTheme.GOLD)
+	box.add_child(text)
+	return {"box": box, "tex": tex, "text": text}
+
+
+func _set_key(cap: Dictionary, key_name: String) -> void:
+	var tex := UiTheme.key_texture(key_name)
+	(cap["tex"] as TextureRect).texture = tex
+	(cap["tex"] as TextureRect).visible = tex != null
+	(cap["text"] as Label).text = "[%s]" % key_name
+	(cap["text"] as Label).visible = tex == null
+
+
+## Full-width strip anchored to a screen edge that centres one child and shrinks to it.
+func _centered_strip(child: Control, top: bool, offset: float) -> Control:
+	var strip := CenterContainer.new()
+	strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hud.add_child(strip)
+	if top:
+		strip.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+		strip.offset_top = offset
+		strip.offset_bottom = offset
+	else:
+		strip.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+		strip.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		strip.offset_top = -offset
+		strip.offset_bottom = -offset
+	strip.add_child(child)
+	return strip
+
+
+## Moves a top-anchored strip `delta` pixels from its resting offset (both offsets, so the size is untouched).
+func _slide_strip(delta: float, strip: Control, base: float) -> void:
+	strip.offset_top = base + delta
+	strip.offset_bottom = base + delta
+
+
+func _show_boss_panel() -> void:
+	if _boss_tween != null:
+		_boss_tween.kill()
+	var entering := not _boss_panel.visible or _boss_panel.modulate.a < 1.0
+	_boss_panel.show()
+	if not entering or not UiTheme.animated():
+		_boss_panel.modulate.a = 1.0
+		_slide_strip(0.0, _boss_panel, BOSS_TOP)
+		return
+	_boss_panel.modulate.a = 0.0
+	_boss_tween = create_tween().set_parallel().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_boss_tween.tween_property(_boss_panel, "modulate:a", 1.0, 0.35)
+	_boss_tween.tween_method(_slide_strip.bind(_boss_panel, BOSS_TOP), -SLIDE_PX, 0.0, 0.4)
+
+
+func _hide_boss_panel(immediate := false) -> void:
+	if _boss_tween != null:
+		_boss_tween.kill()
+	if immediate or not _boss_panel.visible or not UiTheme.animated():
+		_boss_panel.hide()
+		_boss_panel.modulate.a = 1.0
+		_slide_strip(0.0, _boss_panel, BOSS_TOP)
+		return
+	_boss_tween = create_tween().set_parallel().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_boss_tween.tween_property(_boss_panel, "modulate:a", 0.0, 0.3)
+	_boss_tween.tween_method(_slide_strip.bind(_boss_panel, BOSS_TOP), 0.0, -SLIDE_PX, 0.3)
+	_boss_tween.chain().tween_callback(_hide_boss_panel.bind(true))
+
+
+func _hud_panel(variation: StringName = &"HudPanel") -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.theme_type_variation = variation
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return panel
 
 
 func _build_hud() -> void:
 	_hud = Control.new()
 	_hud.name = "Hud"
-	_hud.theme = _theme
+	_hud.theme = UiTheme.theme()
 	_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_hud)
 	_hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	_flash = ColorRect.new()
-	_flash.color = Color(COL_HP, 0.0)
+	_flash.color = Color(UiTheme.HP, 0.0)
 	_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud.add_child(_flash)
 	_flash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-	var stats := PanelContainer.new()
-	stats.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Vitals cluster (top-left): HP, stamina, potion + puzzle, artifact slots, objective.
+	var stats := _hud_panel()
 	_hud.add_child(stats)
 	stats.position = Vector2(16.0, 16.0)
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 5)
+	col.add_theme_constant_override("separation", 8)
 	stats.add_child(col)
+
 	var hp_row := HBoxContainer.new()
-	col.add_child(hp_row)
-	hp_row.add_child(_label("HP", 16, COL_POTION))
-	_hp_bar = _bar(COL_HP, 18.0)
+	hp_row.add_theme_constant_override("separation", 8)
+	hp_row.add_child(_icon_rect(&"hp", 24.0, UiTheme.HP.lightened(0.2)))
+	_hp_bar = _bar(&"HpBar", 24.0, 232.0)
 	_hp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hp_row.add_child(_hp_bar)
-	_hp_label = _label("", 14, Color.WHITE, HORIZONTAL_ALIGNMENT_RIGHT)
-	_hp_label.custom_minimum_size.x = 62.0
-	hp_row.add_child(_hp_label)
+	_hp_label = _outlined(_label("", UiTheme.SIZE_SMALL, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER), 3)
+	_hp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_hp_bar.add_child(_hp_label)
+	_hp_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	col.add_child(hp_row)
+
 	var st_row := HBoxContainer.new()
-	col.add_child(st_row)
-	st_row.add_child(_label("ST", 16, COL_GOLD))
-	_st_bar = _bar(COL_STAMINA, 12.0)
+	st_row.add_theme_constant_override("separation", 8)
+	st_row.add_child(_icon_rect(&"stamina", 24.0, UiTheme.STAMINA))
+	_st_bar = _bar(&"StaminaBar", 16.0)
 	_st_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_st_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	st_row.add_child(_st_bar)
-	_potion_label = _label("", 17, COL_POTION)
-	col.add_child(_potion_label)
-	_artifact_label = _label("", 17, COL_GOLD)
-	col.add_child(_artifact_label)
-	_objective_label = _label("", 15, COL_SAND)
+	col.add_child(st_row)
+
+	var items := HBoxContainer.new()
+	items.add_theme_constant_override("separation", 8)
+	items.add_child(_icon_rect(&"potion", 24.0, Color("9ED2FF")))
+	_potion_label = _label("", UiTheme.SIZE_BODY)
+	items.add_child(_potion_label)
+	_potion_key = _key_cap(24.0)
+	items.add_child(_potion_key["box"])
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	items.add_child(spacer)
+	items.add_child(_icon_rect(&"puzzle", 24.0, UiTheme.TEXT))
+	_puzzle_label = _label("", UiTheme.SIZE_BODY)
+	items.add_child(_puzzle_label)
+	col.add_child(items)
+
+	var slots := HBoxContainer.new()
+	slots.add_theme_constant_override("separation", 8)
+	for id: StringName in ARTIFACT_ORDER:
+		var slot := _hud_panel(&"Pill")
+		slot.custom_minimum_size = Vector2(40.0, 40.0)
+		var glyph := _icon_rect(ARTIFACT_ICONS[id], 24.0, Color(1.0, 1.0, 1.0, 0.18))
+		glyph.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		glyph.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		slot.add_child(glyph)
+		slots.add_child(slot)
+		_artifact_slots.append(glyph)
+	_artifact_label = _label("", UiTheme.SIZE_SMALL, UiTheme.MUTED)
+	_artifact_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	slots.add_child(_artifact_label)
+	col.add_child(slots)
+
+	var goal := HBoxContainer.new()
+	goal.add_theme_constant_override("separation", 8)
+	var flag := _icon_rect(&"objective", 24.0, UiTheme.GOLD)
+	flag.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	goal.add_child(flag)
+	_objective_label = _label("", 16)
 	_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_objective_label.custom_minimum_size.x = 290.0
-	col.add_child(_objective_label)
+	_objective_label.custom_minimum_size.x = 232.0
+	goal.add_child(_objective_label)
+	col.add_child(goal)
 
 	_compass = Compass.new()
-	_compass.font = _theme.default_font if _theme.default_font != null else ThemeDB.fallback_font
-	_compass.custom_minimum_size = Vector2(420.0, 42.0)
+	_compass.custom_minimum_size = Vector2(480.0, 56.0)
 	_compass.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud.add_child(_compass)
 	_compass.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	_compass.offset_left = -210.0
-	_compass.offset_right = 210.0
-	_compass.offset_top = 12.0
-	_compass.offset_bottom = 54.0
+	_compass.offset_left = -240.0
+	_compass.offset_right = 240.0
+	_compass.offset_top = 16.0
+	_compass.offset_bottom = 72.0
 
-	_boss_panel = PanelContainer.new()
-	_boss_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_hud.add_child(_boss_panel)
-	_boss_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	_boss_panel.offset_left = -250.0
-	_boss_panel.offset_right = 250.0
-	_boss_panel.offset_top = 66.0
-	_boss_panel.offset_bottom = 134.0
+	var boss_box := _hud_panel()
+	boss_box.custom_minimum_size.x = 520.0
+	var boss_row := HBoxContainer.new()
+	boss_row.add_theme_constant_override("separation", 16)
+	boss_box.add_child(boss_row)
+	boss_row.add_child(_icon_rect(&"boss", 56.0, UiTheme.GOLD))
 	var boss_col := VBoxContainer.new()
-	_boss_panel.add_child(boss_col)
-	_boss_name = _label("Penjaga Gerbang", 20, COL_FOAM, HORIZONTAL_ALIGNMENT_CENTER)
+	boss_col.add_theme_constant_override("separation", 4)
+	boss_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	boss_row.add_child(boss_col)
+	_boss_name = _label("Penjaga Gerbang", UiTheme.SIZE_HEADING, UiTheme.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	_boss_name.add_theme_font_override("font", UiTheme.title_font())
 	boss_col.add_child(_boss_name)
-	_boss_bar = _bar(COL_STAMINA, 16.0)
-	_boss_bar.custom_minimum_size.x = 480.0
+	_boss_bar = _bar(&"BossBar", 20.0)
 	boss_col.add_child(_boss_bar)
-	_boss_status = _label("", 14, COL_SAND, HORIZONTAL_ALIGNMENT_CENTER)
+	_boss_status = _label("", UiTheme.SIZE_SMALL, UiTheme.MUTED, HORIZONTAL_ALIGNMENT_CENTER)
 	boss_col.add_child(_boss_status)
+	_boss_panel = _centered_strip(boss_box, true, BOSS_TOP)
 	_boss_panel.hide()
 
-	_toast_label = _label("", 22, COL_GOLD, HORIZONTAL_ALIGNMENT_CENTER)
-	_toast_label.add_theme_color_override("font_outline_color", COL_DEEP)
-	_toast_label.add_theme_constant_override("outline_size", 6)
-	_hud.add_child(_toast_label)
-	_toast_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	_toast_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_toast_label.offset_top = 150.0
-	_toast_label.hide()
+	var toast_box := _hud_panel()
+	var toast_row := HBoxContainer.new()
+	toast_row.add_theme_constant_override("separation", 12)
+	toast_box.add_child(toast_row)
+	_toast_icon = _icon_rect(&"objective", 32.0, UiTheme.GOLD)
+	toast_row.add_child(_toast_icon)
+	_toast_label = _label("", UiTheme.SIZE_BODY, UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+	_toast_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	toast_row.add_child(_toast_label)
+	_toast_panel = _centered_strip(toast_box, true, TOAST_TOP)
+	_toast_panel.hide()
 
-	_prompt_label = _label("", 24, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
-	_prompt_label.add_theme_color_override("font_outline_color", COL_DEEP)
-	_prompt_label.add_theme_constant_override("outline_size", 8)
-	_hud.add_child(_prompt_label)
-	_prompt_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	_prompt_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_prompt_label.offset_top = -150.0
-	_prompt_label.hide()
+	var prompt_box := _hud_panel()
+	var prompt_row := HBoxContainer.new()
+	prompt_row.add_theme_constant_override("separation", 12)
+	prompt_box.add_child(prompt_row)
+	_prompt_key = _key_cap(40.0)
+	prompt_row.add_child(_prompt_key["box"])
+	_prompt_label = _label("", UiTheme.SIZE_HEADING)
+	_prompt_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	prompt_row.add_child(_prompt_label)
+	_prompt_panel = _centered_strip(prompt_box, false, 168.0)
+	_prompt_panel.hide()
 
-	_dead_label = _label("Kau tumbang... bangkit di checkpoint.", 28, COL_SAND, HORIZONTAL_ALIGNMENT_CENTER)
-	_dead_label.add_theme_color_override("font_outline_color", COL_HP)
-	_dead_label.add_theme_constant_override("outline_size", 8)
-	_hud.add_child(_dead_label)
-	_dead_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	_dead_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_dead_label.hide()
+	var dead_box := _hud_panel()
+	var dead_label := _label("Kau tumbang... bangkit di checkpoint.", UiTheme.SIZE_HEADING, UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+	dead_label.add_theme_font_override("font", UiTheme.title_font())
+	dead_box.add_child(dead_label)
+	var dead_center := CenterContainer.new()
+	dead_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hud.add_child(dead_center)
+	dead_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	dead_center.add_child(dead_box)
+	_dead_panel = dead_center
+	_dead_panel.hide()
 
-	_controls_label = _label("", 13, Color(COL_SAND, 0.75))
-	_hud.add_child(_controls_label)
-	_controls_label.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	_controls_label.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_controls_label.offset_left = 16.0
-	_controls_label.offset_bottom = -12.0
+	var controls_box := _hud_panel(&"Pill")
+	_controls_label = _label("", UiTheme.SIZE_SMALL, UiTheme.MUTED)
+	controls_box.add_child(_controls_label)
+	_hud.add_child(controls_box)
+	controls_box.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	controls_box.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	controls_box.offset_left = 16.0
+	controls_box.offset_bottom = -16.0
 	_hud.hide()
+
+	_hit_mark = _icon_rect(&"hit", 48.0)
+	_hud.add_child(_hit_mark)
+	_hit_mark.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_hit_mark.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_hit_mark.grow_vertical = Control.GROW_DIRECTION_BOTH
+	var shadow := _icon_rect(&"hit", 48.0, Color(0.0, 0.0, 0.0, 0.9))
+	shadow.show_behind_parent = true
+	_hit_mark.add_child(shadow)
+	shadow.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shadow.offset_left = -3.0
+	shadow.offset_top = -3.0
+	shadow.offset_right = 3.0
+	shadow.offset_bottom = 3.0
+	_hit_mark.modulate.a = 0.0
 
 
 func _overlay_root(opaque: bool) -> Control:
 	var root := Control.new()
-	root.theme = _theme
+	root.theme = UiTheme.theme()
 	root.mouse_filter = Control.MOUSE_FILTER_STOP
 	_overlay.add_child(root)
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var back := ColorRect.new()
-	back.color = Color(COL_DEEP, 1.0) if opaque else Color(0.02, 0.05, 0.1, 0.82)
-	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(back)
-	back.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	if opaque:
-		var band := ColorRect.new()
-		band.color = Color(COL_SEA, 0.55)
-		band.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		root.add_child(band)
-		band.anchor_top = 0.62
-		band.anchor_right = 1.0
-		band.anchor_bottom = 1.0
+		var gradient := Gradient.new()
+		gradient.set_color(0, Color(0.03, 0.05, 0.09))
+		gradient.set_color(1, Color(0.07, 0.17, 0.23))
+		var sky := GradientTexture2D.new()
+		sky.gradient = gradient
+		sky.fill_from = Vector2(0.0, 0.0)
+		sky.fill_to = Vector2(0.0, 1.0)
+		sky.width = 8
+		sky.height = 256
+		var back := TextureRect.new()
+		back.texture = sky
+		back.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		back.stretch_mode = TextureRect.STRETCH_SCALE
+		back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		root.add_child(back)
+		back.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		var mark := _icon_rect(&"compass", 600.0, Color(UiTheme.GOLD, 0.07))
+		root.add_child(mark)
+		mark.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+		mark.offset_left = -300.0
+		mark.offset_right = 300.0
+		mark.offset_top = -300.0
+		mark.offset_bottom = 300.0
+	else:
+		var dim := UiTheme.backdrop(Color(0.02, 0.04, 0.08, 0.55), 7.0)
+		root.add_child(dim)
+		dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.hide()
 	return root
 
 
-func _center_column(root: Control, width: float) -> VBoxContainer:
+## Centred ornate panel holding a VBox of the given content width.
+func _framed_column(root: Control, width: float) -> VBoxContainer:
 	var center := CenterContainer.new()
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(center)
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var panel := PanelContainer.new()
+	root.set_meta(&"content", panel)
+	center.add_child(panel)
 	var box := VBoxContainer.new()
 	box.custom_minimum_size.x = width
-	box.add_theme_constant_override("separation", 14)
-	center.add_child(box)
+	box.add_theme_constant_override("separation", 8)
+	panel.add_child(box)
 	return box
 
 
-func _button(parent: Node, text: String, action: Callable, sound := &"click") -> Button:
+func _title(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.theme_type_variation = &"TitleLabel"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return label
+
+
+func _button(parent: Node, text: String, action: Callable, sound := &"click", primary := false) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.custom_minimum_size = Vector2(300.0, 48.0)
+	button.custom_minimum_size = Vector2(0.0, 44.0)
 	button.focus_mode = Control.FOCUS_NONE
+	if primary:
+		button.theme_type_variation = &"PrimaryButton"
 	button.pressed.connect(func() -> void:
 		play_event(sound)
 		action.call())
 	button.mouse_entered.connect(play_event.bind(&"hover"))
+	UiTheme.hover_button(button)
 	parent.add_child(button)
 	return button
 
@@ -558,21 +772,24 @@ func _seed_block(parent: Node) -> Dictionary:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	parent.add_child(row)
-	row.add_child(_label("Seed", 18, COL_FOAM))
+	var caption := _label("Seed", UiTheme.SIZE_BODY, UiTheme.MUTED)
+	caption.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(caption)
 	var edit := LineEdit.new()
-	edit.custom_minimum_size = Vector2(170.0, 40.0)
+	edit.custom_minimum_size = Vector2(160.0, 40.0)
 	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	edit.placeholder_text = "bilangan bulat"
 	edit.max_length = 11
 	row.add_child(edit)
 	var dice := _button(row, "Acak", func() -> void: edit.text = str(_rng.randi_range(0, 999999)))
-	dice.custom_minimum_size = Vector2(90.0, 40.0)
+	dice.custom_minimum_size = Vector2(88.0, 40.0)
 	var check := CheckBox.new()
 	check.text = "Pulau prosedural dari seed"
 	check.focus_mode = Control.FOCUS_NONE
 	check.toggled.connect(func(_on: bool) -> void: play_event(&"click"))
 	parent.add_child(check)
-	var error := _label("", 15, Color("FF8A8A"))
+	var error := _label("", UiTheme.SIZE_SMALL, UiTheme.DANGER)
+	error.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	parent.add_child(error)
 	return {"edit": edit, "check": check, "error": error}
 
@@ -597,75 +814,131 @@ func _read_block(block: Dictionary) -> Dictionary:
 
 func _build_menu() -> void:
 	_menu_panel = _overlay_root(true)
-	var box := _center_column(_menu_panel, 420.0)
-	box.add_child(_label("THE LOST ISLAND", 52, COL_SAND, HORIZONTAL_ALIGNMENT_CENTER))
-	box.add_child(_label("Terdampar. Temukan tiga artefak. Bangunkan sang penjaga.", 17, COL_FOAM, HORIZONTAL_ALIGNMENT_CENTER))
+	var box := _framed_column(_menu_panel, 440.0)
+	box.add_child(_title("THE LOST ISLAND"))
+	var tagline := _label("Terdampar. Temukan tiga artefak. Bangunkan sang penjaga.", UiTheme.SIZE_SMALL, UiTheme.MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+	box.add_child(tagline)
+	box.add_child(UiTheme.divider())
+	_menu_continue = _button(box, "Lanjutkan dari Simpanan", _on_continue_pressed, &"confirm")
+	_menu_status = _label("", UiTheme.SIZE_SMALL, UiTheme.MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+	_menu_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_menu_status)
+	_status_labels.append(_menu_status)
+	_menu_save = _button(box, "Simpan Progres Sekarang", _on_save_pressed, &"confirm")
+	_menu_save.icon = UiTheme.icon(&"save")
 	_menu_block = _seed_block(box)
-	_menu_start = _button(box, "Mulai Petualangan", _on_start_pressed, &"confirm")
+	_menu_start = _button(box, "Mulai Petualangan", _on_start_pressed, &"confirm", true)
 	_button(box, "Run Baru dengan Seed Ini", _on_menu_new_run)
 	var vol := _volume_row(box)
 	vol.alignment = BoxContainer.ALIGNMENT_CENTER
 	_button(box, "Keluar", request_quit, &"back")
-	box.add_child(_label("Seed/prosedural diterapkan saat Mulai (bila diubah) atau Run Baru.", 13, Color(COL_SAND, 0.7), HORIZONTAL_ALIGNMENT_CENTER))
+	var note := _label("Seed/prosedural diterapkan saat Mulai (bila diubah) atau Run Baru. Simpanan lama baru tergantikan setelah run baru tersimpan.", UiTheme.SIZE_SMALL, Color(UiTheme.MUTED, 0.85), HORIZONTAL_ALIGNMENT_CENTER)
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_menu_panel.add_child(note)
+	note.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	note.offset_left = 160.0
+	note.offset_right = -160.0
+	note.offset_top = -48.0
+	note.offset_bottom = -16.0
 
 
 func _build_intro() -> void:
 	_intro_panel = _overlay_root(false)
-	var box := _center_column(_intro_panel, 640.0)
-	var panel := PanelContainer.new()
-	box.add_child(panel)
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 14)
-	panel.add_child(col)
-	col.add_child(_label("KAPAL KARAM", 34, COL_GOLD, HORIZONTAL_ALIGNMENT_CENTER))
-	var text := _label(INTRO_TEXT, 19)
+	var col := _framed_column(_intro_panel, 592.0)
+	col.add_theme_constant_override("separation", 16)
+	col.add_child(_title("KAPAL KARAM"))
+	col.add_child(UiTheme.divider())
+	var text := _label(INTRO_TEXT, UiTheme.SIZE_BODY)
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(text)
-	var controls := _label("", 15, COL_FOAM)
+	var controls := _label("", UiTheme.SIZE_SMALL, UiTheme.MUTED)
 	controls.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	controls.name = "Controls"
 	col.add_child(controls)
 	_button(col, "Mulai Menjelajah", func() -> void:
-		_intro_done = true
-		_close_overlays()
-		_resume(), &"confirm").size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		_transition(func() -> void:
+			_intro_done = true
+			_close_overlays()
+			_resume()), &"confirm", true)
+
+
+func _stat_cell(icon_id: StringName, caption: String) -> Control:
+	var cell := VBoxContainer.new()
+	cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cell.add_theme_constant_override("separation", 4)
+	var glyph := _icon_rect(icon_id, 32.0, UiTheme.GOLD)
+	glyph.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	cell.add_child(glyph)
+	var value := _label("", UiTheme.SIZE_HEADING, UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+	value.add_theme_font_override("font", UiTheme.title_font())
+	cell.add_child(value)
+	cell.add_child(_label(caption, UiTheme.SIZE_SMALL, UiTheme.MUTED, HORIZONTAL_ALIGNMENT_CENTER))
+	_end_stat_values.append(value)
+	return cell
 
 
 func _build_completion() -> void:
 	_end_panel = _overlay_root(true)
-	var box := _center_column(_end_panel, 560.0)
-	box.add_child(_label("LEVEL 1 SELESAI", 44, COL_GOLD, HORIZONTAL_ALIGNMENT_CENTER))
-	var text := _label(OUTRO_TEXT, 19, COL_SAND, HORIZONTAL_ALIGNMENT_CENTER)
+	var box := _framed_column(_end_panel, 520.0)
+	box.add_child(_title("LEVEL 1 SELESAI"))
+	box.add_child(UiTheme.divider())
+	var text := _label(OUTRO_TEXT, UiTheme.SIZE_BODY, UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER)
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(text)
-	_end_stats = _label("", 17, COL_FOAM, HORIZONTAL_ALIGNMENT_CENTER)
-	box.add_child(_end_stats)
+	var stats := HBoxContainer.new()
+	stats.add_theme_constant_override("separation", 8)
+	stats.add_child(_stat_cell(&"compass", "Waktu"))
+	stats.add_child(_stat_cell(&"artifact_energy", "Artefak"))
+	stats.add_child(_stat_cell(&"hit", "Musuh kalah"))
+	stats.add_child(_stat_cell(&"potion", "Ramuan tersisa"))
+	box.add_child(stats)
 	_end_block = _seed_block(box)
-	_button(box, "Run Baru", func() -> void: _emit_new_run(_end_block), &"confirm")
+	_status_labels.append(_end_block["error"])
+	_button(box, "Run Baru", func() -> void: _emit_new_run(_end_block), &"confirm", true)
 	_button(box, "Menu Utama", func() -> void:
-		_completed = false
-		show_menu(), &"back")
+		_transition(func() -> void:
+			_completed = false
+			show_menu()), &"back")
 	_button(box, "Keluar", request_quit, &"back")
 
 
 func _volume_row(parent: Node) -> HBoxContainer:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
+	row.add_theme_constant_override("separation", 8)
 	parent.add_child(row)
-	row.add_child(_label("Volume", 18, COL_FOAM))
+	var caption := _label("Volume", UiTheme.SIZE_BODY, UiTheme.MUTED)
+	caption.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(caption)
 	var slider := HSlider.new()
 	slider.min_value = 0.0
 	slider.max_value = 1.0
 	slider.step = 0.05
 	slider.value = _volume
-	slider.custom_minimum_size = Vector2(190.0, 28.0)
+	slider.custom_minimum_size = Vector2(120.0, 24.0)
 	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	slider.focus_mode = Control.FOCUS_NONE
 	slider.value_changed.connect(_on_volume_changed)
 	slider.drag_ended.connect(func(_changed: bool) -> void: play_event(&"click"))
 	row.add_child(slider)
 	_volume_sliders.append(slider)
+	var pct := _label(_volume_text(), UiTheme.SIZE_SMALL, UiTheme.MUTED, HORIZONTAL_ALIGNMENT_RIGHT)
+	pct.custom_minimum_size.x = 56.0
+	pct.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(pct)
+	_volume_labels.append(pct)
 	return row
+
+
+func _volume_text() -> String:
+	return "Senyap" if _volume <= 0.001 else "%d%%" % roundi(_volume * 100.0)
+
+
+func _refresh_volume_labels() -> void:
+	var muted := _volume <= 0.001
+	for label in _volume_labels:
+		label.text = _volume_text()
+		label.add_theme_color_override("font_color", UiTheme.DANGER if muted else UiTheme.MUTED)
 
 
 func _hook_pause_panel() -> void:
@@ -677,25 +950,67 @@ func _hook_pause_panel() -> void:
 	_pause_hooked = true
 	var box := resume.get_parent()
 	var row := _volume_row(box)
-	row.theme = _theme
 	box.move_child(row, resume.get_index() + 1)
+	var save := Button.new()
+	save.text = "Simpan Progres"
+	save.icon = UiTheme.icon(&"save")
+	save.custom_minimum_size = Vector2(240.0, 48.0)
+	save.focus_mode = Control.FOCUS_NONE
+	save.pressed.connect(_on_save_pressed)
+	UiTheme.hover_button(save)
+	box.add_child(save)
+	box.move_child(save, row.get_index() + 1)
+	_pause_status = _label("", UiTheme.SIZE_SMALL, UiTheme.MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+	_pause_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_pause_status.custom_minimum_size.x = 240.0
+	box.add_child(_pause_status)
+	box.move_child(_pause_status, save.get_index() + 1)
+	_status_labels.append(_pause_status)
 	var menu := Button.new()
 	menu.text = "Menu Utama"
 	menu.custom_minimum_size = Vector2(240.0, 48.0)
 	menu.focus_mode = Control.FOCUS_NONE
 	menu.pressed.connect(func() -> void:
 		play_event(&"click")
-		show_menu())
+		_transition(show_menu))
+	UiTheme.hover_button(menu)
 	box.add_child(menu)
-	box.move_child(menu, row.get_index() + 1)
+	box.move_child(menu, _pause_status.get_index() + 1)
 	resume.pressed.connect(play_event.bind(&"click"))
+	var panel: Control = _camera.get_pause_panel()
+	panel.visibility_changed.connect(func() -> void:
+		if panel.visible and not _overlay_open:
+			var saved := _save_exists()
+			_pause_status.text = "Simpanan ditemukan di disk." if saved else "Belum ada simpanan di disk."
+			_pause_status.add_theme_color_override("font_color", UiTheme.GOOD if saved else UiTheme.DANGER))
 
 
 # ======================================================================================================================
 # Overlay flow
 # ======================================================================================================================
 
+## Fade-through-black wrapper for user-driven screen changes: out, `change` while black, in. Re-entrant clicks are ignored
+## for the duration; headless runs apply `change` at once.
+func _transition(change: Callable) -> void:
+	if _busy or _quitting:
+		return
+	if not UiTheme.animated():
+		change.call()
+		return
+	_busy = true
+	await UiTheme.fade_out(get_tree())
+	change.call()
+	await UiTheme.fade_in(get_tree())
+	_busy = false
+
+
+func _reveal(root: Control, seconds := UiTheme.REVEAL_TIME) -> void:
+	UiTheme.reveal(root, root.get_meta(&"content") as Control if root.has_meta(&"content") else null, seconds)
+
+
 func _enter_overlay() -> void:
+	if _map_open:
+		_close_map(false)
 	_overlay_open = true
 	_hud.hide()
 	if _camera != null and _camera.has_method(&"pause_game"):
@@ -714,6 +1029,9 @@ func _close_overlays() -> void:
 
 
 func _resume() -> void:
+	_run_active = not _completed
+	if _run_active and _game != null and _game.has_method(&"begin_run"):
+		_game.begin_run()
 	_hud.show()
 	if _camera != null and _camera.has_method(&"resume_game"):
 		_camera.resume_game()
@@ -724,6 +1042,27 @@ func _resume() -> void:
 		_music_to(MUSIC_EXPLORE)
 
 
+func _save_exists() -> bool:
+	return _game != null and _game.has_method(&"has_saved_run") and bool(_game.has_saved_run())
+
+
+func _say(block: Dictionary, text: String, good := false) -> void:
+	var label := block["error"] as Label
+	label.text = text
+	label.add_theme_color_override("font_color", UiTheme.GOOD if good else UiTheme.DANGER)
+
+
+## Two-step guard: with a disk save present, starting a different run needs a second press with the same inputs.
+func _confirm_replace(block: Dictionary, read: Dictionary) -> bool:
+	var key := "%d/%s" % [read["seed"], read["procedural"]]
+	if _armed_key == key:
+		return true
+	_armed_key = key
+	_say(block, "Ada simpanan di disk. Run baru akan menggantikannya begitu tersimpan. Tekan sekali lagi untuk memulai.")
+	play_event(&"error")
+	return false
+
+
 func _on_start_pressed() -> void:
 	var read := _read_block(_menu_block)
 	if not read["ok"]:
@@ -731,52 +1070,255 @@ func _on_start_pressed() -> void:
 	if read["seed"] != run_seed or read["procedural"] != run_procedural:
 		_emit_new_run(_menu_block)
 		return
-	begin_play(true)
+	if not _intro_done and _save_exists() and not _confirm_replace(_menu_block, read):
+		return
+	_transition(begin_play.bind(true))
 
 
 func _on_menu_new_run() -> void:
 	_emit_new_run(_menu_block)
 
 
+## Loads the disk save through the game (deferred: it replaces the running game instance).
+func _on_continue_pressed() -> void:
+	if not _save_exists():
+		_refresh_menu_state()
+		_set_save_status("Tidak ada simpanan yang valid.", false)
+		play_event(&"error")
+		return
+	if _busy:
+		return
+	_busy = true
+	_menu_continue.disabled = true
+	_set_save_status("Memuat simpanan...", true)
+	_game.call_deferred(&"continue_saved_run")
+
+
+func _refresh_menu_state() -> void:
+	var saved := _save_exists()
+	_menu_continue.disabled = not saved
+	_menu_save.visible = _run_active and not _completed
+	_set_save_status("Simpanan ditemukan di disk." if saved else "Belum ada simpanan di disk.", saved)
+
+
+func _set_save_status(text: String, good: bool) -> void:
+	for label in _status_labels:
+		label.text = text
+		label.add_theme_color_override("font_color", UiTheme.GOOD if good else UiTheme.DANGER)
+
+
+## Manual save from the pause panel or the in-run main menu; always reports success or failure.
+func _on_save_pressed() -> void:
+	var ok := false
+	if _game != null and _game.has_method(&"save_run"):
+		ok = bool(_game.save_run())
+	var stamp := Time.get_time_string_from_system()
+	_set_save_status(("Progres tersimpan ke disk (%s)." % stamp) if ok else "GAGAL menyimpan progres. Coba lagi sebelum keluar.", ok)
+	play_event(&"confirm" if ok else &"error")
+	if _menu_continue != null:
+		_menu_continue.disabled = not _save_exists()
+
+
 var _quitting := false
 
 
-## Single bounded shutdown path for every "Keluar" button: stops tweens and all audio, drops stream references,
-## disables the UI against repeat requests, waits ~0.5 s for the audio thread to drain, then quits the tree.
-func request_quit() -> void:
+## Shared by menu/pause buttons and the window close request. Save before teardown; an unstarted menu never writes.
+## Stop playback before its nodes disappear, then let the game release the scene and shared effects before tree.quit.
+func request_quit(exit_code: int = 0) -> void:
 	if _quitting:
 		return
+	if _run_active and not _completed and _game != null and _game.has_method(&"save_run"):
+		if not bool(_game.save_run()) and not _quit_unsaved_armed:
+			_quit_unsaved_armed = true
+			show_menu()
+			_set_save_status("GAGAL menyimpan progres. Tekan Keluar sekali lagi untuk keluar TANPA menyimpan.", false)
+			play_event(&"error")
+			return
 	_quitting = true
-	set_process(false)
+	var audio_references := _release_playback()
 	for button in find_children("*", "Button", true, false):
 		(button as Button).disabled = true
-	if _music_tween != null:
-		_music_tween.kill()
-	if _toast_tween != null:
-		_toast_tween.kill()
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	var tree := get_tree()
+	tree.paused = true
+	await _drain_playback(audio_references, true)
+	if is_instance_valid(_game) and _game.has_method(&"quit_run"):
+		_game.quit_run(exit_code)
+	else:
+		tree.quit(exit_code)
+
+
+## Also runs for scene replacement and external SceneTree.quit (--quit-after included), not only UI-driven exit.
+func _exit_tree() -> void:
+	# External quit has no more main-loop frames. Wait for a real mixer pass to enqueue playback destruction;
+	# AudioServer's final cleanup then reclaims those entries. Ordinary shutdown already drained them below.
+	_drain_playback(_release_playback(), false)
+
+
+func _release_playback() -> Array[WeakRef]:
+	var references: Array[WeakRef] = []
+	for stream: Variant in _cache.values():
+		if stream is AudioStream:
+			references.append(weakref(stream))
+	_quitting = true
+	set_process(false)
+	for tween in [_music_tween, _toast_tween, _hit_tween, _boss_tween]:
+		if tween != null:
+			tween.kill()
+	_music_tween = null
+	_toast_tween = null
+	_hit_tween = null
+	_boss_tween = null
 	var players: Array[AudioStreamPlayer] = [_music, _forest, _sea]
 	players.append_array(_sfx)
-	for p in players:
-		p.stop()
-		p.stream = null
+	for audio in players:
+		if is_instance_valid(audio):
+			audio.stop()
+			audio.stream = null
 	_cache.clear()
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	await get_tree().create_timer(0.5, true).timeout
-	get_tree().quit()
+	return references
+
+
+## stop() only queues mixer-side deletion. Simulation timers (especially --fixed-fps) cannot fence the audio thread.
+## Observe our released resources instead, yielding real CPU time and main-thread reclamation frames. A stalled driver
+## cannot hold shutdown forever; the deadline is monotonic wall time, bounded even with extreme reported latency.
+func _drain_playback(references: Array[WeakRef], allow_frames: bool) -> void:
+	var started: int = Time.get_ticks_usec()
+	var latency: float = AudioServer.get_output_latency() + AudioServer.get_time_to_next_mix()
+	var deadline: int = started + clampi(ceili(latency * 4000000.0), 500000, 2000000)
+	while _audio_references_pending(references):
+		if Time.get_ticks_usec() >= deadline:
+			push_warning("Audio playback cleanup exceeded its wall-clock shutdown deadline.")
+			return
+		if not allow_frames:
+			var last_mix: int = Time.get_ticks_usec() - ceili(AudioServer.get_time_since_last_mix() * 1000000.0)
+			if last_mix > started:
+				# Driver timestamps can be recorded before mixing; this barrier waits until that pass finishes.
+				AudioServer.lock()
+				AudioServer.unlock()
+				return
+		var sleep_usec: int = clampi(ceili(AudioServer.get_time_to_next_mix() * 1000000.0), 2000, 10000)
+		OS.delay_usec(sleep_usec)
+		if allow_frames:
+			await get_tree().process_frame
+
+
+func _audio_references_pending(references: Array[WeakRef]) -> bool:
+	for reference in references:
+		if reference.get_ref() != null:
+			return true
+	return false
 
 
 func _emit_new_run(block: Dictionary) -> void:
+	if _busy:
+		return
 	var read := _read_block(block)
 	if not read["ok"]:
+		return
+	if _save_exists() and not _confirm_replace(block, read):
 		return
 	run_seed = read["seed"]
 	run_procedural = read["procedural"]
 	_intro_done = false
 	_completed = false
+	_run_active = false
+	_busy = true
 	new_run_requested.emit(run_seed, run_procedural)
 
 
+func _notification(what: int) -> void:
+	# Focus loss with the map open: leave the safe paused state with the camera's pause panel, never an unpaused map.
+	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT and _map_open:
+		_close_map(false)
+		if _camera != null and _camera.has_method(&"pause_game"):
+			_camera.pause_game()
+
+
+func _build_map() -> void:
+	if _map != null or _game == null:
+		return
+	var terrain: Variant = _game.get(&"terrain")
+	if not terrain is Node3D:
+		return
+	_map = IslandMap.new()
+	_map.name = "IslandMap"
+	add_child(_map)
+	_map.setup(terrain, _player, _session)
+	_map.hide()
+	_map.close_requested.connect(func() -> void:
+		if _map_open:
+			play_event(&"click")
+			_close_map(true))
+
+
+func _camera_pause_visible() -> bool:
+	return _camera != null and _camera.has_method(&"get_pause_panel") and _camera.get_pause_panel().visible
+
+
+func _player_dead() -> bool:
+	return _player != null and _player.has_method(&"is_dead") and _player.is_dead()
+
+
+func _can_open_map() -> bool:
+	return _map != null and not _map_open and _run_active and not _overlay_open and not _busy \
+		and not _quitting and not _completed and not get_tree().paused and not _camera_pause_visible() \
+		and not _dead_panel.visible and not _player_dead()
+
+
+func _open_map() -> void:
+	_map_open = true
+	_map_prev_mouse_mode = Input.mouse_mode
+	for action in MAP_RELEASE_ACTIONS:
+		if InputMap.has_action(action):
+			Input.action_release(action)
+	if _camera != null and _camera.has_method(&"pause_game"):
+		_camera.pause_game()
+		_camera.get_pause_panel().visible = false
+	else:
+		get_tree().paused = true
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_hud.hide()
+	_map.open()
+	UiTheme.reveal(_map)
+	play_event(&"click")
+
+
+## Closes the map. resume = true only for the map's own close (M, Esc, close button): restores the prior active play;
+## false when another overlay or the camera pause took over, which then stays in charge of the paused state.
+func _close_map(resume: bool) -> void:
+	if not _map_open:
+		return
+	_map_open = false
+	_map.close()
+	_map.modulate.a = 1.0
+	if not _overlay_open:
+		_hud.show()
+	if not resume or _overlay_open or _camera_pause_visible():
+		return
+	if _camera != null and _camera.has_method(&"resume_game"):
+		_camera.resume_game()
+	else:
+		get_tree().paused = false
+		Input.mouse_mode = _map_prev_mouse_mode
+
+
 func _input(event: InputEvent) -> void:
+	if _quitting:
+		get_viewport().set_input_as_handled()
+		return
+	if event is InputEventKey:
+		var key := event as InputEventKey
+		if key.pressed and not key.echo:
+			var code := key.physical_keycode if key.physical_keycode != KEY_NONE else key.keycode
+			if _map_open and (key.keycode == KEY_ESCAPE or code == KEY_M or key.keycode == KEY_M):
+				_close_map(true)
+				get_viewport().set_input_as_handled()
+				return
+			if (code == KEY_M or key.keycode == KEY_M) and _can_open_map():
+				_open_map()
+				get_viewport().set_input_as_handled()
+				return
 	# While a presentation overlay is up, Esc must not toggle the camera pause (it would unpause behind the menu).
 	if _overlay_open and event is InputEventKey:
 		var key := event as InputEventKey
@@ -784,12 +1326,14 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
-func _stats_text() -> String:
+func _fill_stats() -> void:
 	var seconds := int(_run_time)
 	var artifacts: int = _session.count_kind(&"artifact") if _session != null else 0
 	var kills: int = _session.killed_enemy_ids.size() if _session != null else 0
 	var potions: int = _player.potion_count if _player != null and "potion_count" in _player else 0
-	return "Waktu %02d:%02d  •  Artefak %d/%d  •  Musuh kalah %d  •  Ramuan tersisa %d" % [seconds / 60, seconds % 60, artifacts, ARTIFACTS_NEEDED, kills, potions]
+	var values := ["%02d:%02d" % [seconds / 60, seconds % 60], "%d/%d" % [artifacts, ARTIFACTS_NEEDED], str(kills), str(potions)]
+	for i in mini(values.size(), _end_stat_values.size()):
+		_end_stat_values[i].text = values[i]
 
 
 # ======================================================================================================================
@@ -838,20 +1382,30 @@ func _on_attack_started() -> void:
 	play_event(&"swing")
 
 
-func _on_attack_hit(_target: Node, _amount: int) -> void:
-	play_event(&"hit")
+func _on_attack_hit(target: Node, _amount: int) -> void:
+	var dead: bool = target != null and "is_dead" in target and target.is_dead
+	var is_boss: bool = target != null and _boss != null and target.get_parent() == _boss
+	play_event(&"hit", 2.0 if dead else 0.0)
+	if not dead and not is_boss:
+		play_event(&"enemy_hit")  # small enemies have no hurt voice of their own; boss keeps its own audio
+	if _hit_mark != null:
+		_hit_mark.modulate = UiTheme.GOLD if dead else Color.WHITE
+		if _hit_tween != null:
+			_hit_tween.kill()
+		_hit_tween = create_tween()
+		_hit_tween.tween_property(_hit_mark, "modulate:a", 0.0, 0.22 if dead else 0.14)
 
 
 func _on_damage_taken(_amount: int, blocked: bool) -> void:
 	play_event(&"block_hit" if blocked else &"hurt")
-	_flash.color = Color(COL_HP, 0.0 if blocked else 0.35)
+	_flash.color = Color(UiTheme.HP, 0.0 if blocked else 0.35)
 	var tween := create_tween()
 	tween.tween_property(_flash, "color:a", 0.0, 0.35)
 
 
 func _on_player_died() -> void:
 	play_event(&"death")
-	_boss_panel.hide()
+	_hide_boss_panel()
 	if _boss_active:
 		_boss_active = false
 		_music_to(MUSIC_EXPLORE)
@@ -864,7 +1418,7 @@ func _on_action_refused(_action: StringName) -> void:
 func _on_potion_drunk(healed: int) -> void:
 	play_event(&"potion")
 	if healed > 0:
-		toast("+%d HP" % healed, 1.5)
+		toast("+%d HP" % healed, 1.5, &"hp")
 
 
 func _on_potion_cancelled() -> void:
@@ -873,7 +1427,7 @@ func _on_potion_cancelled() -> void:
 
 func _on_respawned() -> void:
 	play_event(&"respawn")
-	toast("Kembali ke checkpoint.", 2.5)
+	toast("Kembali ke checkpoint.", 2.5, &"checkpoint")
 
 
 func _on_checkpoint(_id: StringName) -> void:
@@ -889,19 +1443,19 @@ func _on_boss_started() -> void:
 	_boss_active = true
 	_boss_phase = 1
 	_boss_state = ""
-	_boss_panel.show()
+	_show_boss_panel()
 	_music_to(MUSIC_BOSS)
 	play_event(&"boss_roar")
-	toast("Penjaga Gerbang terbangun!", 3.0)
+	toast("Penjaga Gerbang terbangun!", 3.0, &"boss")
 
 
 func _on_boss_won() -> void:
 	_boss_active = false
-	_boss_panel.hide()
+	_hide_boss_panel()
 	_music_to(MUSIC_EXPLORE)
 	play_event(&"boss_defeated")
 	play_event(&"gate_open")
-	toast("Penjaga runtuh. Gerbang terbuka — lewati untuk keluar.", 5.0)
+	toast("Penjaga runtuh. Gerbang terbuka — lewati untuk keluar.", 5.0, &"dock")
 
 
 func _on_boss_completed() -> void:
@@ -914,6 +1468,13 @@ func _on_boss_completed() -> void:
 # ======================================================================================================================
 
 func _process(delta: float) -> void:
+	if _map_open:
+		if _overlay_open or _camera_pause_visible():
+			_close_map(false)
+		elif not get_tree().paused or Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			get_tree().paused = true
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		return
 	if _overlay_open and (not get_tree().paused or Input.mouse_mode == Input.MOUSE_MODE_CAPTURED):
 		# A late camera _ready/resume_game must not unpause or recapture behind a menu.
 		_enter_overlay()
@@ -935,7 +1496,7 @@ func _process(delta: float) -> void:
 		_boss_timer = 0.0
 		_poll_boss()
 	_poll_player_audio(delta)
-	_dead_label.visible = _player != null and _player.has_method(&"is_dead") and _player.is_dead()
+	_dead_panel.visible = _player != null and _player.has_method(&"is_dead") and _player.is_dead()
 	if Input.is_action_just_pressed(&"interact") and _interactor != null and _interactor.get_prompt() != "":
 		play_event(&"interact")
 
@@ -945,23 +1506,43 @@ func _update_resources() -> void:
 		return
 	var health: Node = _player.get_health() if _player.has_method(&"get_health") else null
 	if health != null:
-		_hp_bar.max_value = health.max_health
-		_hp_bar.value = health.current_health
-		_hp_label.text = "%d/%d" % [health.current_health, health.max_health]
+		var cur := int(health.current_health)
+		var hp_max := int(health.max_health)
+		_hp_bar.max_value = hp_max
+		_hp_bar.value = cur
+		if cur != _shown_hp or hp_max != _shown_hp_max:
+			_shown_hp = cur
+			_shown_hp_max = hp_max
+			_hp_label.text = "%d/%d" % [cur, hp_max]
 	if "stamina" in _player:
 		_st_bar.max_value = _player.max_stamina
 		_st_bar.value = _player.stamina
-	if "potion_count" in _player:
-		_potion_label.text = "Ramuan  %d/%d   [%s]" % [_player.potion_count, _player.max_potions, _action_text(&"potion")]
+	if "potion_count" in _player and _player.potion_count != _shown_potions:
+		_shown_potions = _player.potion_count
+		_potion_label.text = "%d/%d" % [_player.potion_count, _player.max_potions]
 	var artifacts: int = _session.count_kind(&"artifact") if _session != null else 0
-	_artifact_label.text = "Artefak  %d/%d" % [artifacts, ARTIFACTS_NEEDED]
+	if artifacts != _shown_artifacts:
+		_shown_artifacts = artifacts
+		_artifact_label.text = "Artefak %d/%d" % [artifacts, ARTIFACTS_NEEDED]
+		_artifact_label.add_theme_color_override("font_color", UiTheme.GOLD if artifacts >= ARTIFACTS_NEEDED else UiTheme.MUTED)
+	for i in ARTIFACT_ORDER.size():
+		var got: bool = _session != null and _session.is_collected(ARTIFACT_ORDER[i])
+		if got != _slot_on[i]:
+			_slot_on[i] = got
+			_artifact_slots[i].modulate = UiTheme.GOLD if got else Color(1.0, 1.0, 1.0, 0.18)
+	var puzzles := _count_done(_session.puzzle_progress) if _session != null else 0
+	if puzzles != _shown_puzzles:
+		_shown_puzzles = puzzles
+		_puzzle_label.text = "%d/%d" % [puzzles, PUZZLE_KEYS.size()]
 
 
 func _update_prompt() -> void:
 	var prompt: String = _interactor.get_prompt() if _interactor != null else ""
-	_prompt_label.visible = prompt != ""
+	_prompt_panel.visible = prompt != ""
 	if prompt != "":
-		_prompt_label.text = prompt.replace("[E]", "[%s]" % _action_text(&"interact"))
+		var text := prompt.trim_prefix("[E]").strip_edges()
+		if _prompt_label.text != text:
+			_prompt_label.text = text
 
 
 func _action_text(action: StringName) -> String:
@@ -984,11 +1565,13 @@ func _action_text(action: StringName) -> String:
 
 
 func _update_controls_hint() -> void:
-	var hint := "%s%s%s%s gerak • %s lari • %s serang • %s blok • %s berguling • %s ramuan • %s interaksi • Esc jeda" % [
+	var hint := "%s%s%s%s gerak • %s lari • %s serang • %s blok • %s berguling • %s ramuan • %s interaksi • M peta • Esc jeda" % [
 		_action_text(&"move_forward"), _action_text(&"move_left"), _action_text(&"move_backward"), _action_text(&"move_right"),
 		_action_text(&"sprint"), _action_text(&"attack"), _action_text(&"block"), _action_text(&"dodge"),
 		_action_text(&"potion"), _action_text(&"interact")]
 	_controls_label.text = hint
+	_set_key(_potion_key, _action_text(&"potion"))
+	_set_key(_prompt_key, _action_text(&"interact"))
 	var intro_controls := _intro_panel.find_child("Controls", true, false) as Label
 	if intro_controls != null:
 		intro_controls.text = hint
@@ -999,7 +1582,7 @@ func _update_controls_hint() -> void:
 func _refresh_targets() -> void:
 	_targets.clear()
 	var raw: Array[Dictionary] = []
-	var terrain_node: Node = null
+	var generated_regions: Dictionary = {}
 	if _game != null:
 		var terrain: Node = null
 		if "terrain" in _game:
@@ -1009,18 +1592,20 @@ func _refresh_targets() -> void:
 		if terrain == null or not terrain.has_method(&"get_compass_targets"):
 			terrain = _game.find_child("IslandTerrain", true, false)
 		if terrain != null and terrain.has_method(&"get_compass_targets"):
-			terrain_node = terrain
 			for entry: Dictionary in terrain.get_compass_targets():
 				var pos: Vector3 = entry.get("position", Vector3.INF)
 				if pos != Vector3.INF:
 					var label := String(entry.get("label", "Tujuan"))
+					generated_regions[label] = String(entry.get("region", ""))
 					raw.append({"label": label, "pos": pos, "region": String(entry.get("region", "")), "hint": String(entry.get("hint", "")), "node": null, "id": _artifact_id(label, entry.get("artifact_id", &""))})
 	for node in get_tree().get_nodes_in_group(&"compass_target"):
 		var n3 := node as Node3D
 		if n3 == null or not n3.is_inside_tree() or _target_done(n3):
 			continue
 		var label := String(n3.get_meta(&"label", n3.name))
-		raw.append({"label": label, "pos": n3.global_position, "region": String(n3.get_meta(&"region", "")), "hint": String(n3.get_meta(&"hint", "")), "node": n3, "id": _artifact_id(label, n3.get_meta(&"artifact_id", &""))})
+		# A module owns its live position/hint, but its authored lab biome cannot override the generated island.
+		var region: String = generated_regions.get(label, String(n3.get_meta(&"region", "")))
+		raw.append({"label": label, "pos": n3.global_position, "region": region, "hint": String(n3.get_meta(&"hint", "")), "node": n3, "id": _artifact_id(label, n3.get_meta(&"artifact_id", &""))})
 	var artifacts: int = _session.count_kind(&"artifact") if _session != null else 0
 	var gate_phase := artifacts >= ARTIFACTS_NEEDED
 	var won := _boss_won()
@@ -1046,15 +1631,24 @@ func _refresh_targets() -> void:
 	if boss3d != null and boss3d.is_inside_tree():
 		gate_node = boss3d
 		gate_pos = boss3d.global_position
+	elif gate_pos == Vector3.INF:
+		gate_pos = _game_anchor(&"boss")
 	if won:
-		# The pier is the terrain's real dock_end anchor, not the gate/boss anchor.
-		var dock_end: Variant = terrain_node.anchor_positions.get(&"dock_end", null) if terrain_node != null and "anchor_positions" in terrain_node else null
-		if dock_end is Vector3:
-			_targets.append({"label": "Dermaga", "pos": terrain_node.to_global(dock_end) if terrain_node.is_inside_tree() else dock_end, "region": "", "hint": "Gerbang terbuka. Menuju dermaga untuk pulang.", "node": null, "id": &""})
+		var dock_end := _game_anchor(&"dock_end")
+		if dock_end != Vector3.INF:
+			_targets.append({"label": "Dermaga", "pos": dock_end, "region": "", "hint": "Gerbang terbuka. Menuju dermaga untuk pulang.", "node": null, "id": &""})
 		return
 	if gate_pos == Vector3.INF:
 		return
 	_targets.append({"label": "Gerbang", "pos": gate_pos, "region": "", "hint": "Tiga artefak terkumpul. Menuju gerbang.", "node": gate_node, "id": &""})
+
+
+## World-space position of a game anchor (seeded layout), or Vector3.INF when the game does not provide it.
+func _game_anchor(id: StringName) -> Vector3:
+	if _game == null or not _game.has_method(&"get_world_anchor"):
+		return Vector3.INF
+	var pos: Variant = _game.get_world_anchor(id)
+	return pos if pos is Vector3 else Vector3.INF
 
 
 ## Stable id of the artifact behind a compass target: explicit artifact_id from the owner, else the central table
@@ -1132,7 +1726,8 @@ func _update_compass(delta: float) -> void:
 	var nearest_d := INF
 	for f: Dictionary in kept:
 		var label: String = f["t"]["label"]
-		markers.append([f["angle"], label, int(f["dist"]), COL_GOLD if label == "Gerbang" or label == "Dermaga" else COL_FOAM])
+		var gold: bool = label == "Gerbang" or label == "Dermaga"
+		markers.append([f["angle"], label, int(f["dist"]), UiTheme.GOLD if gold else UiTheme.TEXT, _marker_icon(label, f["t"]["id"])])
 		if f["dist"] < nearest_d:
 			nearest_d = f["dist"]
 			nearest = f["t"]
@@ -1142,13 +1737,23 @@ func _update_compass(delta: float) -> void:
 	_objective_label.text = _objective_text(nearest, nearest_d)
 
 
+## Compass icon for a target: its artifact art, the gate guardian, the pier, else a flag.
+func _marker_icon(label: String, id: StringName) -> StringName:
+	if ARTIFACT_ICONS.has(id):
+		return ARTIFACT_ICONS[id]
+	if label == "Gerbang":
+		return &"boss"
+	if label == "Dermaga":
+		return &"dock"
+	return &"objective"
+
+
 func _objective_text(nearest: Dictionary, dist: float) -> String:
 	if _completed:
 		return ""
 	if _boss_active:
 		return "Kalahkan Penjaga Gerbang. Baca telegraph, hindari, lalu serang."
 	var artifacts: int = _session.count_kind(&"artifact") if _session != null else 0
-	var puzzles := _count_done(_session.puzzle_progress) if _session != null else 0
 	var lines: Array[String] = []
 	if not nearest.is_empty():
 		var text: String = nearest["hint"] if nearest["hint"] != "" else "Menuju %s" % nearest["label"]
@@ -1159,8 +1764,6 @@ func _objective_text(nearest: Dictionary, dist: float) -> String:
 		lines.append("Jelajahi pulau, selesaikan puzzle, cari artefak.")
 	else:
 		lines.append("Semua artefak terkumpul. Menuju gerbang.")
-	if puzzles > 0:
-		lines.append("Puzzle selesai: %d/%d" % [puzzles, PUZZLE_KEYS.size()])
 	return "\n".join(lines)
 
 
@@ -1182,6 +1785,10 @@ func _snapshot_session() -> void:
 	_base_puzzle_hash = _puzzle_hash(_session.puzzle_progress)
 	_base_puzzle_done = _count_done(_session.puzzle_progress)
 	_base_checkpoint = _session.checkpoint_id
+	_announced.clear()
+	for id in ARTIFACT_ORDER:
+		if _session.is_collected(id):
+			_announced[id] = true
 
 
 ## Counts ONLY the two real puzzles; shortcut, sockets and boss flags in puzzle_progress are not puzzles.
@@ -1212,25 +1819,30 @@ func _poll_session() -> void:
 	var done := _count_done(_session.puzzle_progress)
 	if artifacts > _base_artifacts:
 		play_event(&"artifact")
-		toast("Artefak %d/%d ditemukan" % [artifacts, ARTIFACTS_NEEDED], 3.5)
+		var found_icon := &"artifact_forest"
+		for id in ARTIFACT_ORDER:
+			if _session.is_collected(id) and not _announced.has(id):
+				_announced[id] = true
+				found_icon = ARTIFACT_ICONS[id]
+		toast("Artefak %d/%d ditemukan" % [artifacts, ARTIFACTS_NEEDED], 3.5, found_icon)
 		if artifacts >= ARTIFACTS_NEEDED:
-			toast("Ketiga artefak terkumpul. Gerbang menunggu.", 4.5)
+			toast("Ketiga artefak terkumpul. Gerbang menunggu.", 4.5, &"boss")
 		_refresh_targets()
 	elif potions > _base_potions:
 		play_event(&"pickup_potion")
-		toast("Ramuan diambil", 1.5)
+		toast("Ramuan diambil", 1.5, &"potion")
 	if kills > _base_kills:
 		play_event(&"enemy_defeated")
 	if done > _base_puzzle_done:
 		play_event(&"puzzle_solved")
-		toast("Puzzle terpecahkan", 3.0)
+		toast("Puzzle terpecahkan", 3.0, &"puzzle")
 		_refresh_targets()
 	elif puzzle_hash != _base_puzzle_hash:
 		play_event(&"puzzle_step")
 	if _session.checkpoint_id != _base_checkpoint:
 		if _session.checkpoint_id != &"":
 			play_event(&"checkpoint")
-			toast("Checkpoint tersimpan", 2.0)
+			toast("Checkpoint aktif", 2.0, &"checkpoint")
 		_base_checkpoint = _session.checkpoint_id
 	_base_artifacts = artifacts
 	_base_potions = potions
@@ -1284,7 +1896,7 @@ func _poll_boss() -> void:
 	if phase > _boss_phase:
 		_boss_phase = phase
 		play_event(&"boss_roar")
-		toast("Inti Penjaga menyala lebih terang!", 3.0)
+		toast("Inti Penjaga menyala lebih terang!", 3.0, &"boss")
 		_music_to(MUSIC_BOSS_PHASE2)
 	if state != _boss_state:
 		if state != "" and not state.to_lower() in ["idle", "recover", "recovery", "dead", "sleep", "sleeping", "ready"]:
@@ -1394,6 +2006,7 @@ func _register_defaults() -> void:
 	_def(&"land", [T + "boots-leather-step-01.wav"], -5.0, Vector2(0.8, 0.95), 0.2)
 	_def(&"swing", [T + "tin-whistle-whoosh-01.wav", T + "tin-whistle-whoosh-02.wav"], -10.0, Vector2(0.9, 1.15), 0.08)
 	_def(&"hit", _seq(T + "sword-clash-", 1, 5, ".wav"), -6.0, Vector2(0.95, 1.1), 0.06)
+	_def(&"enemy_hit", [R + "creature_hurt_01.ogg", R + "creature_hurt_02.ogg"], -14.0, Vector2(0.7, 0.85), 0.12)
 	_def(&"hurt", [R + "creature_hurt_01.ogg", R + "creature_hurt_02.ogg"], -4.0, Vector2(0.9, 1.0), 0.15)
 	_def(&"block_up", [K + "rpg_audio/metalClick.ogg"], -8.0, Vector2(0.95, 1.05), 0.2)
 	_def(&"block_hit", _seq(R + "metal_", 1, 3, ".ogg"), -4.0, Vector2(0.95, 1.05), 0.1)
@@ -1471,6 +2084,7 @@ func _on_volume_changed(value: float) -> void:
 		if not is_equal_approx(slider.value, value):
 			slider.set_value_no_signal(value)
 	_apply_volume()
+	_refresh_volume_labels()
 	var config := ConfigFile.new()
 	config.set_value("audio", "master", _volume)
 	config.save(AUDIO_CONFIG)

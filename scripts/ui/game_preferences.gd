@@ -9,6 +9,8 @@ const FIELDS := {
 	&"camera_distance": {"title": "Jarak kamera awal", "default": 11.4, "min": 4.0, "max": 14.0, "step": 0.1, "format": "%.2f m"},
 }
 
+const UI_THEME := preload("res://scripts/ui/ui_theme.gd")
+
 @export var player_path: NodePath
 @export var camera_path: NodePath
 @export var config_path := "user://control_preferences.cfg"
@@ -16,6 +18,7 @@ const FIELDS := {
 var _player: Node
 var _camera: Camera3D
 var _menu: VBoxContainer
+var _menu_frame: Control
 var _settings: PanelContainer
 var _sliders: Dictionary[StringName, HSlider] = {}
 var _readouts: Dictionary[StringName, Label] = {}
@@ -45,31 +48,37 @@ func _load_preferences() -> void:
 func _build_menu() -> void:
 	var panel: Control = _camera.get_pause_panel()
 	_menu = _camera.get_resume_button().get_parent() as VBoxContainer
+	_menu_frame = panel.get_node("Frame") as Control
 	var open := Button.new()
 	open.name = "OpenPreferences"
 	open.text = "Pengaturan"
 	open.custom_minimum_size.y = 44
 	open.pressed.connect(open_settings)
+	UI_THEME.hover_button(open)
 	_menu.add_child(open)
 
 	_settings = PanelContainer.new()
 	_settings.name = "ControlPreferences"
 	panel.add_child(_settings)
 	_settings.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	_settings.offset_left = -310
-	_settings.offset_right = 310
-	_settings.offset_top = -235
-	_settings.offset_bottom = 235
+	_settings.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_settings.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_settings.custom_minimum_size = Vector2(700,0)
 	var margin := MarginContainer.new()
-	for side in ["left","right","top","bottom"]:
-		margin.add_theme_constant_override("margin_"+side,20)
+	for side in ["left","right"]:
+		margin.add_theme_constant_override("margin_"+side,40)
+	for side in ["top","bottom"]:
+		margin.add_theme_constant_override("margin_"+side,32)
 	_settings.add_child(margin)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation",12)
 	margin.add_child(column)
 	var title := Label.new()
-	title.text = "PENGATURAN KONTROL"
-	title.add_theme_font_size_override("font_size",26)
+	title.text = "Pengaturan"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_override("font",UI_THEME.title_font())
+	title.add_theme_font_size_override("font_size",34)
+	title.add_theme_color_override("font_color",UI_THEME.GOLD)
 	column.add_child(title)
 	for field: StringName in FIELDS:
 		var spec: Dictionary = FIELDS[field]
@@ -90,16 +99,20 @@ func _build_menu() -> void:
 		row.add_child(slider)
 		_sliders[field] = slider
 		var readout := Label.new()
-		readout.custom_minimum_size.x = 85
+		readout.custom_minimum_size.x = 95
+		readout.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		readout.add_theme_color_override("font_color",UI_THEME.GOLD)
 		row.add_child(readout)
 		_readouts[field] = readout
 		slider.value_changed.connect(_on_slider.bind(field))
 	_status = Label.new()
 	_status.text = "Terapkan untuk menyimpan; durasi baru berlaku pada ayunan berikutnya."
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_status.add_theme_color_override("font_color",UI_THEME.MUTED)
+	_status.add_theme_font_size_override("font_size",16)
 	column.add_child(_status)
 	var buttons := HBoxContainer.new()
-	buttons.add_theme_constant_override("separation",10)
+	buttons.add_theme_constant_override("separation",12)
 	column.add_child(buttons)
 	_button(buttons,"Terapkan",apply_and_save)
 	_button(buttons,"Reset Default",reset_defaults)
@@ -109,8 +122,10 @@ func _build_menu() -> void:
 func _button(parent: Node, title: String, action: Callable) -> void:
 	var button := Button.new()
 	button.text = title
-	button.custom_minimum_size = Vector2(140,42)
+	button.custom_minimum_size = Vector2(150,46)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.pressed.connect(action)
+	UI_THEME.hover_button(button)
 	parent.add_child(button)
 
 func _on_slider(value: float, field: StringName) -> void:
@@ -125,12 +140,15 @@ func open_settings() -> void:
 	for field: StringName in FIELDS:
 		_sliders[field].set_value_no_signal(_values[field])
 		_readouts[field].text = FIELDS[field]["format"] % _values[field]
-	_menu.hide()
+	_menu_frame.hide()
+	_menu_frame.scale = Vector2.ONE
 	_settings.show()
+	UI_THEME.reveal(_settings)
 
 func close_settings() -> void:
 	_settings.hide()
-	_menu.show()
+	_menu_frame.show()
+	UI_THEME.reveal(_menu_frame)
 
 func reset_defaults() -> void:
 	for field: StringName in FIELDS:

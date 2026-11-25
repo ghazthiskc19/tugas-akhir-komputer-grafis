@@ -1,7 +1,7 @@
 extends Node3D
 ## Penjaga Gerbang: full gate-boss encounter module (arena, sockets, golem, attacks, retry snapshot, gate, completion).
 ##
-## Wiring (parent): instance scenes/boss/gatekeeper_encounter.tscn at (0,0,-100), add_child, then setup(player, session).
+## Wiring (parent): instance at the generated boss anchor, add_child, then setup(player, session).
 ## Local space: arena z -15..+15 (access from the SOUTH, +Z), dock exit NORTH (-Z, trigger at z -21). See gatekeeper_arena.gd.
 ##
 ## Flow
@@ -12,7 +12,7 @@ extends Node3D
 ##  3. Fight: three telegraphed attacks (sweep / slam / charge). The damage area is a world-clipped polygon drawn as the telegraph;
 ##     direction/position lock at `lock` fraction of the wind-up and never follow the player afterwards. Damage only through
 ##     player.receive_damage(), so block and dodge i-frames apply. At <= 50% HP (phase 2) the core flares, a roar plays, and the
-##     boss sometimes chains two attacks (second telegraph starts after a shortened recovery).
+##     boss uses bounded two/three-strike chains, with freshly telegraphed followups and a full punishable recovery at the end.
 ##  4. Player death: the boss freezes; when Session.respawned fires (player already at the checkpoint, full HP) this module
 ##     resets the boss (full HP, phase 1, no transients, home pose), moves the player to the safe retry point at the arena entrance (local z 13.5, inside the
 ##     arena, barrier open) and OVERRIDES HP/stamina/potions with the first-attempt snapshot. Artifacts, sockets, puzzles and shortcuts are
@@ -21,8 +21,8 @@ extends Node3D
 ##     the gate seal dissolves and the slabs open; `completed` is emitted once when the player crosses into the dock.
 ##
 ## Voluntary exit policy (decided here, docs had none): the arena is sealed from activation until death/retry or victory.
-## There is no abort, no leaving through the barrier and no forfeit command; Esc pauses the tree and nothing else. The
-## encounter is session state only (no disk save): quitting the game discards it. Falling is impossible (floor + walls).
+## There is no abort, no leaving through the barrier and no forfeit command; Esc pauses the tree and nothing else.
+## A loaded started encounter resumes at the retry entrance using its persisted first-attempt snapshot.
 
 signal encounter_started
 signal encounter_won
@@ -30,6 +30,7 @@ signal completed
 signal status_changed
 
 const Telegraph := preload("res://scripts/boss/boss_telegraph.gd")
+const Vfx := preload("res://scripts/vfx/combat_vfx.gd")
 const Arena := preload("res://scripts/boss/gatekeeper_arena.gd")
 const GolemAnimations := preload("res://scripts/boss/golem_animations.gd")
 const GOLEM_SCENE := "res://assets/third_party/blendswap/rock_golem/rock_golem.glb"
@@ -53,10 +54,10 @@ const WALK_SPEED := 2.6
 const TURN_RATE := 2.4
 const FIRST_ATTACK_DELAY := 1.4
 const RETRY_ATTACK_DELAY := 1.8
-const PAUSE_PHASE_ONE := 0.85
-const PAUSE_PHASE_TWO := 0.6
-const CHAIN_CHANCE := 0.45
-const CHAIN_RECOVERY := 0.4
+const PAUSE_PHASE_ONE := 0.65
+const PAUSE_PHASE_TWO := 0.35
+const CHAIN_RESET_PHASE_ONE := 0.30
+const CHAIN_RESET_PHASE_TWO := 0.22
 const MODEL_FEET_OFFSET := 9.06
 ## Per attack: damage (before block), wind-up / active / recovery seconds, `lock` = fraction of the wind-up at which the
 ## target locks, `hit_at` = fraction of the active phase at which the instant hit is resolved, zone geometry.
@@ -65,19 +66,16 @@ const ATTACKS := {
 		"damage": 24, "windup": 1.05, "lock": 0.62, "active": 0.22, "recovery": 1.1, "hit_at": 0.4,
 		"kind": ZoneKind.SECTOR, "radius": 5.2, "half_arc": 72.0,
 		"windup_clip": GolemAnimations.SWEEP_WINDUP, "strike_clip": GolemAnimations.SWEEP_STRIKE, "recover_clip": GolemAnimations.SWEEP_RECOVER,
-		"chain": &"slam",
 	},
 	&"slam": {
 		"damage": 38, "windup": 1.55, "lock": 0.66, "active": 0.25, "recovery": 2.4, "hit_at": 0.5,
 		"kind": ZoneKind.CIRCLE, "radius": 4.2, "reach": 3.8,
 		"windup_clip": GolemAnimations.SLAM_WINDUP, "strike_clip": GolemAnimations.SLAM_STRIKE, "recover_clip": GolemAnimations.SLAM_RECOVER,
-		"chain": &"sweep",
 	},
 	&"charge": {
 		"damage": 30, "windup": 1.15, "lock": 0.7, "active": 0.6, "recovery": 1.45, "hit_at": 0.0,
 		"kind": ZoneKind.LANE, "width": 3.2, "length": 13.0, "speed": 20.0, "front": 2.0,
 		"windup_clip": GolemAnimations.CHARGE_WINDUP, "strike_clip": GolemAnimations.CHARGE_RUN, "recover_clip": GolemAnimations.CHARGE_RECOVER,
-		"chain": &"sweep",
 	},
 }
 const COLOR_TRACK := Color(1.0, 0.72, 0.1)
@@ -132,7 +130,12 @@ var _locked := false
 var _hit_resolved := false
 var _zone: Dictionary = {}
 var _charge_traveled := 0.0
-var _chain_next: StringName = &""
+## A chain's phase and strike budget are fixed at its start; crossing half HP cannot extend it.
+var _chain_index := 0
+var _chain_length := 0
+var _chain_phase := 1
+var _pattern_serial := 0
+var _delayed := false
 var _pause_left := 0.0
 var _roar_pending := false
 var _roar_left := 0.0
@@ -236,6 +239,16 @@ func get_attack_kind() -> StringName:
 	return _attack if act != Act.PAUSE else &""
 
 
+## Live timing, not ATTACKS' base duration: animation, warning fill and strike scheduling all use this same clock.
+## Chain indices are one-based, zero outside a chain. Only final_recovery is a full punish window.
+func get_attack_timing() -> Dictionary:
+	return {
+		"elapsed": _act_time, "duration": _act_length, "locked": _locked,
+		"chain_index": _chain_index, "chain_length": _chain_length, "delayed": _delayed,
+		"final_recovery": act == Act.RECOVERY and _chain_index == _chain_length,
+	}
+
+
 func get_mode_name() -> StringName:
 	return StringName(Mode.keys()[mode].to_lower())
 
@@ -260,12 +273,19 @@ func get_retry_point() -> Vector3:
 	return _arena.retry_point_global()
 
 
-## Deterministic driver for tests: starts `kind` now when the boss is fighting and between attacks.
-func force_attack(kind: StringName) -> bool:
+## Deterministic driver: the default remains one base-timing strike for existing hit-window consumers.
+## `with_chain` exercises the same bounded patterns and timing profiles as normal combat.
+func force_attack(kind: StringName, with_chain := false) -> bool:
 	if mode != Mode.FIGHTING or act != Act.PAUSE or not ATTACKS.has(kind):
 		return false
-	_chain_next = &""
-	_start_attack(kind)
+	if with_chain:
+		_start_chain(kind)
+	else:
+		_chain_index = 1
+		_chain_length = 1
+		_chain_phase = phase
+		_delayed = false
+		_start_attack(kind)
 	return true
 
 
@@ -366,7 +386,8 @@ func _activate() -> void:
 	# Snapshot = resources at the altar press, BEFORE the wake (first attempt only; later presses never overwrite it).
 	_capture_snapshot()
 	_arena.set_barrier(true)
-	_chain_next = &""
+	_chain_index = 0
+	_chain_length = 0
 	if mode == Mode.DORMANT:
 		mode = Mode.WAKING
 		_wake_time = 0.0
@@ -471,31 +492,28 @@ func _tick_pause(delta: float) -> void:
 		_ring_fx(_boss.global_position, 9.0, CORE_RED, 0.7)
 		return
 	_pause_left -= delta
-	if dist > 6.5 and _pause_left > 0.0:
+	if dist > 4.6 and _pause_left > 0.0:
 		_walk_toward(to_player / maxf(dist, 0.001), delta)
 		_play_loop(GolemAnimations.WALK)
 	else:
 		_play_loop(GolemAnimations.IDLE)
 	if _pause_left <= 0.0:
-		_chain_next = &""
-		var kind := _choose_attack(dist)
-		if phase == 2 and _rng.randf() < CHAIN_CHANCE:
-			_chain_next = ATTACKS[kind]["chain"]
-		_start_attack(kind)
+		_start_chain(_choose_attack(dist))
 
 
 func _choose_attack(dist: float) -> StringName:
 	var weights := {&"sweep": 0.0, &"slam": 0.0, &"charge": 0.0}
-	if dist < 7.5:
-		weights = {&"sweep": 55.0, &"slam": 45.0, &"charge": 5.0}
-	elif dist < 11.0:
-		weights = {&"sweep": 15.0, &"slam": 45.0, &"charge": 40.0}
+	if dist < 5.0:
+		weights = {&"sweep": 60.0, &"slam": 40.0, &"charge": 0.0}
+	elif dist < 7.8:
+		weights = {&"sweep": 0.0, &"slam": 55.0, &"charge": 45.0}
 	else:
-		weights = {&"sweep": 0.0, &"slam": 25.0, &"charge": 75.0}
+		# A slam cannot reach past eight metres. Close the distance instead of spending an entire chain whiffing.
+		weights = {&"sweep": 0.0, &"slam": 0.0, &"charge": 100.0}
 	for kind: StringName in weights:
 		if kind == _last_attack:
 			weights[kind] *= 0.4
-		if kind == _last_attack and kind == _prev_attack:
+		if dist < 7.8 and kind == _last_attack and kind == _prev_attack:
 			weights[kind] = 0.0
 	var total := 0.0
 	for kind: StringName in weights:
@@ -508,14 +526,39 @@ func _choose_attack(dist: float) -> StringName:
 	return &"slam"
 
 
+func _start_chain(kind: StringName) -> void:
+	_pattern_serial += 1
+	_chain_phase = phase
+	_chain_index = 1
+	_chain_length = 3 if phase == 2 and _pattern_serial % 3 != 0 else 2
+	_start_attack(kind)
+
+
+func _followup_attack() -> StringName:
+	var dist := _flat_to_player().length()
+	if dist >= 7.8:
+		return &"charge"
+	if dist >= 5.0:
+		return &"slam"
+	return &"slam" if _attack == &"sweep" else &"sweep"
+
+
 func _start_attack(kind: StringName) -> void:
+	Vfx.hub_for(self)
 	_attack = kind
 	_prev_attack = _last_attack
 	_last_attack = kind
 	var cfg: Dictionary = ATTACKS[kind]
 	act = Act.WINDUP
 	_act_time = 0.0
-	_act_length = cfg["windup"]
+	_delayed = _chain_length > 1 and _chain_phase == 2 and (_pattern_serial + _chain_index) % 3 == 0
+	var windup_scale := 1.0
+	if _chain_length > 1:
+		if _chain_phase == 2:
+			windup_scale = 1.16 if _delayed else 0.82
+		elif _chain_index > 1:
+			windup_scale = 0.86
+	_act_length = float(cfg["windup"]) * windup_scale
 	_locked = false
 	_hit_resolved = false
 	_charge_traveled = 0.0
@@ -525,6 +568,7 @@ func _start_attack(kind: StringName) -> void:
 	_core_boost = 1.5
 	_pulse_speed = 5.0
 	_update_zone(cfg)
+	_telegraph.set_progress(0.0)
 	status_changed.emit()
 
 
@@ -552,6 +596,7 @@ func _begin_active(cfg: Dictionary) -> void:
 		_act_length = maxf(float(_zone.get("travel", 0.0)) / float(cfg["speed"]), 0.25)
 		_play_clip(cfg["strike_clip"], 0.0)
 		_fx_trail.emitting = true
+		_vfx_charge_start()
 	else:
 		_play_clip(cfg["strike_clip"], _act_length)
 	_telegraph.set_color(COLOR_ACTIVE, 0.85)
@@ -564,11 +609,16 @@ func _tick_active(delta: float) -> void:
 	_act_time += delta
 	if _attack == &"charge":
 		_tick_charge(cfg, delta)
+		if mode != Mode.FIGHTING:
+			return
 	elif not _hit_resolved and _act_time >= float(cfg["hit_at"]) * _act_length:
 		_hit_resolved = true
 		_impact_fx(cfg)
 		if _player_in_zone():
 			_damage_player(cfg)
+			# receive_damage may synchronously emit player death and clear the chain.
+			if mode != Mode.FIGHTING:
+				return
 	if _act_time >= _act_length:
 		_begin_recovery(cfg)
 
@@ -587,6 +637,8 @@ func _tick_charge(cfg: Dictionary, delta: float) -> void:
 		if offset <= _charge_traveled + float(cfg["front"]) and _player_in_zone():
 			_hit_resolved = true
 			_damage_player(cfg)
+			if mode != Mode.FIGHTING:
+				return
 	if _charge_traveled >= travel - 0.05 or step <= 0.0:
 		_act_time = _act_length  # reached the end of the clipped lane (or blocked): finish this tick
 
@@ -594,7 +646,8 @@ func _tick_charge(cfg: Dictionary, delta: float) -> void:
 func _begin_recovery(cfg: Dictionary) -> void:
 	act = Act.RECOVERY
 	_act_time = 0.0
-	_act_length = CHAIN_RECOVERY if _chain_next != &"" else float(cfg["recovery"])
+	var follows := _chain_index < _chain_length
+	_act_length = (CHAIN_RESET_PHASE_TWO if _chain_phase == 2 else CHAIN_RESET_PHASE_ONE) if follows else float(cfg["recovery"])
 	_telegraph.clear()
 	_fx_trail.emitting = false
 	_pulse_speed = 2.0
@@ -605,17 +658,26 @@ func _begin_recovery(cfg: Dictionary) -> void:
 
 
 func _tick_recovery(delta: float) -> void:
+	if _chain_index < _chain_length:
+		# Reorient only between strikes and before the next warning locks; active zones never track.
+		_turn_toward(_flat_to_player(), TURN_RATE * 1.7, delta)
 	_act_time += delta
 	if _act_time < _act_length:
 		return
-	if _chain_next != &"":
-		var next := _chain_next
-		_chain_next = &""
+	if _chain_index < _chain_length:
+		var next := _followup_attack()
+		_chain_index += 1
 		_start_attack(next)
 		return
 	act = Act.PAUSE
 	_pause_left = PAUSE_PHASE_TWO if phase == 2 else PAUSE_PHASE_ONE
 	_attack = &""
+	_chain_index = 0
+	_chain_length = 0
+	_delayed = false
+	_locked = false
+	_act_time = 0.0
+	_act_length = 0.0
 	_play_loop(GolemAnimations.IDLE)
 	status_changed.emit()
 
@@ -666,9 +728,11 @@ func _circle_zone(origin: Vector3, forward: Vector3, yaw: float, reach: float, r
 func _lane_zone(origin: Vector3, forward: Vector3, yaw: float, width: float, length: float, front: float) -> Dictionary:
 	var right := forward.cross(Vector3.UP).normalized()
 	var chest := origin + Vector3.UP * 1.2
+	var knee := origin + Vector3.UP * 0.45  # the charging body also stops on low solids such as the altar and consoles
 	var lane := length
 	for lateral in [-width * 0.5, 0.0, width * 0.5]:
 		lane = minf(lane, _clip(chest + right * lateral, forward, length))
+		lane = minf(lane, _clip(knee + right * lateral, forward, length))
 	var half := width * 0.5
 	var back := 1.0
 	var a := origin - forward * back
@@ -760,11 +824,7 @@ func _on_boss_dead() -> void:
 	if mode != Mode.FIGHTING:
 		return
 	mode = Mode.WON
-	act = Act.PAUSE
-	_attack = &""
-	_chain_next = &""
-	_telegraph.clear()
-	_fx_trail.emitting = false
+	_stop_attack_state()
 	_set_hurtbox(false)
 	_boss.collision_layer = 0
 	_bar_root.visible = false
@@ -799,9 +859,8 @@ func _restore_won() -> void:
 	_arena.set_barrier(false)
 	for id: StringName in REQUIRED_ARTIFACTS:
 		_arena.set_socket_installed(id, true, false)
-	if _session != null and _session.puzzle_progress.get(KEY_GATE_OPEN, false):
-		_gate_finished = true
-		_arena.open_gate(0.01)
+	# A save may land between victory and the gate-opening tween. Victory is authoritative.
+	_arena.open_gate(0.01)
 
 
 func _on_gate_opened() -> void:
@@ -847,6 +906,7 @@ func _retry_reset() -> void:
 	_roar_left = 0.0
 	_last_attack = &""
 	_prev_attack = &""
+	_pattern_serial = 0
 	_boss_stand_ready()
 	mode = Mode.REARMED
 	_arena.set_barrier(false)
@@ -880,8 +940,13 @@ func _restore_player() -> void:
 func _stop_attack_state() -> void:
 	act = Act.PAUSE
 	_attack = &""
-	_chain_next = &""
+	_chain_index = 0
+	_chain_length = 0
+	_delayed = false
 	_locked = false
+	_act_time = 0.0
+	_act_length = 0.0
+	_hit_resolved = false
 	_zone = {}
 	_telegraph.clear()
 	_fx_trail.emitting = false
@@ -952,6 +1017,7 @@ func _flash_hit() -> void:
 	if _flash_tween != null:
 		_flash_tween.kill()
 	_overlay_mat.albedo_color.a = 0.5
+	_vfx_core_hit()
 	_flash_tween = create_tween()
 	_flash_tween.tween_property(_overlay_mat, "albedo_color:a", 0.0, 0.22)
 	_core_boost = maxf(_core_boost, 2.0)
@@ -966,6 +1032,7 @@ func _update_bar() -> void:
 
 
 func _impact_fx(cfg: Dictionary) -> void:
+	_vfx_strike(cfg)
 	var kind := int(cfg["kind"])
 	if kind == ZoneKind.CIRCLE:
 		var center: Vector3 = _zone["center"]
@@ -1173,6 +1240,41 @@ void fragment() {
 	_bar_label.position = Vector3(0, 0.42, 0)
 	_bar_root.add_child(_bar_label)
 	_update_bar()
+
+
+# ---------------------------------------------------------------- VFX hooks (drawing lives in scripts/vfx/combat_vfx.gd)
+
+func _vfx_strike(cfg: Dictionary) -> void:
+	var kind := int(cfg["kind"])
+	if kind == ZoneKind.SECTOR:
+		var origin := _boss.global_position + Vector3(0.0, 1.6, 0.0)
+		Vfx.slash(self, origin, _boss.global_rotation.y, float(cfg["radius"]) * 0.95, float(cfg["half_arc"]) * 2.0,
+			Color(1.0, 0.8, 0.35), 0.4, 0.0, false)
+		Vfx.slash(self, origin - Vector3(0.0, 0.5, 0.0), _boss.global_rotation.y, float(cfg["radius"]) * 0.75,
+			float(cfg["half_arc"]) * 1.8, Color(1.0, 0.95, 0.7), 0.34, 0.0, false)
+		Vfx.ground_impact(self, _boss.global_position + _boss.global_basis.z * float(cfg["radius"]) * 0.6, 2.0, COLOR_ACTIVE)
+	elif kind == ZoneKind.CIRCLE:
+		var center: Vector3 = _zone["center"]
+		var radius := float(cfg["radius"])
+		Vfx.ground_impact(self, center, radius, COLOR_ACTIVE)
+		Vfx.ring(self, center + Vector3(0.0, 0.14, 0.0), radius * 1.25, Color(1.0, 0.7, 0.3), 0.6, 0.12)
+		Vfx.burst(self, Vfx.Kind.SMOKE, center + Vector3(0.0, 0.3, 0.0), Vector3.UP, Color(0.6, 0.55, 0.5, 0.7), 1.6)
+
+
+func _vfx_charge_start() -> void:
+	var origin := _boss.global_position
+	Vfx.ring(self, origin + Vector3(0.0, 0.12, 0.0), 3.0, COLOR_ACTIVE, 0.4, 0.2)
+	Vfx.dust_puff(self, origin + Vector3(0.0, 0.2, 0.0), Color(0.78, 0.72, 0.62, 0.8), 2.0)
+	Vfx.slash(self, origin + Vector3(0.0, 1.2, 0.0), _boss.global_rotation.y, 3.2, 120.0, Color(1.0, 0.8, 0.35), 0.35, 0.0, false)
+
+
+func _vfx_core_hit() -> void:
+	if _core_light == null or not _core_light.is_inside_tree():
+		return
+	var at := _core_light.global_position
+	Vfx.burst(self, Vfx.Kind.GLOW, at, Vector3.UP, Color(_core_color, 1.0), 3.0)
+	Vfx.burst(self, Vfx.Kind.FLASH, at, Vector3.UP, Color(1.0, 0.9, 0.8), 2.2)
+	Vfx.burst(self, Vfx.Kind.SPARK, at, _boss.global_basis.z + Vector3.UP * 0.4, Vfx.GOLD, 1.4)
 
 
 func _build_fx() -> void:

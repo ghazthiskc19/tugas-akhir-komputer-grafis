@@ -11,7 +11,8 @@ extends Node3D
 ## Order of generation: (1) structure stream (coast wobble, route jitter, hill noise) -> routes + pads + heightfield,
 ## validated with bounded retries and a proven fallback; (2) decoration stream (decoration_seed, independent of the
 ## structure stream) places trees/rocks/bushes/ruins only where they do not touch routes or pads.
-## Everything is in this node's local space; anchors are fixed for every seed.
+## Everything is in this node's local space. Positions of every objective, pad, route, encounter and the dock come from
+## `layout` (see island_layout.gd): the fixed baseline, or a seed-dependent layout when procedural.
 
 signal generated(report: Dictionary)
 
@@ -25,57 +26,10 @@ const WATER_Y := -0.9
 const OUT_OF_BOUNDS_H := -12.0
 const WORLD_LAYER := 1  # terrain, decoration, dock and boundary collision all live on layer 1
 
-const OBJECTIVE_ANCHORS := {
-	&"spawn": Vector3(0, 0, 85),
-	&"symbol": Vector3(-65, 0, 0),
-	&"energy": Vector3(60, 0, 0),
-	&"summit": Vector3(0, 0, -50),
-	&"boss": Vector3(0, 0, -100),
-}
-## Flat pads (height exactly 0). [center(x,z), radius_x, radius_z, blend_width, coast_margin]
-const PAD_DEFS := {
-	&"spawn": [Vector2(0, 85), 15.0, 15.0, 14.0, 14.0],
-	&"symbol": [Vector2(-65, 0), 26.0, 26.0, 16.0, 14.0],
-	&"energy": [Vector2(60, 0), 26.0, 26.0, 16.0, 14.0],
-	# Rect pads: flat region = module AABB + 2 m (covers triangle interpolation across the edge). Summit AABB x+-28 z-50+-24; boss AABB x+-21 z-100+-17 plus approach to z-78.
-	&"summit": [Vector2(0, -50), 30.0, 26.0, 14.0, 14.0, &"rect"],
-	&"boss": [Vector2(0, -97.5), 23.5, 22.0, 5.0, 0.0, &"rect"],
-	&"encounter_standard": [Vector2(0, 48), 10.0, 10.0, 12.0, 12.0],
-	&"encounter_heavy": [Vector2(0, 25), 10.0, 10.0, 12.0, 12.0],
-	&"encounter_ranged": [Vector2(0, 5), 10.0, 10.0, 12.0, 12.0],
-	&"foothill_checkpoint": [Vector2(0, -21), 6.0, 6.0, 8.0, 12.0],
-	&"boss_checkpoint": [Vector2(-22, -97), 5.0, 5.0, 6.0, 8.0],
-	&"viewpoint": [Vector2(-84, -42), 6.0, 6.0, 10.0, 12.0],
-}
-## Routes: ordered control points; `true` = fixed (never jittered). Walkable, no jump gaps (jump_links is empty).
-const ROUTE_DEFS := {
-	&"spawn_symbol": [[Vector2(0, 85), true], [Vector2(-30, 62), false], [Vector2(-58, 30), false], [Vector2(-65, 0), true]],
-	&"spawn_energy": [[Vector2(0, 85), true], [Vector2(30, 62), false], [Vector2(56, 30), false], [Vector2(60, 0), true]],
-	&"spawn_summit": [[Vector2(0, 85), true], [Vector2(0, 48), true], [Vector2(0, 25), true], [Vector2(0, 5), true], [Vector2(0, -21), true], [Vector2(0, -50), true]],
-	&"symbol_summit": [[Vector2(-65, 0), true], [Vector2(-60, -26), false], [Vector2(-38, -46), false], [Vector2(0, -50), true]],
-	&"energy_summit": [[Vector2(60, 0), true], [Vector2(52, -28), false], [Vector2(36, -46), false], [Vector2(0, -50), true]],
-	# Lane through the summit module underpass is global x 1.5 (free x 0..3) for z -50 -> -74; reconnects to the boss at x 0 north of the module.
-	&"summit_boss": [[Vector2(1.5, -50), true], [Vector2(1.5, -62), true], [Vector2(1.5, -74), true], [Vector2(1.5, -80), true], [Vector2(0, -100), true]],
-	&"energy_boss": [[Vector2(60, 0), true], [Vector2(70, -40), false], [Vector2(50, -82), false], [Vector2(26, -98), false], [Vector2(0, -100), true]],
-	&"viewpoint_spur": [[Vector2(-65, 0), true], [Vector2(-80, -20), false], [Vector2(-84, -42), true]],
-}
-## Boss checkpoint is a spur from boss pad; it lies inside the boss pad's flat blend so no route is needed.
-const ROUTE_GRAPH_EDGES := [
-	[&"spawn", &"symbol", &"spawn_symbol"], [&"spawn", &"energy", &"spawn_energy"],
-	[&"spawn", &"summit", &"spawn_summit"], [&"symbol", &"summit", &"symbol_summit"],
-	[&"energy", &"summit", &"energy_summit"], [&"summit", &"boss", &"summit_boss"],
-	[&"energy", &"boss", &"energy_boss"], [&"symbol", &"viewpoint", &"viewpoint_spur"],
-]
-const EXTRA_ANCHORS := {
-	&"foothill_checkpoint": Vector3(0, 0, -21),
-	&"boss_checkpoint": Vector3(-22, 0, -97),
-	&"encounter_standard": Vector3(0, 0, 48),
-	&"encounter_heavy": Vector3(0, 0, 25),
-	&"encounter_ranged": Vector3(0, 0, 5),
-	&"viewpoint": Vector3(-84, 0, -42),
-	&"dock_start": Vector3(0, 0, -106),
-	&"dock_end": Vector3(0, 0, -122),
-}
+const LAYOUT := preload("res://scripts/world/island_layout.gd")
+## Baseline (fixed mode) templates only; every consumer must read `layout` / `anchor_positions` instead.
+const OBJECTIVE_ANCHORS := LAYOUT.OBJECTIVE_ANCHORS
+const PAD_DEFS := LAYOUT.PAD_DEFS
 
 # Traversal limits (player: base 6 / sprint 9 m/s, jump 5.1 m/s with g 9.8 -> apex 1.33 m, floor angle 45 deg).
 const ROUTE_HALF_WIDTH := 5.5            # fully flattened path half-width (path is 11 m wide)
@@ -90,9 +44,9 @@ const MIN_ANCHOR_SHORE := 8.0            # land-field distance (m) anchors must 
 const WALK_SLOPE_DEG := 35.0             # free flood-fill slope limit
 const CORRIDOR_SLOPE_DEG := 20.0         # route-only flood-fill slope limit
 const MAX_JUMP_GAP := 3.0                # documented allowed jump link (none are generated)
-## Summit module AABB (local space): x +-28, z -50 +-24 (parent places the module at the summit anchor).
-## No decoration solid may come within r + SUMMIT_KEEPOUT_MARGIN of it.
-const SUMMIT_FOOTPRINT := Rect2(-28.0, -74.0, 56.0, 48.0)
+## Module AABBs (summit, boss, symbol, energy) come from layout["footprints"]; baseline summit AABB: x +-28, z -50 +-24.
+## No decoration solid may come within r + SUMMIT_KEEPOUT_MARGIN of any module AABB.
+const SUMMIT_FOOTPRINT := LAYOUT.SUMMIT_FOOTPRINT
 const SUMMIT_KEEPOUT_MARGIN := 3.0
 const MIN_RELIEF := 3.0                  # off-route terrain must vary at least this much (not a fake flat plane)
 const MAX_HEIGHT := 16.0
@@ -123,6 +77,8 @@ var attempt_log: Array[Dictionary] = []
 var anchor_positions: Dictionary = {}
 var last_report: Dictionary = {}
 var jump_links: Array = []  # intentionally empty: every route is continuous ground
+## The single layout contract (island_layout.gd): anchors, encounters, potions, camp, pads, routes, footprints, biomes.
+var layout: Dictionary = {}
 
 # ---- Internal -----------------------------------------------------------------------------------------------------
 var _configured := false
@@ -144,6 +100,14 @@ var _noise_coast: FastNoiseLite
 var _noise_road: FastNoiseLite
 var _noise_detail: FastNoiseLite
 var _jitter_rng := RandomNumberGenerator.new()
+var _pads: Dictionary = {}  # StringName -> pad def Array (see island_layout.gd)
+var _route_defs: Dictionary = {}
+var _edges: Array = []
+var _footprints: Dictionary = {}  # StringName -> Rect2
+var _bc_grass := Vector2(0, 70)
+var _bc_forest := Vector2(-70, 10)
+var _bc_ruins := Vector2(68, 5)
+var _bc_high := Vector2(0, -75)
 
 
 # ---- Entry points -------------------------------------------------------------------------------------------------
@@ -172,7 +136,6 @@ func _ready() -> void:
 func generate_data() -> Dictionary:
 	if not _configured:
 		configure(BASELINE_SEED, false)
-	_rebuild_anchor_positions()
 	used_fallback = false
 	attempt_log.clear()
 	generation_attempts = 0
@@ -182,8 +145,7 @@ func generate_data() -> Dictionary:
 	for k in attempts:
 		generation_attempts += 1
 		active_seed = base_seed if k == 0 else _mix(base_seed, 1000 + k)
-		_generate_structure(active_seed)
-		var r := validate_layout()
+		var r := _attempt(procedural)
 		attempt_log.append({"seed": active_seed, "valid": r["valid"], "errors": r["errors"]})
 		if r["valid"]:
 			ok = true
@@ -193,14 +155,23 @@ func generate_data() -> Dictionary:
 		if procedural:
 			generation_attempts += 1
 			active_seed = BASELINE_SEED
-			_generate_structure(active_seed)
-			var fr := validate_layout()
+			var fr := _attempt(false)
 			attempt_log.append({"seed": active_seed, "valid": fr["valid"], "errors": fr["errors"]})
 	decoration_seed = _mix(active_seed, 0xDEC0)
 	_place_decoration()
 	_data_ready = true
 	last_report = validate_layout()
 	return last_report
+
+
+## One structure attempt: layout (seeded or fixed baseline) -> routes/pads/heightfield -> validation.
+func _attempt(use_procedural: bool) -> Dictionary:
+	var l: Dictionary = LAYOUT.generate(_mix(active_seed, 0x1A70), LAYOUT.seed_swaps_sides(requested_seed)) if use_procedural else LAYOUT.baseline()
+	if l.is_empty():
+		return {"valid": false, "errors": ["layout sampling found no valid placement"]}
+	_apply_layout(l)
+	_generate_structure(active_seed)
+	return validate_layout()
 
 
 ## Re-places decoration only (terrain/routes untouched). Same decoration seed => identical result.
@@ -256,16 +227,29 @@ func is_dry_at(x: float, z: float) -> bool:
 
 
 func get_pad_def(pad: StringName) -> Dictionary:
-	var d: Array = PAD_DEFS[pad]
+	var d: Array = _pads[pad]
 	return {"center": d[0], "radius_x": d[1], "radius_z": d[2], "blend": d[3], "rect": d.size() > 5}
+
+
+func pad_names() -> Array:
+	return _pads.keys()
+
+
+func has_pad(pad: StringName) -> bool:
+	return _pads.has(pad)
 
 
 ## Metres beyond the pad edge (negative inside). Minimum over all pads.
 func pad_distance(x: float, z: float) -> float:
 	var best := 1.0e9
-	for name: StringName in PAD_DEFS:
-		best = minf(best, _pad_dist_one(PAD_DEFS[name], x, z))
+	for name: StringName in _pads:
+		best = minf(best, _pad_dist_one(_pads[name], x, z))
 	return best
+
+
+## Metres beyond one pad's edge (negative inside).
+func pad_distance_to(pad: StringName, x: float, z: float) -> float:
+	return _pad_dist_one(_pads[pad], x, z)
 
 
 func route_names() -> Array:
@@ -299,6 +283,33 @@ func get_spawn_position() -> Vector3:
 	return anchor_positions[&"spawn"]
 
 
+func route_graph_edges() -> Array:
+	return _edges
+
+
+## Module AABB (local space) for symbol / energy / summit / boss.
+func get_module_footprint(module: StringName) -> Rect2:
+	return _footprints[module]
+
+
+func get_camp_position() -> Vector3:
+	return layout["camp"]
+
+
+func get_encounters() -> Array:
+	return layout["encounters"]
+
+
+func get_potions() -> Array:
+	return layout["potions"]
+
+
+## Anchor as a world position (to_global when in the tree, else local).
+func get_world_anchor(anchor: StringName) -> Vector3:
+	var p: Vector3 = anchor_positions[anchor]
+	return to_global(p) if is_inside_tree() else p
+
+
 func biome_at(x: float, z: float) -> StringName:
 	if land_depth_at(x, z) < 7.0:
 		return &"beach"
@@ -311,17 +322,30 @@ func biome_at(x: float, z: float) -> StringName:
 	return names[best]
 
 
-## HUD compass hook. position is global when inside the tree, otherwise local.
+## Display name of the biome dominating a position (by the layout's biome centres, so it follows swapped puzzle sides).
+func _region_label(p: Vector3) -> String:
+	var w := _biome_weights(p.x, p.z)
+	var labels := ["Grassland", "Forest", "Ruins Plain", "Rocky Highlands"]
+	var best := 0
+	for i in 4:
+		if w[i] > w[best]:
+			best = i
+	return labels[best]
+
+
+## HUD compass hook. position is global when inside the tree, otherwise local. Regions come from the actual anchor
+## positions, so a seed that swaps the symbol/energy sides labels each puzzle with the biome it really sits in.
 func get_compass_targets() -> Array:
 	var out: Array = []
 	var defs := [
-		[&"spawn", "Titik Awal", "Grassland"], [&"symbol", "Pilar Simbol", "Forest"],
-		[&"energy", "Jalur Energi", "Ruins Plain"], [&"summit", "Puncak", "Rocky Highlands"],
+		[&"spawn", "Titik Awal", ""], [&"symbol", "Pilar Simbol", ""],
+		[&"energy", "Jalur Energi", ""], [&"summit", "Puncak", ""],
 		[&"boss", "Gerbang Pulau", "Dermaga"], [&"viewpoint", "Titik Pandang", "Coast"],
 	]
 	for d in defs:
 		var p: Vector3 = anchor_positions[d[0]]
-		out.append({"label": d[1], "position": to_global(p) if is_inside_tree() else p, "region": d[2]})
+		var region: String = d[2] if d[2] != "" else _region_label(p)
+		out.append({"label": d[1], "position": to_global(p) if is_inside_tree() else p, "region": region})
 	return out
 
 
@@ -340,15 +364,15 @@ func validate_layout() -> Dictionary:
 		errors.append("heightfield not generated")
 		return rep
 	# Anchors
-	for name: StringName in OBJECTIVE_ANCHORS:
-		var a: Vector3 = OBJECTIVE_ANCHORS[name]
+	for name: StringName in [&"spawn", &"symbol", &"energy", &"summit", &"boss"]:
+		var a: Vector3 = anchor_positions[name]
 		if absf(height_at(a.x, a.z)) > PAD_FLAT_TOLERANCE:
 			errors.append("anchor %s not on y=0 (%.3f)" % [name, height_at(a.x, a.z)])
 		if land_depth_at(a.x, a.z) < MIN_ANCHOR_SHORE:
 			errors.append("anchor %s too close to shore" % name)
 	# Pads
-	for name: StringName in PAD_DEFS:
-		var d: Array = PAD_DEFS[name]
+	for name: StringName in _pads:
+		var d: Array = _pads[name]
 		var c: Vector2 = d[0]
 		var max_dev := 0.0
 		for ring in [0.0, 0.5, 0.9]:
@@ -383,7 +407,7 @@ func validate_layout() -> Dictionary:
 	var changed := true
 	while changed:
 		changed = false
-		for e in ROUTE_GRAPH_EDGES:
+		for e in _edges:
 			if route_ok.get(e[2], false):
 				if reached.has(e[0]) and not reached.has(e[1]):
 					reached[e[1]] = true
@@ -408,11 +432,13 @@ func validate_layout() -> Dictionary:
 		errors.append("%d obstacles inside route clearance" % route_viol)
 	var footprint_viol := 0
 	for o in _obstacles:
-		if SUMMIT_FOOTPRINT.grow(float(o["r"]) + SUMMIT_KEEPOUT_MARGIN - 0.01).has_point(o["pos"]):
-			footprint_viol += 1
+		for fp: Rect2 in _footprints.values():
+			if fp.grow(float(o["r"]) + SUMMIT_KEEPOUT_MARGIN - 0.01).has_point(o["pos"]):
+				footprint_viol += 1
+				break
 	rep["metrics"]["summit_footprint_violations"] = footprint_viol
 	if footprint_viol > 0:
-		errors.append("%d obstacles inside summit module footprint" % footprint_viol)
+		errors.append("%d obstacles inside a module footprint" % footprint_viol)
 	rep["metrics"]["obstacle_count"] = _obstacles.size()
 	rep["metrics"]["relief_off_route"] = _relief
 	rep["metrics"]["max_height"] = _max_h
@@ -421,14 +447,30 @@ func validate_layout() -> Dictionary:
 	if _max_h > MAX_HEIGHT:
 		errors.append("terrain too high (%.2f)" % _max_h)
 	# Dock hand-off
-	var ds: Vector3 = EXTRA_ANCHORS[&"dock_start"]
-	var de: Vector3 = EXTRA_ANCHORS[&"dock_end"]
+	var ds: Vector3 = anchor_positions[&"dock_start"]
+	var de: Vector3 = anchor_positions[&"dock_end"]
 	rep["metrics"]["dock_start_ground"] = height_at(ds.x, ds.z)
 	rep["metrics"]["dock_end_ground"] = height_at(de.x, de.z)
 	if absf(height_at(ds.x, ds.z)) > 0.1:
 		errors.append("dock start not level with boss pad")
 	if height_at(de.x, de.z) > WATER_Y:
 		errors.append("dock end not over water")
+	for msg in LAYOUT.validate(layout):
+		errors.append("layout: " + msg)
+	var spots: Array = [["camp", layout["camp"]]]
+	for po: Dictionary in layout["potions"]:
+		spots.append(["potion %s" % po["id"], po["position"]])
+	for en: Dictionary in layout["encounters"]:
+		spots.append(["enemy %s" % en["id"], en["position"]])
+	for s in spots:
+		var sp: Vector3 = s[1]
+		if absf(height_at(sp.x, sp.z)) > PAD_FLAT_TOLERANCE:
+			errors.append("%s not on flat y=0 ground" % s[0])
+		for o in _obstacles:
+			if (o["pos"] as Vector2).distance_to(Vector2(sp.x, sp.z)) < float(o["r"]) + 1.0:
+				errors.append("%s blocked by an obstacle" % s[0])
+				break
+	rep["metrics"]["encounter_groups"] = (layout["enc_pads"] as Array).size()
 	rep["valid"] = errors.is_empty()
 	return rep
 
@@ -491,7 +533,7 @@ func _validate_flood(rep: Dictionary, errors: Array[String]) -> void:
 	var hh := PackedFloat32Array()
 	hh.resize(M * M)
 	var padmask := {}
-	for name: StringName in PAD_DEFS:
+	for name: StringName in _pads:
 		padmask[name] = PackedByteArray()
 		padmask[name].resize(M * M)
 	var blocked := PackedByteArray()
@@ -503,8 +545,8 @@ func _validate_flood(rep: Dictionary, errors: Array[String]) -> void:
 			var z := origin + float(j) * step
 			hh[k] = height_at(x, z)
 			droute[k] = _route_d[(j * 2) * N + i * 2]
-			for name: StringName in PAD_DEFS:
-				if _pad_dist_one(PAD_DEFS[name], x, z) <= 0.0:
+			for name: StringName in _pads:
+				if _pad_dist_one(_pads[name], x, z) <= 0.0:
 					padmask[name][k] = 1
 	for o in _obstacles:
 		var p: Vector2 = o["pos"]
@@ -524,7 +566,10 @@ func _validate_flood(rep: Dictionary, errors: Array[String]) -> void:
 	# Free traversal
 	var v_free := _flood(M, step, hh, blocked, droute, padmask, spawn_cell, tan_free, false, [])
 	var v_corr := _flood(M, step, hh, blocked, droute, padmask, spawn_cell, tan_corr, true, [])
-	var targets := [&"symbol", &"energy", &"summit", &"boss", &"viewpoint", &"foothill_checkpoint", &"boss_checkpoint", &"encounter_standard", &"encounter_heavy", &"encounter_ranged"]
+	var targets: Array = []
+	for n: StringName in _pads:
+		if n != &"spawn":
+			targets.append(n)
 	for t: StringName in targets:
 		var c := _cell_of(_anchor2(t), M, step)
 		var f_ok: bool = v_free[c] == 1
@@ -534,6 +579,19 @@ func _validate_flood(rep: Dictionary, errors: Array[String]) -> void:
 			errors.append("flood(free): %s unreachable" % t)
 		if not c_ok:
 			errors.append("flood(corridor): %s unreachable" % t)
+	var spots: Array = []
+	for po: Dictionary in layout["potions"]:
+		spots.append(["potion_%s" % po["id"], po["position"]])
+	for en: Dictionary in layout["encounters"]:
+		spots.append(["enemy_%s" % en["id"], en["position"]])
+	for s in spots:
+		var sp: Vector3 = s[1]
+		var sc := _cell_of(Vector2(sp.x, sp.z), M, step)
+		var s_free: bool = v_free[sc] == 1
+		var s_corr: bool = v_corr[sc] == 1
+		rep["flood"][s[0]] = {"free": s_free, "corridor": s_corr}
+		if not s_free or not s_corr:
+			errors.append("flood: %s unreachable" % s[0])
 	# Artifact order independence: reach each artifact pad without passing through the other two pads.
 	var arts := [&"symbol", &"energy", &"summit"]
 	for t: StringName in arts:
@@ -609,13 +667,18 @@ func _flood(M: int, step: float, hh: PackedFloat32Array, blocked: PackedByteArra
 
 
 # ---- Structure ----------------------------------------------------------------------------------------------------
-func _rebuild_anchor_positions() -> void:
-	anchor_positions = {}
-	for name: StringName in OBJECTIVE_ANCHORS:
-		anchor_positions[name] = OBJECTIVE_ANCHORS[name]
-	for name: StringName in EXTRA_ANCHORS:
-		anchor_positions[name] = EXTRA_ANCHORS[name]
-
+func _apply_layout(l: Dictionary) -> void:
+	layout = l
+	anchor_positions = (l["anchors"] as Dictionary).duplicate()
+	_pads = (l["pads"] as Dictionary).duplicate(true)
+	_route_defs = (l["routes"] as Dictionary).duplicate(true)
+	_edges = l["edges"]
+	_footprints = l["footprints"]
+	var bc: Dictionary = l["biome_centers"]
+	_bc_grass = bc[&"grassland"]
+	_bc_forest = bc[&"forest"]
+	_bc_ruins = bc[&"ruins_plain"]
+	_bc_high = bc[&"rocky_highlands"]
 
 func _make_noise(seed_value: int, freq: float, octaves: int, kind: int = FastNoiseLite.TYPE_SIMPLEX_SMOOTH) -> FastNoiseLite:
 	var n := FastNoiseLite.new()
@@ -643,8 +706,8 @@ func _generate_structure(seed_value: int) -> void:
 
 func _build_routes() -> void:
 	_routes.clear()
-	for name: StringName in ROUTE_DEFS:
-		var ctrl: Array = ROUTE_DEFS[name]
+	for name: StringName in _route_defs:
+		var ctrl: Array = _route_defs[name]
 		var pts: Array[Vector2] = []
 		for c in ctrl:
 			var p: Vector2 = c[0]
@@ -654,25 +717,7 @@ func _build_routes() -> void:
 				var rad := _jitter_rng.randf_range(0.0, 9.0)
 				p += Vector2(cos(ang), sin(ang)) * rad
 			pts.append(p)
-		_routes[name] = _catmull(pts)
-
-
-func _catmull(pts: Array[Vector2]) -> PackedVector2Array:
-	var out := PackedVector2Array()
-	var n := pts.size()
-	for i in n - 1:
-		var p0: Vector2 = pts[maxi(i - 1, 0)]
-		var p1: Vector2 = pts[i]
-		var p2: Vector2 = pts[i + 1]
-		var p3: Vector2 = pts[mini(i + 2, n - 1)]
-		var subdiv := maxi(2, ceili(p1.distance_to(p2) / 4.0))
-		for s in subdiv:
-			var t := float(s) / float(subdiv)
-			var t2 := t * t
-			var t3 := t2 * t
-			out.append(0.5 * ((2.0 * p1) + (-p0 + p2) * t + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2 + (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3))
-	out.append(pts[n - 1])
-	return out
+		_routes[name] = LAYOUT.catmull(pts)
 
 
 func _build_fields() -> void:
@@ -717,8 +762,8 @@ func _build_fields() -> void:
 			var h := _coast_profile(s) + hills * smoothstep(8.0, 28.0, s)
 			var pd := 1.0e9
 			var wp := 0.0
-			for name: StringName in PAD_DEFS:
-				var d: Array = PAD_DEFS[name]
+			for name: StringName in _pads:
+				var d: Array = _pads[name]
 				var dp := _pad_dist_one(d, x, z)
 				pd = minf(pd, dp)
 				wp = maxf(wp, 1.0 - smoothstep(0.0, float(d[3]), dp))
@@ -743,8 +788,8 @@ func _land_field(x: float, z: float, route_d: float) -> float:
 	var q := Vector2(absf(x) - (92.0 - 42.0), absf(z) - (104.0 - 42.0))
 	var sd := Vector2(maxf(q.x, 0.0), maxf(q.y, 0.0)).length() + minf(maxf(q.x, q.y), 0.0) - 42.0
 	var s := -sd + _noise_coast.get_noise_2d(x, z) * 9.0
-	for name: StringName in PAD_DEFS:
-		var d: Array = PAD_DEFS[name]
+	for name: StringName in _pads:
+		var d: Array = _pads[name]
 		s = maxf(s, float(d[4]) - _pad_dist_one(d, x, z))
 	return maxf(s, 16.0 - route_d)
 
@@ -757,21 +802,16 @@ func _coast_profile(s: float) -> float:
 
 func _biome_weights(x: float, z: float) -> Vector4:
 	# x grassland, y forest, z ruins plain, w rocky highlands
-	var g := exp(-pow(Vector2(x, z - 70.0).length() / 52.0, 2.0))
-	var f := exp(-pow(Vector2(x + 70.0, z - 10.0).length() / 48.0, 2.0))
-	var p := exp(-pow(Vector2(x - 68.0, z - 5.0).length() / 45.0, 2.0))
-	var hh := exp(-pow(Vector2(x * 0.8, z + 75.0).length() / 52.0, 2.0))
+	var g := exp(-pow(Vector2(x - _bc_grass.x, z - _bc_grass.y).length() / 52.0, 2.0))
+	var f := exp(-pow(Vector2(x - _bc_forest.x, z - _bc_forest.y).length() / 48.0, 2.0))
+	var p := exp(-pow(Vector2(x - _bc_ruins.x, z - _bc_ruins.y).length() / 45.0, 2.0))
+	var hh := exp(-pow(Vector2((x - _bc_high.x) * 0.8, z - _bc_high.y).length() / 52.0, 2.0))
 	var sum := g + f + p + hh + 0.0001
 	return Vector4(g / sum, f / sum, p / sum, hh / sum)
 
 
 func _pad_dist_one(d: Array, x: float, z: float) -> float:
-	var c: Vector2 = d[0]
-	if d.size() > 5:  # axis-aligned rectangle, d[1]/d[2] are half extents (exact signed distance)
-		var q := Vector2(absf(x - c.x) - float(d[1]), absf(z - c.y) - float(d[2]))
-		return Vector2(maxf(q.x, 0.0), maxf(q.y, 0.0)).length() + minf(maxf(q.x, q.y), 0.0)
-	var dn := Vector2((x - c.x) / float(d[1]), (z - c.y) / float(d[2])).length()
-	return (dn - 1.0) * minf(float(d[1]), float(d[2]))
+	return LAYOUT.pad_dist(d, x, z)
 
 
 func _paint_colors() -> void:
@@ -842,10 +882,12 @@ func _clear_for(p: Vector2, r: float, route_margin: float, pad_margin: float, mi
 		return false
 	if pad_distance(p.x, p.y) < r + pad_margin:
 		return false
-	if absf(p.x) < 8.0 + r and p.y < -102.0:
+	var dock: Vector3 = anchor_positions[&"dock_start"]
+	if absf(p.x - dock.x) < 8.0 + r and p.y < dock.z + 4.0:
 		return false
-	if SUMMIT_FOOTPRINT.grow(r + SUMMIT_KEEPOUT_MARGIN).has_point(p):
-		return false
+	for fp: Rect2 in _footprints.values():
+		if fp.grow(r + SUMMIT_KEEPOUT_MARGIN).has_point(p):
+			return false
 	return normal_at(p.x, p.y).y >= min_ny
 
 
@@ -971,11 +1013,13 @@ func _place_trail_markers(rng: RandomNumberGenerator, occupied: Dictionary) -> v
 func _place_cover_rocks(rng: RandomNumberGenerator, occupied: Dictionary) -> void:
 	# Side cover beside the centre-route encounter pads (15 m off the centreline): outside the 6 m clearance
 	# corridor and outside every pad, so they give ranged-fight cover without blocking the path.
-	for e: StringName in [&"encounter_standard", &"encounter_heavy", &"encounter_ranged"]:
+	for e: StringName in layout["enc_pads"]:
 		var c: Vector3 = anchor_positions[e]
+		var tdir: Vector2 = layout["enc_dirs"][e]
+		var ndir := Vector2(tdir.y, -tdir.x)
 		for side in [-1.0, 1.0]:
 			for dz in [-3.5, 3.5]:
-				var p := Vector2(c.x + 15.0 * side, c.z + dz)
+				var p: Vector2 = Vector2(c.x, c.z) + ndir * 15.0 * float(side) + tdir * float(dz)
 				var scale := rng.randf_range(3.2, 4.2)
 				var model := ROCKS_BIG[rng.randi() % ROCKS_BIG.size()]
 				var yaw := rng.randf() * TAU
@@ -1158,22 +1202,23 @@ func _build_dock() -> void:
 	body.collision_layer = WORLD_LAYER
 	body.collision_mask = 0
 	dock.add_child(body)
-	# 2 x 4 tiles of 4 m: x -4..4, z -106..-122, walking surface y = 0.03 (3 cm above the pad).
+	# 2 x 4 tiles of 4 m leaving the boss pad toward -Z (dock_start = boss + 6 m, dock_end = boss + 22 m), deck y = 0.03.
+	dock.position = Vector3(anchor_positions[&"boss"].x, 0.0, anchor_positions[&"boss"].z)
 	for tz in 4:
 		for tx in 2:
 			var n: Node3D = tile.instantiate()
-			n.position = Vector3(-2.0 + 4.0 * float(tx), -0.02, -108.0 - 4.0 * float(tz))
+			n.position = Vector3(-2.0 + 4.0 * float(tx), -0.02, -8.0 - 4.0 * float(tz))
 			dock.add_child(n)
 	var cs := CollisionShape3D.new()
 	var bs := BoxShape3D.new()
 	bs.size = Vector3(8.0, 0.6, 16.0)
 	cs.shape = bs
-	cs.position = Vector3(0, 0.03 - 0.3, -114.0)
+	cs.position = Vector3(0, 0.03 - 0.3, -14.0)
 	body.add_child(cs)
 	for tz in 3:
 		for side in [-1.0, 1.0]:
 			var post: Node3D = col.instantiate()
-			post.position = Vector3(4.3 * side, -1.35, -108.0 - 6.0 * float(tz))
+			post.position = Vector3(4.3 * side, -1.35, -8.0 - 6.0 * float(tz))
 			post.scale = Vector3(1.3, 1.3, 1.3)
 			dock.add_child(post)
 
@@ -1281,7 +1326,8 @@ func probe_collision() -> Dictionary:
 			continue
 		var local_y: float = to_local(hit["position"]).y
 		var ground := height_at(p.x, p.y)
-		if absf(p.x) < 4.0 and p.y < -106.0 and p.y > -122.2:
+		var dock_a: Vector3 = anchor_positions[&"dock_start"]
+		if absf(p.x - dock_a.x) < 4.0 and p.y < dock_a.z and p.y > anchor_positions[&"dock_end"].z - 0.2:
 			ground = maxf(ground, 0.03)  # dock deck top, 3 cm above the boss pad
 		max_err = maxf(max_err, absf(local_y - ground))
 	return {"checked": pts.size(), "missed": missed, "max_error": max_err}

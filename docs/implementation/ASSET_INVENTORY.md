@@ -2,7 +2,7 @@
 
 Audit awal: **17 November 2026**. Acuan: [konsep game](../konsep-game.md) dan [Implementation Tracker](IMPLEMENTATION_TRACKER.md).
 
-Inventaris mencatat kebutuhan logis, bukan jumlah file yang wajib diunduh. Satu paket dapat memenuhi beberapa baris; satu model dapat dipakai ulang melalui scene/material variant. Status baris di bawah mengikuti kondisi terkini (lihat audit kecukupan 21 November 2026 di bawah); status `MISSING` pada audit awal 17 November sudah diperbarui. Daftar kandidat di bawah belum membuktikan file tersedia atau bekerja pada project.
+Inventaris mencatat kebutuhan logis, bukan jumlah file yang wajib diunduh. Satu paket dapat memenuhi beberapa baris; satu model dapat dipakai ulang melalui scene/material variant. **Tabel kandidat/model/animasi/UI di bawah memuat status audit 17–21 November 2026 (historis)**; status implementasi terkini per 54 kebutuhan ada pada bagian [Pemetaan implementasi](#pemetaan-implementasi-pulau-penuh--22-november-2026-status-terkini). Daftar kandidat tidak membuktikan file tersedia atau bekerja.
 
 ## Status Definitions
 
@@ -26,7 +26,7 @@ Inventaris mencatat kebutuhan logis, bukan jumlah file yang wajib diunduh. Satu 
 | Concept art pulau, puzzle, route, karakter, boss | `docs/laporan/assets/` | REFERENCE_ONLY | Acuan palette, bentuk, framing dan silhouette; tidak menggantikan mesh, rig, animasi, atau collision |
 | Logo game dan FILKOM | `docs/laporan/assets/` | REFERENCE_ONLY | Branding/laporan; pemakaian pada UI memerlukan import dan pemeriksaan tersendiri |
 | Icon project sementara | `icon.svg` | PLACEHOLDER | Icon fondasi, bukan icon game final yang sudah diverifikasi |
-| Preview ground | `scenes/main.tscn` | PLACEHOLDER | Permukaan uji awal; bukan pulau 250 × 250 meter |
+| Preview ground | `scenes/main.tscn` | PLACEHOLDER | Permukaan uji awal; bukan lagi main scene (project kini menunjuk `scenes/world/island_game.tscn`) |
 
 ## Candidate Sources
 
@@ -78,15 +78,84 @@ Shortlist awal di dua dokumen di atas merupakan **riset historis yang lebih semp
 
 **Ekstraksi dan import 21 November 2026 (P02-01/02):** subset yang dipakai ada di `assets/third_party/` (1.681 file, 74 MB; path di bawah relatif terhadap folder itu). Godot 4.7.2 mengimpor seluruh 1.281 file yang bisa diimpor tanpa error/warning. Uji muat headless: Rock Golem GLB (28 bone), Rogue (23 bone), Rig_Medium/Rig_Large CombatMelee (22/16 clip), pilar Dungeon, dan `Drinking.fbx` (37 bone) berhasil di-instantiate. Rogue, Knight, dan Barbarian memiliki 23 nama bone yang sama dengan library Rig_Medium/Rig_Large; track animasi Godot merujuk nama bone. Koreksi pada audit kecukupan di bawah: rest pose karakter identik dengan Rig_Medium tetapi **tidak** dengan Rig_Large, dan kesamaan nama bukan jaminan kompatibilitas pose. Kecocokan visual belum dilihat.
 
-`IMPORTED` dipakai hanya bila file yang ter-import langsung memenuhi kebutuhan. Kebutuhan yang masih memerlukan perakitan, edit mesh, atau retarget tetap `MISSING`, dengan basis yang sudah ter-import dicatat di kolom file. Belum ada baris `VERIFIED`.
+`IMPORTED` dipakai hanya bila file yang ter-import langsung memenuhi kebutuhan (status audit historis). Status terkini per kebutuhan ada pada [Pemetaan implementasi](#pemetaan-implementasi-pulau-penuh--22-november-2026-status-terkini). Belum ada baris `VERIFIED`.
 
 ### Audit kecukupan asset — 21 November 2026 (ambang visual dilonggarkan)
 
-Pengguna menyatakan model yang mirip/cukup sudah memadai (tidak harus bagus atau persis concept art) dan recolor diutamakan daripada ubah bentuk. Dengan ambang itu: **bahan awal cukup; tidak ada model, paket berbayar, atau pencarian sumber baru yang wajib.** Shipwreck/dock (M27) opsional. Yang tersisa bukan unduhan: (a) retarget/aplikasi N06 dan N11 serta authoring wake/charge boss; (b) kode dan perakitan (terrain procedural, logika puzzle/UI/state, wrapper scene, collision, reskin guardian, material golem, socket crystal); (c) verifikasi visual/gameplay. Tidak ada gameplay dan tidak ada baris `VERIFIED`.
+**(Historis, 21 November 2026.)** Pengguna menyatakan model yang mirip/cukup sudah memadai (tidak harus bagus atau persis concept art) dan recolor diutamakan daripada ubah bentuk. Dengan ambang itu: **bahan awal cukup; tidak ada model, paket berbayar, atau pencarian sumber baru yang wajib.** Shipwreck/dock (M27) opsional. Pada audit itu yang tersisa adalah retarget/authoring, kode dan perakitan, serta verifikasi; semuanya ditinjau pada Pemetaan implementasi di bawah. Tidak ada baris `VERIFIED` pada audit itu dan tidak ada sekarang.
 
-**Angka mentah bukan kesiapan.** 1.681 file di `assets/third_party/` (1.281 bisa diimpor) adalah jumlah berkas, bukan jumlah kebutuhan. Dari 54 baris: 31 `IMPORTED` dan 23 `MISSING` (perlu perakitan/edit/retarget). Angka ini tidak dinaikkan oleh audit ini. Catatan clone baru: FBX Mixamo (N06/N11) di-gitignore karena repo GitHub ternyata publik; salinan lokal ada, tetapi clone baru tidak memilikinya dan tim harus mengunduh sendiri dari Mixamo, sehingga hitungan di atas berlaku untuk salinan kerja lokal ini, bukan fresh clone.
+**Angka mentah bukan kesiapan.** (Historis, 21 November 2026; status terkini ada pada Pemetaan implementasi 22 November.) 1.681 file di `assets/third_party/` (1.281 bisa diimpor) adalah jumlah berkas, bukan jumlah kebutuhan. Dari 54 baris saat itu: 31 `IMPORTED` dan 23 `MISSING` (perlu perakitan/edit/retarget). Catatan clone baru: FBX Mixamo (N06/N11) di-gitignore karena repo GitHub publik; clone baru tidak memilikinya. **Pembaruan 22 November:** gameplay tidak lagi bergantung pada FBX tersebut karena clip minum dan golem sudah dibuat sendiri.
 
 **Bukti satu kali (parse statis GLB, tanpa Godot; skrip sementara sudah dihapus):** Rogue, Knight, Barbarian, dan Ranger dibandingkan dengan `Rig_Medium_General` dan `Rig_Medium_CombatMelee`: 23 joint, nama dan parent sama, translasi dan rotasi rest pose identik (23/23), seluruh target channel animasi (15 dan 22 clip) menemukan joint di karakter. Terhadap `Rig_Large_CombatMelee`: nama sama dan seluruh 16 clip menemukan target, tetapi rest translasi hanya 1/23 cocok (selisih hingga ±0,76 pada head/upperarm/hips) dan clip membawa track translation/rotation/scale; pada karakter Free (berproporsi Medium) clip Large berpotensi mendistorsi, sehingga clip Medium dipakai untuk semua karakter KayKit. Koreksi: klaim lama bahwa Barbarian "sama dengan Rig_Large" hanya benar untuk nama bone. Kesamaan nama/rest pose belum menjamin hasil visual; pose tidak dilihat, dan flag loop tetap tidak ada pada import (tidak ada klaim semantik loop). Rock Golem: 28 joint bernama generik `Bone*`, tanpa clip dan tanpa image; tidak ada kecocokan dengan rig KayKit atau Mixamo, jadi N11 tetap kerja retarget/authoring.
+
+## Pemetaan implementasi pulau penuh — 22 November 2026 (status terkini)
+
+Bagian ini **menggantikan** kolom Status dan klaim "belum ada gameplay/puzzle/boss" pada audit 17–21 November di atas; audit itu dipertahankan sebagai riwayat. Pulau penuh (`scenes/world/island_game.tscn`, root `scripts/world/island_game.gd`, kini main scene project) sudah memuat terrain prosedural berbenih, tiga objektif, boss Penjaga Gerbang, HUD/menu/intro/outro dan audio.
+
+Semua baris di bawah memakai status yang sudah didefinisikan di atas: **IMPORTED** berarti resource sudah dipakai pada `island_game.tscn` dan punya bukti runtime bounded (bot input, suite state, screenshot, lihat [Test Runs](ACCEPTANCE_CHECKLIST.md#test-runs)), **tetapi Gate B penuh belum ditutup** (tinjauan visual akhir dalam gerak, audit audio subjektif, pemeriksaan material/collision per item). **Tidak ada dari 54 baris yang `VERIFIED`**: keberadaan file sumber atau scene bukan bukti. Hitungan: 0 VERIFIED, 53 IMPORTED, 1 MISSING (M27, opsional).
+
+Path relatif terhadap `assets/third_party/` kecuali ditulis lain. Tidak ada baris yang bergantung pada FBX Mixamo mentah.
+
+**Status 25 November 2026:** tabel di bawah tetap **IMPORTED** (0 VERIFIED, 53 IMPORTED, 1 MISSING). Tidak ada baris yang dinaikkan: Gate B/C membutuhkan bukti visual dan runtime pada build baru yang belum diterima. Bukti "dikalahkan bot"/"screenshot" pada kolom kanan berasal dari kode 22 Nov. Tambahan terkirim sejak itu: tema UI (font, ikon, border), peta pulau (M), blur menu/jeda, dan VFX tempur (`scripts/vfx/combat_vfx.gd`) — semuanya perlu pemeriksaan visual sebelum dinaikkan. Lisensi: [THIRD_PARTY_NOTICES](../../THIRD_PARTY_NOTICES.md).
+
+| ID | Status | Pemetaan aktual | Bukti dan batas (semua baris IMPORTED: runtime terintegrasi, Gate B penuh belum ditutup) |
+|---|---|---|---|
+| M01 | IMPORTED | `kaykit/adventurers/characters/Rogue.glb` (rig dari `scenes/tests/melee_lab.tscn` yang dipakai island) | Dimainkan oleh bot; pilihan pemain final tetap keputusan pengguna |
+| M02 | IMPORTED | `Rogue.glb` + `props/sword_1handed.gltf` (`scenes/enemies/standard_melee.tscn`); penampilan penjaga kuno lewat `scripts/enemies/guard_appearance.gd`: shader batu per-instance (menjaga kecerahan), topi/jubah lumut, inti dada dan bilah mata teal pada bone attachment; Rogue pemain tidak disentuh | Dikalahkan bot. Parent melihat [depan](evidence/ancient-guards-front.png), [dekat](evidence/ancient-guards-close.png), [belakang](evidence/ancient-guards-back.png) (tiga arketipe + kontrol Rogue manusia); `enemy_lab` 120 frame bersih. Bukan audit visual dalam gerak |
+| M03 | IMPORTED | `Barbarian.glb` + `props/axe_2handed.gltf`, skala 1,25 (`heavy_melee.tscn`); tampilan batu yang sama + pauldron batu | Dikalahkan bot; screenshot guard di atas; clip Rig_Medium |
+| M04 | IMPORTED | `Ranger.glb` + `props/crossbow_1handed.gltf`, proyektil lurus (`ranged_enemy.tscn`, `enemy_projectile.gd`); tampilan batu + cincin rune di punggung; senjata tidak diubah | Dikalahkan bot; screenshot guard di atas; letak crossbow di tangan belum ditinjau dalam gerak |
+| M05 | IMPORTED | `blendswap/rock_golem/rock_golem.glb`, skala 0,45; inti energi dan health bar billboard dibuat di `gatekeeper_encounter.gd` | Dikalahkan oleh input playthrough nyata; screenshot wake/ending dilihat parent; bukan audit gerak penuh |
+| M06 | IMPORTED | `kaykit/adventurers/props/sword_1handed.gltf` pada pemain | Bot; attachment tangan belum direview manual |
+| M07 | IMPORTED | `sword_1handed.gltf` pada musuh standard | `axe_1handed`/`dagger` tidak dipakai |
+| M08 | IMPORTED | `axe_2handed.gltf` pada heavy | — |
+| M09 | IMPORTED | `crossbow_1handed.gltf`; proyektil dibuat dari scene/mesh sendiri | Busur dan `arrow_*` tidak dipakai |
+| M10 | IMPORTED | Heightfield, mesh, collision dan jalur dibuat prosedural di `scripts/world/island_terrain.gd` (bukan modul KayKit/Extra) | 20 seed DATA_PASS, traversal baseline 16/16, probe collision; traversal per seed belum |
+| M11 | IMPORTED | `kaykit/forest_nature/Tree_*`, `Tree_Bare_*`, `Bush_*` (varian `_Color1`) lewat instancing dekorasi | Dekorasi dapat berganti per seed tanpa mengubah rute |
+| M12 | IMPORTED | `kaykit/forest_nature/Rock_*`; relief/tebing dari heightfield | Cover puncak diuji state/bot |
+| M13 | IMPORTED | Hanya semak (`Bush_*`); `Grass_*` dan `polypizza/flower_a_isa_lousberg.glb` tidak dipakai | POLISH; sebagian |
+| M14 | IMPORTED | `kaykit/dungeon/`: `wall_broken`, `rubble_half/large`, `barrier`, `barrier_column`, `floor_wood_large`, `floor_tile_large` | Tangga modular tidak dipakai; rute puncak memakai ramp/ledge sendiri |
+| M15 | IMPORTED | `dungeon/pillar.gltf`, `column.gltf` + objek pilar simbol di `symbol_pillars.gd` | Suite state + bot |
+| M16 | IMPORTED | Empat simbol berbeda bentuk (bola, kotak, piramida segitiga, cincin) dari mesh primitif sendiri dengan stele relief urutan; Kenney Rune Pack **tidak** dipakai | Urutan clue = solusi diuji; keterbacaan menunggu review pemain |
+| M17 | IMPORTED | Tiga panel batu (lurus/siku) dan konektor dari mesh primitif di `energy_path.gd`; Kenney Starter Kit Racing tidak dipakai | 64 kombinasi vs model BFS independen; bot |
+| M18 | IMPORTED | `polypizza/crystal_ipoly3d.glb` (skala 0,13) sebagai sumber energi; pedestal Dungeon; segel dibuat sendiri | Screenshot final dilihat parent: kristal berskala normal |
+| M19 | IMPORTED | Tiga artefak (`forest_artifact`, `energy_artifact`, `summit_artifact`) memakai `scenes/world/artifact_pickup.tscn` (prisma + plinth + cahaya, mesh sendiri) | Enam urutan pengambilan diuji state |
+| M20 | IMPORTED | Pickup `scenes/world/potion_pickup.tscn` (tanpa model pihak ketiga); prop minum `dungeon/bottle_A_green.gltf` | Bot memakai potion; grip tangan belum direview manual |
+| M21 | IMPORTED | `scenes/world/checkpoint.tscn` (pedestal + kristal prisma, mesh sendiri); pada island: `camp`, `summit_foot`, `summit_top` | Diuji respawn |
+| M22 | IMPORTED | Blok dan ramp dengan kemiringan ≤ 22° di `summit_route.gd` + dekorasi Dungeon/Forest, satu gap lompat 3 m | Bot menyelesaikan rute |
+| M23 | IMPORTED | Dek jembatan shortcut dibuat sendiri (collision aktif setelah tuas) + `dungeon/barrier`; `medieval_hexagon` jembatan **tidak** dipakai | State tuas/jembatan bertahan setelah respawn; bridge + underpass diverifikasi pada exe rilis |
+| M24 | IMPORTED | Arena, tiga socket, altar, penghalang energi, gerbang terbuka dibuat di `scripts/boss/gatekeeper_arena.gd`; tanpa modul gate KayKit | Bot membuka gerbang hingga ending |
+| M25 | IMPORTED | Susunan modul Dungeon (pilar, `wall_broken`, obor) di puncak | Screenshot artefak puncak dilihat parent; bukan audit gerak penuh |
+| M26 | IMPORTED | Laut `shaders/island/island_water.gdshader` (shader lokal Compatibility) pada plane 900×900; langit/cahaya diwarisi dari scene rig | Tidak ditinjau pengguna; shader pihak ketiga tidak dipakai |
+| M27 | MISSING | Tidak ada model dermaga/kapal karam; dermaga prosedural di terrain dan teks intro/outro memenuhi konteks | Opsional, bukan kekurangan wajib |
+| M28 | IMPORTED | Telegraph poligon boss/musuh, `CPUParticles3D` (debu, puing, hit, jejak charge), material emisi/segel dibuat sendiri; shader `ring_aoe`/`fiery_slash` dan Kenney particle **tidak** dipakai | Telegraph terlihat sebelum damage diuji suite boss |
+| N01 | IMPORTED | `Rig_Medium_General`, `Rig_Medium_MovementBasic` pada pemain dan musuh | Bot; foot sliding belum dinilai |
+| N02 | IMPORTED | `Rig_Medium_MovementBasic` jump/fall/landing | Bot melompati gap puncak |
+| N03 | IMPORTED | `Rig_Medium_CombatMelee` serangan 1–3, timing dinormalisasi ke swing 0,2 s | Bot |
+| N04 | IMPORTED | `Melee_Block`/`Blocking`/`Block_Hit` | Bot memakai block |
+| N05 | IMPORTED | `Rig_Medium_MovementAdvanced` dodge; translasi akar dibuang | Bot memakai dodge |
+| N06 | IMPORTED | **Clip authored** `scripts/player/drink_animation.gd` (keyframe tulang Rig_Medium, 1,5 s) + prop botol; bukan Mixamo, bukan `Use_Item` | Bot meminum potion; tampilan belum ditinjau manual |
+| N07 | IMPORTED | `Hit_A/B`, `Death_*`, `Spawn_*` | Mati/respawn diuji suite state |
+| N08 | IMPORTED | Locomotion + `Melee_1H_Attack_*` + `Hit_*`/`Death_*` | — |
+| N09 | IMPORTED | `Melee_2H_*` Rig_Medium pada Barbarian | Clip `Rig_Large_*` tidak dipakai |
+| N10 | IMPORTED | `Rig_Medium_CombatRanged` | — |
+| N11 | IMPORTED | **Clip authored** `scripts/boss/golem_animations.gd`: dormant, wake, roar, walk, sweep, slam, charge, recovery, death pada 28 bone; bukan retarget Mixamo | Boss dikalahkan oleh input playthrough nyata; screenshot wake dan ending dilihat parent (bukan audit gerak penuh) |
+| N12 | IMPORTED | Tween/state transform pada panel, segel, jembatan, gerbang, socket | Suite state + bot |
+| U01 | IMPORTED | HUD HP/stamina/ramuan/artefak/objektif dan kompas di `scripts/ui/island_presentation.gd` memakai tema `scripts/ui/ui_theme.gd`: ikon `game_icons/` (Lorc/Delapouite CC BY 3.0, Zeromancer CC0), `kenney/ui_pack_adventure/` dan `kenney/fantasy_ui_borders/` (CC0). Catatan lama "Kenney UI Pack tidak dipakai" tidak berlaku untuk paket Adventure/Borders ini | Screenshot 22 Nov historis (layout lama); tampilan tema baru belum diperiksa visual di build baru; **bukan VERIFIED** |
+| U02 | IMPORTED | Prompt `[E]` dan hint kontrol dibaca dari InputMap (teks nama tombol); Kenney input prompts tidak dipakai | Gamepad fisik belum |
+| U03 | IMPORTED | Menu utama, intro, jeda, pengaturan (seed, prosedural, volume, preferensi), layar selesai | Screenshot `presentation-1..6` |
+| U04 | IMPORTED | **(25 Nov)** `fonts/cinzel/Cinzel-Variable.ttf` dan `fonts/nunito/Nunito-Variable.ttf` (SIL OFL) dimuat di `scripts/ui/ui_theme.gd`; Kenney fonts tidak dipakai; logo game belum dimuat di runtime | Runtime ada, tetapi belum ada bukti visual/glyph di build baru; **bukan VERIFIED** |
+| U05 | IMPORTED | Teks intro "Kapal Karam" dan outro di `island_presentation.gd`; clue: stele relief, label 3D, kompas | Lore pengguna dipertahankan; review teks oleh pengguna belum |
+| SFX01 | IMPORTED | `kenney/rpg_audio/footstep*`, `audio/tinysized_vehicle/boots-leather-*` | Belum diaudisi |
+| SFX02 | IMPORTED | `tin-whistle-whoosh-*`, `sword-clash-*`, `metal-hammer-hit-*` | Belum diaudisi |
+| SFX03 | IMPORTED | `kenney/rpg_audio/metalClick`, `cloth*`; `rpg_sfx_rubberduck/metal_*`, `creature_hurt/die_*` | Belum diaudisi |
+| SFX04 | IMPORTED | `bottle-glass-uncork-01`, `water-pour-01`, `rpg_sfx_rubberduck/item_misc_*`, `item_gem_*` | Belum diaudisi |
+| SFX05 | IMPORTED | `rpg_sfx_rubberduck/stones_*`, `lock_*`, `item_gem/stone`, `spell_02`; `kenney/interface_sounds/` | Satu clip per event, tanpa layering; belum diaudisi |
+| SFX06 | IMPORTED | `rpg_sfx_rubberduck/spell_01` (checkpoint), `kenney/rpg_audio/doorOpen_1` (gerbang), `creature_roar_*` (boss), `metal-hammer-hit-*` (serangan) | Belum diaudisi |
+| SFX07 | IMPORTED | `kenney/interface_sounds/` (click, tick, confirmation, back, error, open) | Belum diaudisi |
+| AUD01 | IMPORTED | `audio/ambience/Forest_Ambience.mp3`, `VistulaShort.mp3` | Loop/mix belum diaudisi |
+| AUD02 | IMPORTED | `audio/music/children_soundtrack_2.ogg` (eksplorasi), `CleytonRX-Battle-RPG-Theme.mp3` (boss), `-Var.ogg` (fase 2) | Transisi/loop belum diaudisi |
+
+**Gate A/B/C tidak dicentang.** Gate B membutuhkan tinjauan visual dan material tiap baris; Gate C membutuhkan build export, audit audio, dan font/logo runtime. Sumber lisensi tiap file ada pada [THIRD_PARTY_NOTICES](../../THIRD_PARTY_NOTICES.md). Shader laut, clip golem, dan clip minum dibuat lokal.
 
 ## Models & World Resources
 
@@ -224,11 +293,14 @@ Gate A membuka prototype. Gate ini tidak menyatakan seluruh kebutuhan asset suda
 
 ## Open Gaps
 
-Kondisi awal: seluruh model/world resource produksi, animasi, UI runtime, dan audio di atas masih perlu dipenuhi. Boss, puzzle props, potion animation, dan source/tier clip menjadi risiko pengadaan yang diperiksa lebih awal. Concept art tidak menjadi jaminan ada paket 3D dengan bentuk yang sama.
+**(Historis, 17 November 2026.)** Kondisi awal: seluruh model/world resource produksi, animasi, UI runtime, dan audio di atas masih perlu dipenuhi. Status terkini ada pada Pemetaan implementasi 22 November; baris tabel di bawah adalah tinjauan terbuka yang masih berlaku.
 
 | Tanggal | Asset ID | Kekurangan/temuan | Fallback atau tindakan berikutnya | PIC |
 |---|---|---|---|---|
 | 2026-11-17 | Semua baris produksi | Belum ada file 3D/audio/gameplay script pada audit awal | Ambil sampel P01-02–04, lalu uji pada P02 | Belum ditetapkan |
+| 2026-11-22 | Semua 53 baris IMPORTED | Belum ada baris `VERIFIED`: tinjauan visual akhir dalam gerak, audit audio subjektif, material/collision per item (Gate B penuh belum ditutup) | Pengguna/tim meninjau; naikkan baris satu per satu dengan bukti | Main |
+| 2026-11-22 | U04 | **Diperbarui 25 Nov:** font Cinzel (judul) + Nunito (isi) dimuat runtime lewat `scripts/ui/ui_theme.gd`; logo game (`docs/laporan/assets/`) belum dimuat di runtime | Putuskan logo atau catat sebagai batas rilis; glyph/tampilan font di build belum diperiksa manual | Main |
+| 2026-11-22 | Gate C | Export Windows berhasil (source `90d2976`); exe final lolos QA playthrough headless 119,8 s sim; pack 1.393 entri bersih; ZIP 23 file tersedia; fresh clone `08d5702` lolos pada mesin pengembang. Belum: mesin anggota lain, jaringan mati terpisah, review audio subjektif | Review manusia dan mesin lain | Main |
 
 ## Bukti review statis I01 — 21 November 2026
 

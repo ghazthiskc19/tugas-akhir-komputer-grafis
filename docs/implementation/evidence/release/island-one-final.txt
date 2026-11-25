@@ -1,0 +1,75 @@
+THE LOST ISLAND — ISLAND 1 EVIDENCE — 2026-11-25
+Engine: Godot 4.7.2 Standard; Compatibility/OpenGL on Radeon RX 5500M; Windows.
+State regression uses fixture teleports; rendered playthrough uses ordinary player input, not teleports.
+No claim of human difficulty/audio approval, physical gamepad, or teammate-machine testing.
+
+Enemy patterns
+Source log: tmp/island-final/enemy_pattern-final.log
+enemy_pattern_regression: 72 checks, 0 failed
+
+Boss patterns
+Source log: tmp/island-final/boss-pattern-final.log
+boss_pattern_regression: 122 checks, 0 failed
+
+Player combat and guard
+Source log: tmp/island-final/combat_edge-final.log
+combat_edge_regression: 269 checks, 0 failed
+
+Save/Continue
+Source log: tmp/island-final/save.log
+island_save_regression: 82 checks, 0 failures, 4 suites
+
+Seed layout
+Source log: tmp/island-final/layout.log
+seed 42: swapped=true symbol.x=76.7 fallback=false
+seed 777: swapped=false symbol.x=-68.0 fallback=false
+seed 7: swapped=true symbol.x=61.4 fallback=false
+island_layout_regression: 0 failure(s)
+
+Completion/persistence state
+Source log: tmp/island-final/completion.log
+island_completion_regression: 384 checks, 0 failed (STATE regression with teleports; not a full playthrough)
+
+Full state regression
+Source log: tmp/island-final/state.log
+island_regression: 37620 checks, 0 failed (STATE regression with teleports; not a full playthrough)
+
+Terrain data acceptance
+Source log: tmp/island-final/terrain-data-final.log
+seed 42: valid=true fallback=false attempts=1 active_seed=42 ms=2935 route_max_slope=8.18 relief=7.65 max_h=8.27 obstacles=302 flood_ok=true errors=[]
+seed 777: valid=true fallback=false attempts=1 active_seed=777 ms=2738 route_max_slope=7.69 relief=7.69 max_h=8.25 obstacles=260 flood_ok=true errors=[]
+SUMMARY: all_valid=true fallbacks=0 distinct_heightfields=20/20 total_ms=55097
+identical heightfield/routes/obstacles: true  (A=[734934216, 14612140, 3654251432] B=[734934216, 14612140, 3654251432])
+baseline identical for seed 1 vs 999 (procedural=false): true, active_seed=20261122
+forced fallback contract ok: true
+RESULT: PASS
+
+Physical traversal
+Source log: tmp/island-final/traversal.log
+TRAVERSAL SUMMARY: all_ok=true
+JUMP: start_y=0.000 apex_rise=1.370 (expected ~1.33) landed_on_floor=true
+probe_collision: { "checked": 91, "missed": 0, "max_error": 0.02999922633171 }
+
+Rendered full-input playthrough (seed 42)
+Source log: tmp/island-final/rendered-playthrough-final.log
+[  229.9s ending         ] RESULT PASS | sim 229.9 s | kills=4 boss_attempts=1 deaths=2 | artifacts=3 | Checkpoint: awal • Artefak: 3 • Ramuan diambil: 1 • Musuh kalah: 7
+[  219.2s boss_fight     ] boss attempt 1 result: won
+[  229.9s ending         ] ENDING reached: completion screen shown, tree paused=true
+
+Shutdown (source; actual production quit path, seed 777)
+Menu-only quit: 36 checks, 0 failed; existing save unchanged.
+Pause-menu quit: 43 checks, 0 failed; exact live resources saved.
+Window-close from map: 38 checks, 0 failed; exact live resources saved.
+Headless verbose exits contained no leaked-instance or resource errors after real-clock AudioServer drain.
+Source --headless --verbose --quit-after 5 -- --qa-no-save: exit 0, no leak/resource errors.
+
+Final Windows x86_64 executable
+Path: exports/island-one/the-lost-island.exe
+SHA-256: 81ed42e9f85ed5754a575a14b3da407549cddacde5ee07b1ee9f72b382364449
+Clean release export: exit 0.
+Command: the-lost-island.exe --headless --fixed-fps 60 -- --qa-playthrough --seed=42
+RESULT PASS | sim 200.4 s | kills=3 boss_attempts=1 deaths=0 | artifacts=3
+Both puzzles, summit shortcut, phase-two boss, gate and dock completion reached through real player inputs.
+Process exit 0; no script errors, leaked-instance warnings or resource errors in the final executable run.
+Source log: tmp/island-final/exe-playthrough.log
+Builds/ZIP remain local and ignored; the source milestone is committed to main for teammate handoff.

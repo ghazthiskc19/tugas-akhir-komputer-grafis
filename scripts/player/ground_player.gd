@@ -11,7 +11,9 @@ extends CharacterBody3D
 ##   legs keep the locomotion clip. One hit per victim per swing.
 ## - Sprint (hold `sprint`): sprint_speed while moving, grounded and not dead/dodging/drinking/blocking. Attacking does
 ##   not stop it. No stamina cost. Plays Running_A (cadence scaled to speed) + subtle dust/streak particles.
-## - Block (hold): damage x0.25 from ALL directions, drains 18 stamina/s, breaks at 0 (needs 20 to guard again).
+## - Block (hold): damage x0.25 from ALL directions, drains 18 stamina/s plus max(8, incoming damage * 0.8) per hit.
+##   An unaffordable impact empties/breaks the guard and deals full damage; exact-cost blocks still reduce that hit.
+##   Guard breaks at 0 and needs 20 stamina to resume.
 ## - Dodge: 25 stamina, 0.25 s motion along the move input (back-step without input), invulnerable for the first 0.18 s;
 ##   the whole dodge clip is time-scaled onto the duration.
 ## - Potion (Q): 1.5 s upper-body drink at 0.5 speed. Potion + heal happen ONLY when the channel completes; any damaging
@@ -101,6 +103,7 @@ const BLOCK_BLEND_RATE := 10.0
 const Damageable := preload("res://scripts/combat/damageable.gd")
 const DrinkAnimation := preload("res://scripts/player/drink_animation.gd")
 const SprintEffects := preload("res://scripts/player/player_sprint_effects.gd")
+const Vfx := preload("res://scripts/vfx/combat_vfx.gd")
 
 signal attack_started
 signal attack_finished
@@ -253,6 +256,7 @@ func _ready() -> void:
 		_sprint_effects.name = &"SprintEffects"
 		add_child(_sprint_effects)
 		_sprint_effects.setup()
+		Vfx.hub_for(self)
 		_setup_health()
 		stamina = max_stamina
 		potion_count = clampi(starting_potions, 0, max_potions)
@@ -384,11 +388,24 @@ func receive_damage(amount: int) -> bool:
 	if _dodging and _dodge_time < dodge_iframes:
 		return false
 	var blocked := _blocking
+	if blocked:
+		var impact := maxf(8.0, float(amount) * 0.8)
+		blocked = stamina >= impact
+		stamina = maxf(0.0, stamina - impact) if blocked else 0.0
+		_since_stamina_spend = 0.0
+		if stamina <= 0.0:
+			_blocking = false
+			_block_broken = true
+			if not _block_refused_latch:
+				_block_refused_latch = true
+				action_refused.emit(&"block")
+		resources_changed.emit()
 	var final_amount := maxi(1, roundi(amount * block_damage_factor)) if blocked else amount
 	_cancel_drink()
 	if not _health.apply_damage(final_amount):
 		return false
 	damage_taken.emit(final_amount, blocked)
+	_vfx_damage(blocked)
 	return true
 
 
@@ -586,6 +603,8 @@ func _try_dodge(direction: Vector3) -> bool:
 	_dodge_node.fadeout_time = DODGE_FADE_OUT * dodge_scale
 	_tree.set(PARAM_DODGE_PICK, String(clip))
 	_tree.set(PARAM_DODGE, AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+	Vfx.dust_puff(self, global_position + Vector3(0.0, 0.15, 0.0), Color(0.78, 0.72, 0.62, 0.6), 0.9)
+	Vfx.ring(self, global_position + Vector3(0.0, 0.08, 0.0), 1.1, Vfx.STEEL, 0.3, 0.16)
 	resources_changed.emit()
 	return true
 
@@ -671,6 +690,8 @@ func _advance_drink(delta: float) -> void:
 	_set_bottle_visible(false)
 	potion_count = maxi(potion_count - 1, 0)
 	var healed: int = _health.heal(potion_heal)
+	if healed > 0:
+		_vfx_heal()
 	potion_drunk.emit(healed)
 	resources_changed.emit()
 
@@ -700,6 +721,8 @@ func _advance_attack(delta: float) -> void:
 	if not is_on_floor():
 		_end_attack() # Walked off a ledge mid-swing: cut the swing, the jump state plays the fall.
 		return
+	if previous < _attack_active.x and _attack_time >= _attack_active.x:
+		_vfx_swing()
 	if _attack_time >= _attack_active.x and previous <= _attack_active.y:
 		_hit_targets()
 	if _attack_time >= _attack_length - 0.0005:
@@ -741,9 +764,52 @@ func _hit_targets() -> void:
 			continue
 		_hit_victims[damageable.get_instance_id()] = true
 		if damageable.apply_damage(_attack_damage_now):
+			_vfx_hit(area)
 			attack_hit.emit(damageable, _attack_damage_now)
 			if not _attacking:
 				return # A hit handler ended the swing (e.g. respawn); stop scanning.
+
+
+# --- VFX hooks (all drawing lives in scripts/vfx/combat_vfx.gd) ----------------------------------------------------
+
+func _vfx_forward() -> Vector3:
+	return Basis(Vector3.UP, global_rotation.y) * Vector3.BACK
+
+
+func _vfx_swing() -> void:
+	var forward := _vfx_forward()
+	var center := global_position + Vector3(0.0, 1.0, 0.0) + forward * 0.15
+	if _combo_step >= ATTACK_STEPS.size() - 1:
+		Vfx.slash(self, center, global_rotation.y, 2.6, 220.0, Vfx.GOLD, 0.32, 22.0, false)
+		Vfx.ring(self, global_position + forward * 1.0 + Vector3(0.0, 0.1, 0.0), 1.9, Vfx.GOLD, 0.35, 0.25)
+	else:
+		var odd := _combo_step % 2 == 1
+		Vfx.slash(self, center, global_rotation.y, 1.95, 160.0, Vfx.STEEL, 0.26, 36.0 if odd else -36.0, odd)
+
+
+func _vfx_hit(area: Node) -> void:
+	var finisher := _combo_step >= ATTACK_STEPS.size() - 1
+	Vfx.hit_spark(self, _hurtbox_center(area), _vfx_forward() + Vector3.UP * 0.3, finisher,
+		Vfx.GOLD if finisher else Color(1.0, 0.92, 0.6))
+
+
+func _vfx_damage(blocked: bool) -> void:
+	var forward := _vfx_forward()
+	var chest := global_position + Vector3(0.0, 1.1, 0.0) + forward * 0.35
+	if blocked:
+		Vfx.hit_spark(self, chest, forward + Vector3.UP * 0.2, false, Vfx.STEEL)
+		Vfx.ring(self, global_position + Vector3(0.0, 0.08, 0.0), 1.0, Vfx.STEEL, 0.25, 0.14)
+	else:
+		Vfx.burst(self, Vfx.Kind.FLASH, chest, Vector3.UP, Color(1.0, 0.45, 0.35), 1.1)
+		Vfx.burst(self, Vfx.Kind.SPARK, chest, forward + Vector3.UP * 0.5, Vfx.HURT_RED, 1.1)
+		Vfx.burst(self, Vfx.Kind.GLOW, chest, Vector3.UP, Vfx.HURT_RED, 0.9)
+
+
+func _vfx_heal() -> void:
+	var feet := global_position + Vector3(0.0, 0.1, 0.0)
+	Vfx.burst(self, Vfx.Kind.HEAL, feet, Vector3.UP, Vfx.HEAL_GREEN, 1.0)
+	Vfx.burst(self, Vfx.Kind.GLOW, feet + Vector3(0.0, 0.9, 0.0), Vector3.UP, Vfx.HEAL_GREEN, 1.2)
+	Vfx.ring(self, feet, 1.2, Vfx.HEAL_GREEN, 0.6, 0.18)
 
 
 # --- Health ------------------------------------------------------------------------------------------------------
