@@ -1253,12 +1253,14 @@ func _vfx_strike(cfg: Dictionary) -> void:
 		Vfx.slash(self, origin - Vector3(0.0, 0.5, 0.0), _boss.global_rotation.y, float(cfg["radius"]) * 0.75,
 			float(cfg["half_arc"]) * 1.8, Color(1.0, 0.95, 0.7), 0.34, 0.0, false)
 		Vfx.ground_impact(self, _boss.global_position + _boss.global_basis.z * float(cfg["radius"]) * 0.6, 2.0, COLOR_ACTIVE)
+		Vfx.shake(self, 0.45, _boss.global_position)
 	elif kind == ZoneKind.CIRCLE:
 		var center: Vector3 = _zone["center"]
 		var radius := float(cfg["radius"])
 		Vfx.ground_impact(self, center, radius, COLOR_ACTIVE)
 		Vfx.ring(self, center + Vector3(0.0, 0.14, 0.0), radius * 1.25, Color(1.0, 0.7, 0.3), 0.6, 0.12)
 		Vfx.burst(self, Vfx.Kind.SMOKE, center + Vector3(0.0, 0.3, 0.0), Vector3.UP, Color(0.6, 0.55, 0.5, 0.7), 1.6)
+		Vfx.shake(self, 0.6, center)
 
 
 func _vfx_charge_start() -> void:
@@ -1266,6 +1268,7 @@ func _vfx_charge_start() -> void:
 	Vfx.ring(self, origin + Vector3(0.0, 0.12, 0.0), 3.0, COLOR_ACTIVE, 0.4, 0.2)
 	Vfx.dust_puff(self, origin + Vector3(0.0, 0.2, 0.0), Color(0.78, 0.72, 0.62, 0.8), 2.0)
 	Vfx.slash(self, origin + Vector3(0.0, 1.2, 0.0), _boss.global_rotation.y, 3.2, 120.0, Color(1.0, 0.8, 0.35), 0.35, 0.0, false)
+	Vfx.shake(self, 0.35, origin)
 
 
 func _vfx_core_hit() -> void:
