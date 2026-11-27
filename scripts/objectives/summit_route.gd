@@ -2,8 +2,8 @@ extends Node3D
 ## Exploration 03 - Jalur Menuju Puncak (Rocky Highlands). Climbable route with REAL elevation, built from solid blocks
 ## and walkable slopes (all <= 22 degrees): foot checkpoint -> west ramp (R1) -> cliff ledge (L1) -> ramp (R2) -> ledge (L2)
 ## -> ONE proven 3 m jump gap -> guardian courtyard (melee + ranged, cover rocks) -> final ramp (R4) -> summit altar with
-## the artifact (no kill prerequisite: a cover-lined side corridor bypasses the courtyard) -> viewpoint, rest checkpoint
-## and a lever that extends a persistent bridge shortcut from the summit down to the foot area.
+## the artifact (no kill prerequisite: a cover-lined side corridor bypasses the courtyard) -> viewpoint, rest checkpoint,
+## an optional raised-platform precision leap, and a lever that extends a persistent bridge shortcut down to the foot area.
 ##
 ## Module-local layout (anchor at origin on flat ground y=0, entry from +z; footprint x +/-25, z +/-22, max height 8.2):
 ##   Foot area y=0, z 4..22.   Checkpoint "summit_foot" (-4,0,18).   Foot enemy summit_melee_foot (10,0,9) (>20 m from the bridge foot/R1).
@@ -16,7 +16,7 @@ extends Node3D
 ##
 ## Interface: setup(player, session) AFTER the module has its final transform (enemies snapshot their spawn then),
 ## is_shortcut_open(), open_shortcut(), get_artifact(), get_enemies(), get_route_waypoints(), validate_route(),
-## signals shortcut_opened / viewpoint_used. Session keys: puzzle_progress[&"summit_shortcut"], artifact id
+## signals shortcut_opened / viewpoint_used / summit_skill_completed. Session keys: puzzle_progress[&"summit_shortcut"], artifact id
 ## &"summit_artifact", enemy ids summit_melee_foot / summit_melee_guard / summit_ranged_guard,
 ## checkpoints &"summit_foot" and &"summit_top".
 
@@ -24,6 +24,7 @@ const Kit := preload("res://scripts/objectives/objective_kit.gd")
 
 signal shortcut_opened
 signal viewpoint_used
+signal summit_skill_completed
 
 const SHORTCUT_KEY := &"summit_shortcut"
 const ARTIFACT_ID := &"summit_artifact"
@@ -66,11 +67,13 @@ var _compass: Node3D
 var _enemies: Array[Node] = []
 var _enemy_root: Node3D
 var _view_label: Label3D
+var _summit_skill_completed := false
 
 var _rock_mat: StandardMaterial3D
 var _cliff_mat: StandardMaterial3D
 var _path_mat: StandardMaterial3D
 var _wood_mat: StandardMaterial3D
+var _edge_mat: StandardMaterial3D
 
 
 func _ready() -> void:
@@ -221,6 +224,16 @@ func _use_viewpoint(_p: Node) -> bool:
 	viewpoint_used.emit()
 	return true
 
+func _complete_summit_skill(player: Node) -> bool:
+	var player_body := player as Node3D
+	if _summit_skill_completed or player_body == null or player_body.global_position.y < TOP_SUMMIT + 1.1:
+		return false
+	_summit_skill_completed = true
+	_view_label.text = "Lompatan puncak berhasil - pemandangan terbuka!"
+	Kit.play(self, Kit.SFX_CONFIRM)
+	summit_skill_completed.emit()
+	return true
+
 
 func _refresh_compass() -> void:
 	if _compass == null:
@@ -262,8 +275,7 @@ func _build() -> void:
 	_built = true
 	_rock_mat = Kit.material(Color(0.46, 0.46, 0.43))
 	_cliff_mat = Kit.material(Color(0.38, 0.38, 0.36))
-	_path_mat = Kit.material(Color(0.62, 0.53, 0.37))
-	_wood_mat = Kit.material(Color(0.5, 0.36, 0.2))
+	_edge_mat = Kit.material(Color(0.2, 0.72, 0.9), 0.25)
 	_build_blocks()
 	_build_ramps()
 	_build_courtyard()
@@ -283,6 +295,8 @@ func _block(node_name: String, x0: float, x1: float, z0: float, z1: float, top: 
 func _build_blocks() -> void:
 	_block("LedgeL1", -24.0, -14.0, -10.0, -4.0, TOP_L1)
 	_block("LedgeL2", -6.0, GAP_X0, -10.0, -4.0, TOP_L2)
+	# High-contrast visual lip marks the takeoff edge over the jump gap.
+	Kit.box_mesh(self, "GapEdgeMarker", Vector3(-0.04, TOP_L2 + 0.055, -7.0), Vector3(0.16, 0.11, 5.6), _edge_mat)
 	_block("Courtyard", GAP_X1, 25.0, -20.0, -4.0, TOP_COURT)
 	_block("Summit", -25.0, -10.0, -22.0, -11.0, TOP_SUMMIT)
 
@@ -412,6 +426,13 @@ func _build_summit() -> void:
 	var scope := Kit.box_mesh(self, "Telescope", view + Vector3(0, 1.0, 0), Vector3(0.22, 0.22, 1.2), Kit.material(Color(0.45, 0.35, 0.2)), 40.0)
 	scope.rotation_degrees.x = 18.0
 	Kit.dungeon(self, "barrier_column", view + Vector3(1.6, 0, 1.2), 90.0, 0.5)
+	# Optional summit leap: jump from the lower stone to the raised landing, then claim the view.
+	Kit.box_body(self, "SkillLaunch", Vector3(-20.3, top + 0.2, -12.8), Vector3(1.8, 0.4, 1.8), _path_mat)
+	Kit.box_body(self, "SkillLanding", Vector3(-17.3, top + 0.75, -12.8), Vector3(1.8, 1.5, 1.8), _path_mat)
+	Kit.label(self, "LOMPATAN PUNCAK (OPSIONAL)", Vector3(-18.8, top + 2.3, -12.8), 28, 0.008, Color(1.0, 0.85, 0.5), true)
+	var skill := Kit.interactable(self, "Interact_SummitSkill", Vector3(-17.3, top + 1.55, -12.8), "Raih pemandangan dengan lompatan", 1.0)
+	skill.enabled_callable = func(_p: Node) -> bool: return not _summit_skill_completed
+	skill.interact_callable = _complete_summit_skill
 	Kit.label(self, "TITIK PANDANG", view + Vector3(0, 2.4, 0), 36, 0.008, Color(0.7, 0.95, 1.0), true)
 	_view_label = Kit.label(self, "", view + Vector3(0, 2.0, 0), 24, 0.006, Color(0.9, 0.95, 0.8), true)
 	var look := Kit.interactable(self, "Interact_Viewpoint", view + Vector3(0.9, 0, 0.6), "Lihat pemandangan pulau", 1.0)

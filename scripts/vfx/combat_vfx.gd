@@ -10,7 +10,7 @@ const SCRIPT_PATH := "res://scripts/vfx/combat_vfx.gd"
 const HUB_NAME := &"CombatVfxHub"
 const TEX := "res://assets/third_party/kenney/particle_pack/"
 
-enum Kind { SPARK, FLASH, GLOW, DUST, DEBRIS, SMOKE, HEAL }
+enum Kind { SPARK, FLASH, GLOW, DUST, DEBRIS, SMOKE, HEAL, EMBER }
 
 const GOLD := Color(1.0, 0.82, 0.3)
 const STEEL := Color(0.5, 0.82, 1.0)
@@ -35,6 +35,8 @@ const KIND_CFG := {
 		"gravity": 0.9, "add": false, "end": 1.5, "start": 0.6, "pool": 3, "radius": 0.3},
 	Kind.HEAL: {"tex": "star_04", "amount": 18, "life": 1.0, "size": 0.55, "vmin": 0.7, "vmax": 1.6, "spread": 20.0,
 		"gravity": 1.2, "add": false, "end": 0.0, "start": 1.0, "pool": 2, "radius": 0.55},
+	Kind.EMBER: {"tex": "circle_05", "amount": 16, "life": 1.15, "size": 0.16, "vmin": 0.5, "vmax": 1.7, "spread": 45.0,
+		"gravity": 1.5, "add": false, "end": 0.0, "start": 1.0, "pool": 3, "radius": 0.45},
 }
 
 ## Drawn after world transparents (telegraph boxes, rings) so effects stay readable inside them.
@@ -60,12 +62,24 @@ void vertex() {
 void fragment() {
 	float t = flip > 0.0 ? UV.x : 1.0 - UV.x;
 	float behind = progress * 1.3 - t;
-	float trail = clamp(1.0 - behind / 0.6, 0.0, 1.0);
-	float mask = step(0.0, behind) * trail * trail;
-	float edge = pow(UV.y, 1.6);
+	// Soft leading edge (no hard step), long smooth tail.
+	float lead = smoothstep(0.0, 0.05, behind);
+	float trail = pow(clamp(1.0 - behind / 0.65, 0.0, 1.0), 1.7);
+	// Radial profile: transparent inner rim, bright body, hot thin core just inside a feathered outer edge.
+	float radial = smoothstep(0.0, 0.35, UV.y) * (1.0 - smoothstep(0.9, 1.0, UV.y));
+	float core = exp(-pow((UV.y - 0.82) / 0.1, 2.0));
+	// Feather both arc ends so the crescent tapers instead of ending in a cut.
+	float ends = smoothstep(0.0, 0.14, UV.x) * (1.0 - smoothstep(0.86, 1.0, UV.x));
+	// Bright glint right behind the sweeping head.
+	float glint = exp(-pow(behind / 0.07, 2.0)) * smoothstep(0.0, 0.05, behind + 0.02);
 	float fade = 1.0 - smoothstep(0.5, 1.0, progress);
-	ALBEDO = mix(color.rgb, vec3(1.0), edge * 0.7);
-	ALPHA = clamp(mask * fade * (0.35 + 0.9 * edge), 0.0, 1.0) * color.a;
+	float body = lead * trail * radial * ends;
+	// Saturated tint body so it reads on bright ground, white-hot only in the thin core and at the sweeping head.
+	vec3 deep = clamp(color.rgb * 1.15 - 0.08, 0.0, 1.0);
+	vec3 hot = mix(color.rgb, vec3(1.0), 0.8);
+	vec3 col = mix(deep, hot, clamp(core * 0.85 + glint * 0.7, 0.0, 1.0));
+	ALBEDO = col;
+	ALPHA = clamp((body * (0.7 + 0.5 * core) + glint * radial * ends * 0.6) * fade, 0.0, 1.0) * color.a;
 }
 """
 
@@ -217,6 +231,12 @@ static func poof(from: Node, pos: Vector3, tint := Color(0.7, 0.68, 0.7, 0.8)) -
 	burst(from, Kind.DUST, pos, Vector3.UP, tint, 1.2)
 	burst(from, Kind.GLOW, pos, Vector3.UP, Color(1.0, 0.9, 0.7), 1.2)
 	burst(from, Kind.HEAL, pos, Vector3.UP, Color(0.75, 0.9, 1.0), 1.0)
+
+
+## Rising embers while a defeated guard dissolves (drifting orange sparks + a few teal rune motes).
+static func embers(from: Node, pos: Vector3, tint := Color(1.0, 0.62, 0.2, 0.95)) -> void:
+	burst(from, Kind.EMBER, pos, Vector3.UP, tint, 1.0)
+	burst(from, Kind.EMBER, pos + Vector3(0.0, 0.2, 0.0), Vector3.UP, Color(0.35, 1.0, 0.9, 0.9), 0.8)
 
 ## Camera shake (trauma 0..1, additive, decays). Falls off with distance when `at` is given. No-op without a shaking camera.
 ## The player-facing intensity (Guncangan kamera slider, `shake_scale`) is applied by the camera, not here.

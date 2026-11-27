@@ -17,6 +17,8 @@ uniform float fresnel_power = 3.0;
 uniform sampler2D shore_tex : hint_default_black, filter_linear, repeat_disable;
 uniform float shore_half_extent = 125.0;
 uniform float shore_range = 6.0;       // metres encoded either side of the shoreline
+uniform vec4 sky_color : source_color = vec4(0.55, 0.74, 0.95, 1.0); // faked reflection tint
+uniform float sparkle = 0.55;
 
 varying vec3 v_world;
 
@@ -64,11 +66,22 @@ void fragment() {
 
 	float fres = pow(1.0 - clamp(dot(NORMAL, normalize(VIEW)), 0.0, 1.0), fresnel_power);
 	float tint = smoothstep(0.0, 3.5, depth);
-	vec3 col = mix(shallow_color.rgb * 1.05, deep_color.rgb, tint);
-	col = mix(col, horizon_color.rgb, clamp(fres * 0.4, 0.0, 0.45));
+	// Three-stop depth gradient: bright turquoise shallows -> blue -> deep navy.
+	vec3 mid = mix(shallow_color.rgb, deep_color.rgb, 0.5);
+	vec3 col = mix(shallow_color.rgb * 1.08, mid, smoothstep(0.0, 1.8, depth));
+	col = mix(col, deep_color.rgb, smoothstep(1.8, 5.5, depth) * (0.6 + 0.4 * tint));
+	// Fake sky reflection (no screen/cubemap reads): fresnel pulls toward the sky tint, ripples modulate it.
+	float sky_amt = clamp(fres * 0.75 + 0.06 + dot(slope, vec2(0.6, 0.4)) * 0.7, 0.0, 0.7);
+	col = mix(col, sky_color.rgb, sky_amt);
 	// Broad glints on crests.
 	float crest = smoothstep(0.55, 1.0, (slope.x + slope.y) * 6.0 + 0.5);
 	col += foam_color.rgb * crest * 0.05;
+	// Horizon blend into the fog colour.
+	col = mix(col, horizon_color.rgb, smoothstep(140.0, 420.0, dist) * 0.8);
+	// Sun sparkle: small bright facets that twinkle, fading with distance.
+	float s1 = pow(max(0.0, sin(p.x * 7.3 + t * 1.3) * sin(p.y * 6.1 - t * 1.1)), 18.0);
+	float s2 = pow(max(0.0, sin(p.x * 11.7 - t * 0.9 + 1.7) * sin(p.y * 9.3 + t * 1.4)), 18.0);
+	float sparkles = (s1 + s2) * sparkle * (1.0 - smoothstep(20.0, 120.0, dist)) * smoothstep(0.6, 2.5, depth + 0.6);
 
 	// Shore: animated wash line + soft foam band; also thins the water so the sand shows through.
 	float wash = 0.22 * sin(t * 0.9 + p.x * 0.35 + p.y * 0.2) + 0.28;
@@ -79,6 +92,7 @@ void fragment() {
 	col = mix(col, foam_color.rgb, foam * 0.85);
 
 	ALBEDO = col;
+	EMISSION = vec3(1.0, 0.98, 0.9) * sparkles * (1.0 - foam);
 	ROUGHNESS = 0.14;
 	SPECULAR = 0.7;
 	float shallow_alpha = mix(0.55, opacity, smoothstep(0.0, 1.6, depth));

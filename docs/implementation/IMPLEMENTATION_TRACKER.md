@@ -244,23 +244,25 @@ Dependensi: movement/camera dan ukuran karakter terbukti. Belum memasukkan varia
 
 Dependensi: P05, P08–P09. Acuan: [Pilar Simbol](../desain/puzzle-01-pilar-simbol.md).
 
-- [x] **P10-01** Empat bentuk pilar, relief permanen, segel collision dan artefak tersedia pada modul reusable.
-- [x] **P10-02** Solusi `[2,0,3,1]` dan clue satu sumber; 24 permutasi dan input acak diperiksa melawan model independen.
-- [x] **P10-03** Urutan benar melepas segel; salah mereset tanpa HP/potion loss atau cooldown panjang.
-- [x] **P10-04** Tidak ada musuh di area puzzle; bentuk/clue diperiksa dari screenshot kamera gameplay 1280 × 720. Penilaian agent, bukan review pengguna.
-- [x] **P10-05** Solved-but-uncollected, collected, death/respawn dan rebuild modul mempertahankan state tanpa duplikasi.
+- [x] **P10-01** Enam bentuk pilar, relief awal, lima clue stone interaktif, segel dan artefak tersedia.
+- [x] **P10-02** Lima relasi precedence berantai memberi satu urutan dari enam simbol; uniqueness diverifikasi dengan enumerasi seluruh 720 permutasi.
+- [x] **P10-03** Urutan benar melepas segel; salah mereset tanpa damage/item loss dan menutup input sementara.
+- [x] **P10-04** Clue dapat dibaca lewat interaksi; fairness/keterbacaan manusia belum dinilai.
+- [x] **P10-05** Solved/collected/death/rebuild mempertahankan progres tanpa duplikasi.
 
-**Exit:** A14 lolos dan modul dapat ditempatkan ulang tanpa kehilangan petunjuk atau akses.
+**Exit:** A14 regresi; human fairness tetap terbuka.
 
 ## P11 — Puzzle 02: Energy Path
 
 Dependensi: P05, P08–P09. Acuan: [Jalur Energi](../desain/puzzle-02-jalur-energi.md).
 
-- [x] **P11-01** Tiga panel, kristal sumber, altar, segel dan artefak berada di modul terkontrol.
-- [x] **P11-02** Port lurus/siku dan orientasi 90° diperiksa dengan trace independen pada seluruh 64 susunan; dua solusi valid.
-- [x] **P11-03** Satu putaran per interaksi, input reentry ditolak selama tween, prefix aliran mengikuti konektivitas.
-- [x] **P11-04** Koneksi lengkap membuka segel; ukiran/chevron dan cahaya tidak bergantung suara saja. Tidak ada timer/damage/batas percobaan.
-- [x] **P11-05** Starting `[0,1,2]` dapat diselesaikan enam press menjadi `[1,3,1]`; 64 kombinasi dan persistence teruji.
+- [ ] **P11-01** Network empat/lima panel dengan decoy dan clue route.
+- [ ] **P11-02** Solver uniqueness/solvability dan BFS minimum press.
+- [ ] **P11-03** Rotasi, prefix visual dan persistence diuji.
+- [ ] **P11-04** Minimum presses tampak pada harness saja.
+- [ ] **P11-05** Acceptance seeds dan playthrough input nyata lulus.
+
+**Exit:** A15 lolos dan human fairness ditinjau.
 
 **Exit:** A15 lolos; perubahan penempatan/seed tidak membuat modul kehilangan solusi.
 

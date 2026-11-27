@@ -23,6 +23,9 @@ const SOCKETS := [
 	{"id": &"summit_artifact", "name": "Artefak Puncak", "label": "Puncak", "pos": Vector3(0.0, 0.0, 9.0), "color": Color(1.0, 0.85, 0.35)},
 	{"id": &"energy_artifact", "name": "Artefak Energi", "label": "Energi", "pos": Vector3(6.0, 0.0, 11.5), "color": Color(0.35, 0.8, 1.0)},
 ]
+const DUNGEON := "res://assets/third_party/kaykit/dungeon/%s.gltf"
+const NATURE := "res://assets/third_party/kaykit/forest_nature/%s.gltf"
+const BEAM_SHADER := preload("res://shaders/island/landmark_beam.gdshader")
 
 var consoles: Dictionary = {}
 var altar: Node3D
@@ -32,8 +35,8 @@ var barrier_body: StaticBody3D
 var _stone: StandardMaterial3D
 var _dark: StandardMaterial3D
 var _rune_mat: StandardMaterial3D
-var _seal_mat: StandardMaterial3D
-var _barrier_mat: StandardMaterial3D
+var _seal_mat: ShaderMaterial
+var _barrier_mat: ShaderMaterial
 var _lights: Array[OmniLight3D] = []
 var _door_l: Node3D
 var _door_r: Node3D
@@ -47,23 +50,19 @@ var _socket_labels: Dictionary = {}
 var _altar_label: Label3D
 var _rune_energy := 0.4
 var _rune_color := Color(0.3, 0.85, 1.0)
-var _seal_color := Color(1.0, 0.2, 0.15)
+var _seal_color := Color(0.95, 0.5, 0.28)
 var _time := 0.0
 var _gate_open := false
+var _flames: Array[Dictionary] = []  # {pivot: Node3D, light: OmniLight3D, phase: float}
+static var _model_cache: Dictionary = {}
 
 
 func build(encounter: Node) -> void:
-	_stone = _std(Color(0.43, 0.41, 0.38), 0.95)
-	_dark = _std(Color(0.26, 0.25, 0.25), 0.95)
+	_stone = _std(Color(0.55, 0.58, 0.63), 0.95)
+	_dark = _std(Color(0.34, 0.36, 0.4), 0.95)
 	_rune_mat = _glow(Color(0.3, 0.85, 1.0), 0.4)
-	_seal_mat = _glow(_seal_color, 1.5)
-	_seal_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_seal_mat.albedo_color.a = 0.55
-	_seal_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	_barrier_mat = _glow(Color(0.3, 0.85, 1.0), 1.6)
-	_barrier_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_barrier_mat.albedo_color.a = 0.0
-	_barrier_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_seal_mat = _gate_material(_seal_color, Vector2(GATE_HALF * 2, GATE_H), 1.0)
+	_barrier_mat = _gate_material(Color(0.3, 0.85, 1.0), Vector2(ENTRANCE_HALF * 2, 6.0), 0.0)
 	_build_floor()
 	_build_walls()
 	_build_gate()
@@ -73,6 +72,7 @@ func build(encounter: Node) -> void:
 	_build_altar(encounter)
 	for data: Dictionary in SOCKETS:
 		_build_socket(data, encounter)
+	_build_dressing()
 	var retry := Marker3D.new()
 	retry.name = &"RetryPoint"
 	retry.position = RETRY_POINT
@@ -82,12 +82,15 @@ func build(encounter: Node) -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
-	if _seal != null and _seal.visible:
-		_seal_mat.albedo_color.a = 0.45 + 0.12 * sin(_time * 3.0)
-		_seal_mat.emission_energy_multiplier = 1.4 + 0.5 * sin(_time * 3.0)
 	if _altar_core != null:
 		_altar_core.rotate_y(delta * 1.2)
 		_altar_core.position.y = 1.9 + sin(_time * 1.8) * 0.1
+	for flame in _flames:
+		var phase: float = flame["phase"]
+		var a := sin(_time * 7.0 + phase)
+		var b := sin(_time * 11.3 + phase * 2.1)
+		(flame["pivot"] as Node3D).scale = Vector3(1.0 + 0.06 * a, 1.0 + 0.14 * b, 1.0 + 0.06 * a)
+		(flame["light"] as OmniLight3D).light_energy = 1.25 + 0.18 * (a * 0.5 + b * 0.5)
 
 
 func set_barrier(closed: bool) -> void:
@@ -96,7 +99,7 @@ func set_barrier(closed: bool) -> void:
 			shape.set_deferred(&"disabled", not closed)
 	_barrier.visible = true
 	var tween := create_tween()
-	tween.tween_property(_barrier_mat, "albedo_color:a", 0.42 if closed else 0.0, 0.45)
+	tween.tween_property(_barrier_mat, "shader_parameter/progress", 1.0 if closed else 0.0, 0.45)
 	if not closed:
 		tween.tween_callback(func(): _barrier.visible = false)
 
@@ -111,8 +114,8 @@ func open_gate(duration := 3.0) -> void:
 		return
 	_gate_open = true
 	var tween := create_tween().set_parallel(true)
-	tween.tween_property(_seal_mat, "emission_energy_multiplier", 0.0, 1.0)
-	tween.tween_property(_seal_mat, "albedo_color:a", 0.0, 1.0)
+	tween.tween_property(_seal_mat, "shader_parameter/progress", 0.0, 1.4).set_trans(Tween.TRANS_SINE)
+	tween.tween_property(_seal_mat, "shader_parameter/open_mix", 1.0, 0.5)
 	tween.tween_property(_door_l, "position:x", -GATE_HALF * 1.5 - 2.25, duration).set_delay(0.7).set_trans(Tween.TRANS_SINE)
 	tween.tween_property(_door_r, "position:x", GATE_HALF * 1.5 + 2.25, duration).set_delay(0.7).set_trans(Tween.TRANS_SINE)
 	tween.chain().tween_callback(_finish_gate_open)
@@ -127,8 +130,7 @@ func set_rune(color: Color, energy: float) -> void:
 	for light in _lights:
 		light.light_color = color
 		light.light_energy = clampf(energy * 0.35, 0.0, 3.0)
-	_barrier_mat.emission = color
-	_barrier_mat.albedo_color = Color(color.r, color.g, color.b, _barrier_mat.albedo_color.a)
+	_barrier_mat.set_shader_parameter(&"line_color", color)
 
 
 func set_seal_active(active: bool) -> void:
@@ -193,7 +195,6 @@ func _build_floor() -> void:
 	_box(self, &"FloorCollision", Vector3(HALF_X * 2 + 3.0, 1.0, HALF_Z * 2 + 3.0), Vector3(0, -0.5, 0), null, true)
 	_box(self, &"ApproachCollision", Vector3(14.0, 1.0, 8.0), Vector3(0, -0.5, HALF_Z + 5.5), null, true)
 	_box(self, &"DockCollision", Vector3(13.0, 1.0, 12.0), Vector3(0, -0.5, -21.5), null, true)
-	_box(self, &"PlazaVisual", Vector3(HALF_X * 2, 0.1, HALF_Z * 2), Vector3(0, -0.038, 0), _stone, false)
 	var ring := MeshInstance3D.new()
 	ring.name = &"RuneRing"
 	var torus := TorusMesh.new()
@@ -222,18 +223,15 @@ func _build_floor() -> void:
 
 func _build_walls() -> void:
 	var t := 1.5
-	_box(self, &"WallWest", Vector3(t, WALL_H, HALF_Z * 2 + 3.0), Vector3(-HALF_X - t * 0.5, WALL_H * 0.5, 0), _dark, true)
-	_box(self, &"WallEast", Vector3(t, WALL_H, HALF_Z * 2 + 3.0), Vector3(HALF_X + t * 0.5, WALL_H * 0.5, 0), _dark, true)
+	_box(self, &"WallWest", Vector3(t, WALL_H, HALF_Z * 2 + 3.0), Vector3(-HALF_X - t * 0.5, WALL_H * 0.5, 0), null, true)
+	_box(self, &"WallEast", Vector3(t, WALL_H, HALF_Z * 2 + 3.0), Vector3(HALF_X + t * 0.5, WALL_H * 0.5, 0), null, true)
 	var north_w := HALF_X + t - GATE_HALF
-	_box(self, &"WallNorthWest", Vector3(north_w, WALL_H, t), Vector3(-(GATE_HALF + north_w * 0.5), WALL_H * 0.5, -HALF_Z - t * 0.5), _dark, true)
-	_box(self, &"WallNorthEast", Vector3(north_w, WALL_H, t), Vector3(GATE_HALF + north_w * 0.5, WALL_H * 0.5, -HALF_Z - t * 0.5), _dark, true)
-	_box(self, &"GateLintel", Vector3(GATE_HALF * 2, WALL_H - GATE_H, t), Vector3(0, GATE_H + (WALL_H - GATE_H) * 0.5, -HALF_Z - t * 0.5), _dark, true)
+	_box(self, &"WallNorthWest", Vector3(north_w, WALL_H, t), Vector3(-(GATE_HALF + north_w * 0.5), WALL_H * 0.5, -HALF_Z - t * 0.5), null, true)
+	_box(self, &"WallNorthEast", Vector3(north_w, WALL_H, t), Vector3(GATE_HALF + north_w * 0.5, WALL_H * 0.5, -HALF_Z - t * 0.5), null, true)
+	_box(self, &"GateLintel", Vector3(GATE_HALF * 2, WALL_H - GATE_H, t), Vector3(0, GATE_H + (WALL_H - GATE_H) * 0.5, -HALF_Z - t * 0.5), null, true)
 	var south_w := HALF_X + t - ENTRANCE_HALF
-	_box(self, &"WallSouthWest", Vector3(south_w, WALL_H, t), Vector3(-(ENTRANCE_HALF + south_w * 0.5), WALL_H * 0.5, HALF_Z + t * 0.5), _dark, true)
-	_box(self, &"WallSouthEast", Vector3(south_w, WALL_H, t), Vector3(ENTRANCE_HALF + south_w * 0.5, WALL_H * 0.5, HALF_Z + t * 0.5), _dark, true)
-	# Entrance posts.
-	for sx in [-1.0, 1.0]:
-		_box(self, &"EntrancePost", Vector3(1.4, 4.2, 1.4), Vector3(sx * (ENTRANCE_HALF + 0.2), 2.1, HALF_Z + 0.75), _stone, false)
+	_box(self, &"WallSouthWest", Vector3(south_w, WALL_H, t), Vector3(-(ENTRANCE_HALF + south_w * 0.5), WALL_H * 0.5, HALF_Z + t * 0.5), null, true)
+	_box(self, &"WallSouthEast", Vector3(south_w, WALL_H, t), Vector3(ENTRANCE_HALF + south_w * 0.5, WALL_H * 0.5, HALF_Z + t * 0.5), null, true)
 
 
 func _build_gate() -> void:
@@ -277,9 +275,8 @@ func _build_barrier() -> void:
 
 
 func _build_dock() -> void:
-	_box(self, &"DockVisual", Vector3(12.0, 0.1, 11.0), Vector3(0, -0.038, -22.0), _dark, false)
 	for sx in [-1.0, 1.0]:
-		_box(self, &"DockWall", Vector3(1.0, 4.0, 12.0), Vector3(sx * 6.5, 2.0, -21.5), _dark, true)
+		_box(self, &"DockWall", Vector3(1.0, 4.0, 12.0), Vector3(sx * 6.5, 2.0, -21.5), null, true)
 	_box(self, &"DockEndStop", Vector3(14.0, 4.0, 0.6), Vector3(0, 2.0, DOCK_END - 0.3), null, true)
 	# Exit arch.
 	for sx in [-1.0, 1.0]:
@@ -303,7 +300,7 @@ func _build_pylons() -> void:
 	for sx in [-1.0, 1.0]:
 		for sz in [-1.0, 1.0]:
 			var pos := Vector3(sx * (HALF_X - 1.8), 0, sz * (HALF_Z - 2.5) - 0.0)
-			_box(self, &"PylonBase", Vector3(1.3, 3.4, 1.3), pos + Vector3(0, 1.7, 0), _stone, true)
+			_box(self, &"PylonBase", Vector3(1.3, 3.4, 1.3), pos + Vector3(0, 1.7, 0), null, true)
 			var crystal := MeshInstance3D.new()
 			crystal.name = &"PylonCrystal"
 			var prism := PrismMesh.new()
@@ -319,6 +316,70 @@ func _build_pylons() -> void:
 			_lights.append(light)
 
 
+## Art sits on the existing collision shell; the arena's walkable lanes and exits remain unchanged.
+func _build_dressing() -> void:
+	for ix in 9:
+		for iz in 8:
+			var tile := "floor_tile_large_rocks" if (ix * 7 + iz * 3) % 6 == 0 else "floor_tile_large"
+			_asset(self, tile, Vector3(-16.0 + ix * 4.0, -0.05, -13.0 + iz * 4.0))
+	for x in [-16.0, -12.0, -8.0, 8.0, 12.0, 16.0]:
+		_asset(self, "wall_cracked" if int(absf(x)) % 8 == 0 else "wall", Vector3(x, 0, -15.8))
+		_asset(self, "wall_broken" if int(absf(x)) % 8 == 0 else "wall", Vector3(x, 0, 15.8), 180.0)
+	for z in [-12.0, -8.0, -4.0, 0.0, 4.0, 8.0, 12.0]:
+		_asset(self, "wall", Vector3(-18.8, 0, z), 90.0)
+		_asset(self, "wall", Vector3(18.8, 0, z), -90.0)
+	for x in [-16.0, 16.0]:
+		for z in [-12.5, 12.5]:
+			_asset(self, "pillar_decorated", Vector3(x, 0, z), 0.0, 1.15)
+	for x in [-12.0, 12.0]:
+		_asset(self, "rubble_half", Vector3(x, 0, -10.5), 35.0)
+		_asset(self, "banner_shield_red", Vector3(x, 3.0, -15.3), 180.0)
+	for x in [-5.0, 5.0]:
+		_asset(self, "pillar", Vector3(x, 0, -16.0))
+		_asset(self, "torch_lit", Vector3(x, 0, -14.6))
+	for x in [-4.0, 0.0, 4.0]:
+		_asset(self, "floor_wood_large_dark", Vector3(x, -0.04, -20.0))
+		_asset(self, "floor_wood_large_dark", Vector3(x, -0.04, -24.0))
+	for x in [-6.0, 6.0]:
+		_asset(self, "barrier", Vector3(x, 0, -21.0), 90.0)
+
+
+func _asset(parent: Node3D, name: String, pos: Vector3, yaw := 0.0, size := 1.0) -> void:
+	var path := DUNGEON % name
+	var scene: PackedScene = _model_cache.get(path)
+	if scene == null:
+		scene = load(path) as PackedScene
+		_model_cache[path] = scene
+	var instance := scene.instantiate() as Node3D
+	instance.position = pos
+	instance.rotation_degrees.y = yaw
+	instance.scale = Vector3.ONE * size
+	parent.add_child(instance)
+
+
+func _cyl_collider(parent: Node3D, pos: Vector3, radius: float, height: float) -> void:
+	var body := StaticBody3D.new()
+	body.collision_layer = 1
+	body.position = pos + Vector3(0, height * 0.5, 0)
+	var shape := CollisionShape3D.new()
+	var cylinder := CylinderShape3D.new()
+	cylinder.radius = radius
+	cylinder.height = height
+	shape.shape = cylinder
+	body.add_child(shape)
+	parent.add_child(body)
+
+
+func _dress_altar(parent: Node3D) -> void:
+	_asset(parent, "pillar_decorated", Vector3.ZERO, 0.0, 1.2)
+	_asset(parent, "floor_tile_small_decorated", Vector3.ZERO, 0.01, 1.5)
+
+
+func _dress_socket(parent: Node3D, _color: Color) -> void:
+	_asset(parent, "pillar", Vector3.ZERO)
+	_asset(parent, "floor_tile_small_decorated", Vector3.ZERO)
+
+
 func _build_altar(encounter: Node) -> void:
 	var node := CONSOLE.new()
 	node.name = &"ActivationAltar"
@@ -328,8 +389,8 @@ func _build_altar(encounter: Node) -> void:
 	node.position = ALTAR_POS
 	altar = node
 	add_child(altar)
-	_cyl(altar, Vector3.ZERO, 1.3, 1.0, _dark, true)
-	_cyl(altar, Vector3(0, 1.0, 0), 1.0, 0.12, _stone, false)
+	_cyl_collider(altar, Vector3.ZERO, 1.3, 1.0)
+	_dress_altar(altar)
 	_altar_core_mat = _glow(Color(0.3, 0.85, 1.0), 0.15)
 	_altar_core = MeshInstance3D.new()
 	_altar_core.name = &"AltarCore"
@@ -363,7 +424,8 @@ func _build_socket(data: Dictionary, encounter: Node) -> void:
 	console.position = data["pos"]
 	add_child(console)
 	consoles[id] = console
-	_cyl(console, Vector3.ZERO, 0.62, 0.9, _dark, true)
+	_cyl_collider(console, Vector3.ZERO, 0.62, 0.9)
+	_dress_socket(console, color)
 	var hollow := _cyl(console, Vector3(0, 0.9, 0), 0.42, 0.06, _std(Color(0.08, 0.08, 0.09), 1.0), false)
 	hollow.name = &"Hollow"
 	var glow := _glow(color, 0.5)
@@ -459,6 +521,19 @@ func _glow(color: Color, energy: float) -> StandardMaterial3D:
 	mat.emission_enabled = true
 	mat.emission = color
 	mat.emission_energy_multiplier = energy
+	return mat
+
+
+const GATE_SHADER := preload("res://shaders/island/energy_gate.gdshader")
+
+
+func _gate_material(color: Color, size: Vector2, progress: float) -> ShaderMaterial:
+	var mat := ShaderMaterial.new()
+	mat.shader = GATE_SHADER
+	mat.set_shader_parameter(&"line_color", color)
+	mat.set_shader_parameter(&"gate_size", size)
+	mat.set_shader_parameter(&"open_mix", 0.0)
+	mat.set_shader_parameter(&"progress", progress)
 	return mat
 
 

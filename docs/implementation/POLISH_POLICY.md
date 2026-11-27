@@ -8,6 +8,8 @@ Dokumen ini mendefinisikan kapan sebuah area dianggap "dipoles". Pulau 2/3 baru 
 3. **Semua intensitas bisa diatur** (guncangan kamera, volume) dan punya nilai awal yang nyaman.
 4. **Tidak mengubah balance** (HP, damage, timing) kecuali diminta; polish = presentasi.
 5. **Bukti nyata:** tiap perubahan diuji di jendela render (screenshot/rekaman) dan regresi relevan, bukan klaim.
+6. **Navigasi dan puzzle jelas:** landmark/rute keluar terbaca; petunjuk relasional dapat ditemukan dan dipahami, puzzle memberi umpan balik progres tanpa menyamarkan solusi.
+7. **Gate performa:** ukur frame time dan draw call pada resolusi/mesin acuan setelah batch; angka lama bukan bukti performa batch baru.
 
 ## Standar umpan balik combat
 | Kejadian | Visual | Kamera / waktu | Audio |
@@ -23,10 +25,11 @@ Dokumen ini mendefinisikan kapan sebuah area dianggap "dipoles". Pulau 2/3 baru 
 | Musuh mati | poof | guncangan ringan | death |
 
 ## Standar area (per pulau)
-- **Visual dunia:** pencahayaan konsisten, tidak ada objek melayang/tembus, landmark terbaca dari jauh, tiap biome punya identitas.
+- **Visual dunia:** pencahayaan konsisten, tidak ada objek melayang/tembus, landmark terbaca dari jauh, tiap biome punya identitas. Fog membantu menyatukan horizon dan jarak tanpa mengaburkan rute, landmark, telegraph, atau clue.
+- **Navigasi/puzzle:** arah ke objektif dan jalur keluar dapat ditemukan; clue puzzle terbaca dari sudut pandang normal; indikator progres menjelaskan apa yang sudah terhubung/aktif.
 - **Audio:** musik per konteks, mixer seimbang, tidak ada klik/pop saat transisi.
 - **UI:** semua layar terbaca di 1280×720, tidak ada teks terpotong/tumpang tindih.
-- **Performa:** median frame ≤ 16,7 ms di 1280×720 (baseline Pulau 1: 16,65 ms, 584 draw call); efek tidak menambah > 0,5 ms rata-rata.
+- **Performa:** target median frame ≤ 16,7 ms di 1280×720; baseline historis Pulau 1 16,65 ms dan 584 draw call. Gate perf untuk batch saat ini belum diukur; jangan menganggap baseline lama sebagai hasil baru.
 - **Aksesibilitas:** pengaturan intensitas guncangan; efek flash tidak berkedip cepat berulang.
 
 ## Bukti wajib sebelum "selesai"

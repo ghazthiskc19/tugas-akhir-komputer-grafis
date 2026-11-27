@@ -836,7 +836,9 @@ func _paint_colors() -> void:
 				c = c.lerp(Color(0.55, 0.5, 0.38), 0.6)
 			var slope := 1.0 - normal_at_grid(i, j).y
 			c = c.lerp(rock * 0.9, smoothstep(0.12, 0.3, slope))
-			var wr := 1.0 - smoothstep(ROUTE_HALF_WIDTH - 1.5, ROUTE_HALF_WIDTH + 1.5, _route_d[k])
+			# Visual path: narrower than the flattened corridor, with a meandering grassy edge (colour only).
+			var rd := _route_d[k] + _noise_detail.get_noise_2d(x * 1.3 + 40.0, z * 1.3) * 1.8
+			var wr := 1.0 - smoothstep(1.8, ROUTE_HALF_WIDTH + 0.2, rd)
 			c = c.lerp(dirt, wr * 0.85)
 			var pd := pad_distance(x, z)
 			c = c.lerp(paving, 1.0 - smoothstep(-2.0, 1.0, pd))

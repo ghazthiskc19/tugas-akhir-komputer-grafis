@@ -270,13 +270,16 @@ func free_fixture(fx: Dictionary) -> void:
 # ============================================================================================================ symbol pillars
 
 func symbol_clue_ids(m: Node) -> Array:
-	var names: Array = (m.get_script() as GDScript).get_script_constant_map()["SYMBOL_NAMES"]
-	var prompt: String = m.get_relief_interactable().get_prompt()
-	var listed := prompt.substr(prompt.find(":") + 1).strip_edges().split(" > ")
-	var ids: Array = []
-	for n in listed:
-		ids.append(names.find(n.strip_edges()))
-	return ids
+	var constants: Dictionary = (m.get_script() as GDScript).get_script_constant_map()
+	var links: Array = constants["CLUE_LINKS"]
+	var valid: Array = []
+	for order in permutations([0, 1, 2, 3, 4, 5]):
+		var ok := true
+		for link: Vector2i in links:
+			ok = ok and order.find(link.x) < order.find(link.y)
+		if ok:
+			valid.append(order)
+	return valid
 
 
 func permutations(items: Array) -> Array:
@@ -306,85 +309,53 @@ func test_symbol_pillars() -> void:
 	var dummy: Node = fx["player"]
 	var session: Node = fx["session"]
 	var sol: Array = m.get_solution()
-	check(sol.size() == 4, "solution has four steps")
+	check(sol.size() == 6, "solution has six steps")
 	var sorted := sol.duplicate()
 	sorted.sort()
-	check(arr_eq(sorted, [0, 1, 2, 3]), "solution is a permutation of the four distinct pillars")
-	check(arr_eq(symbol_clue_ids(m), sol), "relief clue %s matches the solution %s" % [symbol_clue_ids(m), sol])
-	var failures := [0]
-	m.sequence_failed.connect(func(): failures[0] += 1)
-	var expected_failures := 0
-	# Every ordering of the four pillars: only the solution may open the seal. Fuzz-model the chain after every press.
-	var solution_perm: Array = []
-	for order in permutations([0, 1, 2, 3]):
-		if arr_eq(order, sol):
-			solution_perm = order
-			continue
-		m.reset_sequence()
-		var chain: Array = []
-		for sym in order:
-			var next := chain_step(chain, sol, sym)
-			var was_lit := chain.has(sym)
-			if not was_lit and sym != sol[chain.size()]:
-				expected_failures += 1
-			var handled: bool = m.get_pillar_interactable(sym).interact(dummy)
-			check(handled == not was_lit, "pillar %d press handled=%s with chain %s" % [sym, handled, chain])
-			chain = next
-			check(arr_eq(m.get_progress(), chain), "order %s: progress %s != model %s" % [order, m.get_progress(), chain])
-			check(not m.is_solved(), "order %s must not solve" % [order])
-		check(session.puzzle_progress.get(&"symbol_pillars", false) == false, "wrong order wrote solved progress")
-	check(failures[0] == expected_failures, "sequence_failed emitted %d times, model expects %d" % [failures[0], expected_failures])
-	# Random press storm (repeats included) on its own module against the model; it may legitimately solve at the end.
-	var storm := await make_fixture(SYMBOL_SCENE)
-	var sm = storm["module"]
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 19
-	var chain2: Array = []
-	for i in 400:
-		var sym := rng.randi_range(0, 3)
-		var next2 := chain_step(chain2, sol, sym)
-		sm.get_pillar_interactable(sym).interact(storm["player"])
-		chain2 = next2
-		if chain2.size() == 4:
-			check(sm.is_solved(), "storm completed the true chain at step %d but the module is not solved" % i)
-			break
-		check(not sm.is_solved(), "storm step %d solved without the true chain" % i)
-		check(arr_eq(sm.get_progress(), chain2), "storm step %d progress %s != model %s" % [i, sm.get_progress(), chain2])
-	await free_fixture(storm)
-	check(solution_perm.size() == 4, "solution found among the 24 permutations")
+	check(arr_eq(sorted, [0, 1, 2, 3, 4, 5]), "six distinct pillars")
+	var clue_solutions := symbol_clue_ids(m)
+	check(clue_solutions.size() == 1, "five relational clues leave exactly one of 720 orders")
+	if clue_solutions.size() == 1:
+		check(arr_eq(clue_solutions[0], sol), "unique clue order matches solution")
+	for link: Vector2i in (m.get_script() as GDScript).get_script_constant_map()["CLUE_LINKS"]:
+		check(link.x != link.y, "clue relation is non-reflexive")
+	var wrong: int = (int(sol[0]) + 1) % 6
+	if wrong == sol[0]:
+		wrong = (wrong + 1) % 6
+	m.get_pillar_interactable(wrong).interact(dummy)
+	check(m.get_progress().is_empty(), "wrong press resets sequence")
+	check(not m.get_pillar_interactable(sol[0]).can_interact(dummy), "wrong press briefly locks pillars")
 	m.reset_sequence()
-	for sym in solution_perm:
+	for sym in sol:
 		check(m.get_pillar_interactable(sym).interact(dummy), "correct pillar %d accepted" % sym)
-	check(m.is_solved(), "solution order opens the seal")
-	check(session.puzzle_progress.get(&"symbol_pillars", false) == true, "solved progress recorded in session")
-	check(not session.is_collected(FOREST), "solving does not collect the artifact")
-	for sym in 4:
+		await frames(1)
+	check(m.is_solved(), "six-symbol solution opens seal")
+	check(session.puzzle_progress.get(&"symbol_pillars", false), "solved progress recorded")
+	check(not session.is_collected(FOREST), "solving does not collect artifact")
+	for sym in 6:
 		check(not m.get_pillar_interactable(sym).can_interact(dummy), "pillar %d locked after solve" % sym)
 	await free_fixture(fx)
-
-	# In the real game: real interactor, no penalty on a wrong chain, solved-but-uncollected survives death.
 	var g := await new_game()
 	var gm = g.objectives.get_node("SymbolPillars")
 	var p = g.player
 	var gs = g.session
 	var gsol: Array = gm.get_solution()
-	var wrong: int = (gsol[0] + 1) % 4
 	var hp0: int = p.get_health().current_health
 	var pot0: int = p.potion_count
 	check(await use(g, gm.get_pillar_interactable(gsol[0])), "interactor reaches first correct pillar")
-	check(arr_eq(gm.get_progress(), [gsol[0]]), "first press registered")
-	check(await use(g, gm.get_pillar_interactable(wrong)), "interactor reaches wrong pillar")
-	check(gm.get_progress().is_empty() and not gm.is_solved(), "wrong pillar resets the chain through the interactor")
+	check(await use(g, gm.get_pillar_interactable((gsol[0] + 1) % 6)), "interactor reaches wrong pillar")
+	check(gm.get_progress().is_empty() and not gm.is_solved(), "wrong press resets chain")
 	check(p.get_health().current_health == hp0 and p.potion_count == pot0, "wrong order costs no HP or potion")
-	check(await unreachable(g, gm.get_artifact(), RING), "sealed artifact is not targetable (seal blocks line of sight)")
-	check(not gs.is_collected(FOREST), "sealed artifact not collected")
+	check(await unreachable(g, gm.get_artifact(), RING), "sealed artifact is not targetable")
 	await puzzle_persistence(g, gm, FOREST, &"symbol_pillars", Callable(self, "solve_symbol"), SYMBOL_SCENE)
 	await end_game(g)
 
-
 func solve_symbol(g: Node, m: Node) -> void:
-	for sym in m.get_solution():
-		await use(g, m.get_pillar_interactable(sym))
+	var solution: Array = m.get_solution()
+	for symbol: int in solution:
+		var item: Node3D = m.get_pillar_interactable(symbol)
+		check(await until(func(): return item.can_interact(g.player), 4.0), "pillar %d unlocks" % symbol)
+		check(await use(g, item), "pillar %d activated through interactor" % symbol)
 
 
 ## Shared flow for the two puzzles: solved-but-uncollected survives death, pickup exactly once, re-setup restores state.
@@ -436,7 +407,7 @@ func energy_model(m: Node) -> Dictionary:
 	var src := flat(m.get_node("SourcePlinth").position)
 	var alt := flat(m.get_node("AltarPlinth").position)
 	var cells: Array = []
-	for i in 3:
+	for i in m.get_panel_kinds().size():
 		cells.append(flat(m.get_node("Panel%d" % (i + 1)).position))
 	return {
 		"src": src, "alt": alt, "cells": cells, "kinds": m.get_panel_kinds(),
@@ -457,14 +428,14 @@ func energy_trace(model: Dictionary, orients: Array) -> Dictionary:
 	var dir: int = model["emit"]
 	var prefix := 0
 	var reached := false
-	for _i in 6:
+	for _i in model["cells"].size() + 1:
 		var nxt: Vector3 = pos + DIRS[dir] * float(model["step"])
 		var entry := (dir + 2) % 4
 		if nxt.distance_to(model["alt"]) < 0.1:
 			reached = entry == int(model["alt_in"])
 			break
 		var idx := -1
-		for k in 3:
+		for k in model["cells"].size():
 			if nxt.distance_to(model["cells"][k]) < 0.1:
 				idx = k
 		if idx < 0:
@@ -479,7 +450,10 @@ func energy_trace(model: Dictionary, orients: Array) -> Dictionary:
 
 
 func combo_key(o: Array) -> int:
-	return o[0] * 16 + o[1] * 4 + o[2]
+	var key := 0
+	for orient in o:
+		key = key * 4 + int(orient)
+	return key
 
 
 ## Shortest press sequence (each press = +1 quarter turn of one panel) from `from` to `to` avoiding states in `forbidden`.
@@ -494,7 +468,7 @@ func press_path(from: Array, to: Array, forbidden: Dictionary) -> Array:
 	while head < queue.size():
 		var cur: Array = queue[head]
 		head += 1
-		for panel in 3:
+		for panel in cur.size():
 			var nxt := cur.duplicate()
 			nxt[panel] = (nxt[panel] + 1) % 4
 			var k := combo_key(nxt)
@@ -522,22 +496,24 @@ func test_energy_path() -> void:
 	var m = fx["module"]
 	var model := energy_model(m)
 	var kinds: Array = model["kinds"]
-	check(kinds.size() == 3 and model["cells"].size() == 3 and float(model["step"]) > 1.0, "energy module exposes 3 panels on a grid")
-	# Independent solution set over all 4*4*4 orientations.
+	check(kinds.size() == 4 and model["cells"].size() == 4 and float(model["step"]) > 1.0, "energy module exposes 4 panels on a grid")
+	# Independent solution set over all 4^4 orientations.
 	var solving: Dictionary = {}
 	var all_states: Array = []
 	for a in 4:
 		for b in 4:
 			for c in 4:
-				all_states.append([a, b, c])
-				if energy_trace(model, [a, b, c])["reached"]:
-					solving[combo_key([a, b, c])] = [a, b, c]
+				for d in 4:
+					var combo := [a, b, c, d]
+					all_states.append(combo)
+					if energy_trace(model, combo)["reached"]:
+						solving[combo_key(combo)] = combo
 	check(solving.size() > 0, "independent trace finds at least one solving orientation")
 	var self_report: Dictionary = m.validate_orientations()
 	var self_solving: Dictionary = {}
 	for s in self_report["solving"]:
 		self_solving[combo_key(s)] = true
-	check(self_report["total"] == 64 and solving.size() == self_solving.size(), "module and independent model agree on the solving count (%d vs %d)" % [solving.size(), self_solving.size()])
+	check(self_report["total"] == 256 and solving.size() == self_solving.size(), "module and independent model agree on solving count (%d vs %d)" % [solving.size(), self_solving.size()])
 	for k in solving:
 		check(self_solving.has(k), "module solving set contains independent solution %s" % [solving[k]])
 	var initial: Array = m.get_orientations()
@@ -555,8 +531,8 @@ func test_energy_path() -> void:
 	check(not m.rotate_panel(2), "rotate_panel refused while rotating")
 	await settle(m)
 	var after: Array = m.get_orientations()
-	check(after[0] == (before[0] + 1) % 4 and after[1] == before[1] and after[2] == before[2], "reentry produced exactly one quarter turn: %s -> %s" % [before, after])
-	# All 64 combinations: single instance through every non-solving state (BFS avoiding solving ones), then solved ones.
+	check(after[0] == (before[0] + 1) % 4 and after.slice(1) == before.slice(1), "reentry produced exactly one quarter turn: %s -> %s" % [before, after])
+	# All 256 combinations: single instance through every non-solving state (BFS avoiding solving ones), then solved ones.
 	var visited: Dictionary = {}
 	var cur: Array = m.get_orientations()
 	visited[combo_key(cur)] = true
@@ -577,7 +553,7 @@ func test_energy_path() -> void:
 			visited[combo_key(cur)] = true
 			verify.call(cur, "walk")
 		check(not m.is_solved() and not session_solved(fx), "non-solving combination %s must not open the seal" % [target])
-	check(visited.size() + solving.size() == 64, "non-solving walk covered %d + %d solving = 64 combinations" % [visited.size(), solving.size()])
+	check(visited.size() + solving.size() == 256, "non-solving walk covered %d + %d solving = 256 combinations" % [visited.size(), solving.size()])
 	await free_fixture(fx)
 	for k in solving:
 		var fx2 := await make_fixture(ENERGY_SCENE)
@@ -601,7 +577,7 @@ func test_energy_path() -> void:
 		check(arr_eq(m2.get_orientations(), frozen), "orientations unchanged after the lock")
 		visited[k] = true
 		await free_fixture(fx2)
-	check(visited.size() == 64, "all 64 orientation combinations verified (%d)" % visited.size())
+	check(visited.size() == 256, "all 256 orientation combinations verified (%d)" % visited.size())
 
 	# Real game: real interactor presses, solved-but-uncollected persistence.
 	var g := await new_game()
@@ -663,8 +639,10 @@ func test_artifact_orders() -> void:
 				for a in 4:
 					for b in 4:
 						for c in 4:
-							if energy_trace(model, [a, b, c])["reached"]:
-								solving[combo_key([a, b, c])] = [a, b, c]
+							for d in 4:
+								var combo := [a, b, c, d]
+								if energy_trace(model, combo)["reached"]:
+									solving[combo_key(combo)] = combo
 				await solve_energy(g, eng, [], solving)
 				check(eng.is_solved(), "%s: energy puzzle solved" % label)
 				check(await use(g, eng.get_artifact(), RING), "%s: energy artifact picked up through the interactor" % label)

@@ -8,21 +8,29 @@ extends Node3D
 ##   atmosphere.build(parent, terrain)
 
 const FOLIAGE_SHADER := "res://shaders/island/foliage_sway.gdshader"
+const TERRAIN_SHADER := "res://shaders/island/island_terrain.gdshader"
+const STONE_SHADER := "res://shaders/island/island_stone.gdshader"
 const SHORE_RES := 256
 const SHORE_RANGE := 6.0
 const CLOUD_COUNT := 14
 const MOTE_COUNT := 90
 
 var _clouds: Node3D
+var _noise_tex: Texture2D
 
 
 ## `rig` = the node that owns WorldEnvironment/KeyLight/Camera3D (the game root).
 func build(rig: Node, terrain: Node3D) -> void:
 	_build_environment(rig)
 	_build_sun(rig)
+	var camera := rig.get_node_or_null(^"Camera3D") as Camera3D
+	if camera != null:
+		camera.far = 420.0
 	_build_shore(terrain)
 	_detail_terrain(terrain)
 	_sway_foliage(terrain)
+	_stone_decoration(rig, terrain)
+	_limit_decoration_range(terrain)
 	_build_clouds(terrain)
 	_build_motes(rig)
 
@@ -63,15 +71,28 @@ func _build_environment(rig: Node) -> void:
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_white = 6.0
 	env.tonemap_exposure = 0.95
+	# Distance fog veils far terrain and lets the horizon dissolve into the sky/sea palette.
+	# Depth mode's start/end are easier to tune against camera distance than density.
 	env.fog_enabled = true
-	env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
-	env.fog_light_color = Color(0.74, 0.85, 0.93)
+	env.fog_mode = Environment.FOG_MODE_DEPTH
+	env.fog_light_color = Color(0.72, 0.81, 0.86)
 	env.fog_light_energy = 1.0
-	env.fog_density = 0.0022
-	env.fog_sky_affect = 0.0
+	env.fog_depth_begin = 75.0
+	env.fog_depth_end = 330.0
+	env.fog_depth_curve = 1.15
+	env.fog_sky_affect = 0.25
+	env.fog_aerial_perspective = 0.16
+	env.fog_sun_scatter = 0.12
 	env.adjustment_enabled = true
 	env.adjustment_contrast = 1.08
 	env.adjustment_saturation = 1.12
+	env.glow_enabled = true
+	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
+	env.glow_intensity = 0.55
+	env.glow_strength = 0.9
+	env.glow_bloom = 0.0
+	env.glow_hdr_threshold = 0.92
+	env.glow_hdr_scale = 2.0
 	holder.environment = env
 
 
@@ -115,33 +136,88 @@ func _build_shore(terrain: Node3D) -> void:
 
 
 # ---- Terrain / foliage -----------------------------------------------------------------------------------------------
-## Breaks up the flat vertex-colour ground with a world-space triplanar value noise (no extra draw call).
-func _detail_terrain(terrain: Node3D) -> void:
-	var mesh_node := terrain.get_node_or_null(^"Terrain/TerrainMesh") as MeshInstance3D
-	if mesh_node == null:
-		return
-	var mat := mesh_node.mesh.surface_get_material(0) as StandardMaterial3D
-	if mat == null:
-		return
+## Shared seamless value-noise texture (built synchronously so the first frame is already textured).
+func _noise_texture() -> Texture2D:
+	if _noise_tex != null:
+		return _noise_tex
 	var noise := FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
-	noise.frequency = 0.035
+	noise.frequency = 0.02
 	noise.fractal_octaves = 3
 	noise.seed = 1019
-	var ramp := Gradient.new()
-	ramp.set_color(0, Color(0.88, 0.88, 0.88))
-	ramp.set_color(1, Color(1.04, 1.04, 1.04))
-	var tex := NoiseTexture2D.new()
-	tex.width = 256
-	tex.height = 256
-	tex.seamless = true
-	tex.noise = noise
-	tex.color_ramp = ramp
-	mat.albedo_texture = tex
-	mat.uv1_triplanar = true
-	mat.uv1_world_triplanar = true
-	mat.uv1_scale = Vector3.ONE * 0.06
+	var img := noise.get_seamless_image(256, 256)
+	img.convert(Image.FORMAT_L8)
+	img.adjust_bcs(1.0, 1.35, 1.0)
+	img.generate_mipmaps()
+	_noise_tex = ImageTexture.create_from_image(img)
+	return _noise_tex
 
+
+## Replaces the flat vertex-colour ground material with the stylised terrain shader (same mesh, same draw call):
+## vertex colour stays the base, so biome, shore, route and pad painting from the terrain data is preserved.
+func _detail_terrain(terrain: Node3D) -> void:
+	var mesh_node := terrain.get_node_or_null(^"Terrain/TerrainMesh") as MeshInstance3D
+	if mesh_node == null or not ResourceLoader.exists(TERRAIN_SHADER):
+		return
+	var mat := ShaderMaterial.new()
+	mat.shader = load(TERRAIN_SHADER) as Shader
+	mat.set_shader_parameter("noise_tex", _noise_texture())
+	mat.set_shader_parameter("water_y", float(terrain.WATER_Y))
+	mesh_node.mesh.surface_set_material(0, mat)
+
+
+## Moss/dirt stone look for rocks and ruin pieces (walls, rubble, barriers), one ShaderMaterial per source texture.
+## Sweeps the whole rig: terrain decoration (MultiMesh rocks, scene instances) and the objective modules' loose pieces.
+## Puzzle pillars, columns, torches, floor tiles and the wooden dock keep their own materials (puzzles recolour them).
+func _stone_decoration(rig: Node, terrain: Node3D) -> void:
+	if not ResourceLoader.exists(STONE_SHADER):
+		return
+	var shader := load(STONE_SHADER) as Shader
+	var cache := {}
+	var deco := terrain.get_node_or_null(^"Decoration")
+	for n in rig.find_children("*", "GeometryInstance3D", true, false):
+		var g := n as GeometryInstance3D
+		if g.material_override != null:
+			continue
+		var mesh: Mesh = null
+		if g is MultiMeshInstance3D and (g as MultiMeshInstance3D).multimesh != null:
+			mesh = (g as MultiMeshInstance3D).multimesh.mesh
+		elif g is MeshInstance3D:
+			mesh = (g as MeshInstance3D).mesh
+		if mesh == null or mesh.get_surface_count() < 1:
+			continue
+		var mname := mesh.resource_name
+		var stone := mname.begins_with("Rock_") or mname.begins_with("wall") or mname.begins_with("rubble") \
+			or mname.begins_with("barrier")
+		if not stone and deco != null and deco.is_ancestor_of(g):
+			stone = mname.begins_with("pillar") or mname.begins_with("column")
+		if not stone:
+			continue
+		var src := mesh.surface_get_material(0) as StandardMaterial3D
+		if src == null or src.albedo_texture == null:
+			continue
+		var key: Texture2D = src.albedo_texture
+		if not cache.has(key):
+			var sm := ShaderMaterial.new()
+			sm.shader = shader
+			sm.set_shader_parameter("albedo_tex", key)
+			sm.set_shader_parameter("noise_tex", _noise_texture())
+			cache[key] = sm
+		g.material_override = cache[key]
+
+
+## Foliage/loose decor fades before the fog reaches its dense far range; no geometry or gameplay is removed.
+func _limit_decoration_range(terrain: Node3D) -> void:
+	var deco := terrain.get_node_or_null(^"Decoration")
+	if deco == null:
+		return
+	for node in deco.find_children("*", "GeometryInstance3D", true, false):
+		var instance := node as GeometryInstance3D
+		instance.visibility_range_begin = 195.0
+		instance.visibility_range_begin_margin = 35.0
+		instance.visibility_range_end = 300.0
+		instance.visibility_range_end_margin = 45.0
+		instance.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 
 ## Wind sway for trees and bushes. They are MultiMeshes sharing one palette material, so one ShaderMaterial per class
 ## (tall / low) is applied as material_override: zero extra draw calls.

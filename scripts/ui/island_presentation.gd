@@ -639,8 +639,8 @@ func _build_hud() -> void:
 	_flash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var vignette_gradient := Gradient.new()
-	vignette_gradient.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
-	vignette_gradient.colors = PackedColorArray([Color(UiTheme.HP, 0.0), Color(UiTheme.HP, 0.0), Color(UiTheme.HP, 0.58)])
+	vignette_gradient.offsets = PackedFloat32Array([0.0, 0.7, 1.0])
+	vignette_gradient.colors = PackedColorArray([Color(UiTheme.HP, 0.0), Color(UiTheme.HP, 0.0), Color(UiTheme.HP, 0.6)])
 	var vignette_texture := GradientTexture2D.new()
 	vignette_texture.gradient = vignette_gradient
 	vignette_texture.fill = GradientTexture2D.FILL_RADIAL
@@ -1714,8 +1714,8 @@ func _update_alert(delta: float) -> void:
 	var pulse := 0.0
 	if _hp_ratio > 0.0 and _hp_ratio <= LOW_HP_RATIO:
 		var severity := 1.0 if _hp_ratio <= 0.15 else 0.55
-		pulse = severity * (0.05 + 0.12 * (0.5 + 0.5 * sin(_alert_time * TAU * 0.9)))
-	_vignette.modulate.a = maxf(_hurt_level * 0.72, pulse)
+		pulse = severity * (0.4 + 0.45 * (0.5 + 0.5 * sin(_alert_time * TAU * 0.8)))
+	_vignette.modulate.a = maxf(_hurt_level * 0.9, pulse)
 	var stamina_ratio: float = _st_bar.value / maxf(_st_bar.max_value, 1.0)
 	var tint := Color(1.0, 0.5, 0.45) if stamina_ratio < LOW_STAMINA_RATIO else Color.WHITE
 	if _st_flash > 0.0:

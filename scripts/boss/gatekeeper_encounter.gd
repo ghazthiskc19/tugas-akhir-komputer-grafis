@@ -33,6 +33,7 @@ const Telegraph := preload("res://scripts/boss/boss_telegraph.gd")
 const Vfx := preload("res://scripts/vfx/combat_vfx.gd")
 const Arena := preload("res://scripts/boss/gatekeeper_arena.gd")
 const GolemAnimations := preload("res://scripts/boss/golem_animations.gd")
+const GuardAppearance := preload("res://scripts/enemies/guard_appearance.gd")
 const GOLEM_SCENE := "res://assets/third_party/blendswap/rock_golem/rock_golem.glb"
 
 const KEY_SOCKETS := &"gatekeeper_sockets"
@@ -106,6 +107,8 @@ var _mesh: MeshInstance3D
 var _anim: AnimationPlayer
 var _hurtbox: Area3D
 var _core_mat: StandardMaterial3D
+var _stone_mat: ShaderMaterial
+var _wind := 0.0
 var _eye_mat: StandardMaterial3D
 var _overlay_mat: StandardMaterial3D
 var _core_light: OmniLight3D
@@ -446,8 +449,15 @@ func _process(delta: float) -> void:
 	_core_color = _core_color.lerp(_target_color, blend)
 	_core_energy = lerpf(_core_energy, _target_energy, blend)
 	_core_boost = move_toward(_core_boost, 0.0, delta * 5.0)
+	# Visual only: runes/veins swell while a strike is being telegraphed.
+	_wind = move_toward(_wind, 1.0 if act == Act.WINDUP else 0.0, delta * 3.0)
 	var pulse := 1.0 + 0.18 * sin(_time * _pulse_speed * TAU * 0.5)
-	var energy := _core_energy * pulse + _core_boost
+	var energy := _core_energy * pulse + _core_boost + _wind * 1.4
+	if _stone_mat != null:
+		_stone_mat.set_shader_parameter(&"vein_color", _core_color)
+		_stone_mat.set_shader_parameter(&"vein_energy", clampf(energy * 0.2, 0.0, 2.0))
+		_stone_mat.set_shader_parameter(&"rim_color", GuardAppearance.RIM_BOSS.lerp(_core_color, 0.5))
+		_stone_mat.set_shader_parameter(&"rim_energy", 0.5 + 0.12 * energy)
 	if _core_mat != null:
 		_core_mat.albedo_color = _core_color
 		_core_mat.emission = _core_color
@@ -1154,10 +1164,10 @@ func _build_boss() -> void:
 		push_error("Penjaga Gerbang: " + "\n".join(errors))
 	else:
 		_anim.add_animation_library(&"", library)
-	var stone := StandardMaterial3D.new()
-	stone.albedo_color = Color(0.46, 0.43, 0.4)
-	stone.roughness = 0.95
-	_mesh.set_surface_override_material(0, stone)
+	_stone_mat = GuardAppearance.make_toon(null, Color.WHITE, 0.0, GuardAppearance.RIM_BOSS, GuardAppearance.make_outline(GuardAppearance.OUTLINE_BOSS, 0.045))
+	_stone_mat.set_shader_parameter(&"albedo_color", Color(0.36, 0.33, 0.31))
+	_stone_mat.set_shader_parameter(&"vein_scale", 0.05)
+	_mesh.set_surface_override_material(0, _stone_mat)
 	_eye_mat = StandardMaterial3D.new()
 	_eye_mat.emission_enabled = true
 	_eye_mat.albedo_color = CORE_CYAN

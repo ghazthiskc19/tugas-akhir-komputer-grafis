@@ -256,7 +256,7 @@ func solve_energy(g: Node, m: Node) -> void:
 	for target: Array in m.validate_orientations()["solving"]:
 		var presses: Array = []
 		var cost := 0
-		for i in 3:
+		for i in cur.size():
 			var n: int = ((int(target[i]) - int(cur[i])) % 4 + 4) % 4
 			presses.append(n)
 			cost += n

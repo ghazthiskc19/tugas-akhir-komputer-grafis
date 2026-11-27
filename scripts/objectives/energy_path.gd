@@ -1,17 +1,18 @@
 extends Node3D
-## Puzzle 02 - Jalur Energi. Three rotatable stone panels (straight / elbow) route energy from the source crystal to the
+## Puzzle 02 - Jalur Energi. Four rotatable stone panels (straight / elbow) route energy from the source crystal to the
 ## altar. One E press turns a panel 90 degrees clockwise (seen from above). Flow lights only the VALID PREFIX of the chain
 ## (source -> panel 1 -> ... ); the seal over the altar artifact opens only when the whole chain reaches the altar.
 ##
-## Module-local layout (4 m cells, grid col 0..3 / row 1..2, cell centre = ((col-1.5)*4, 0, (row-1.5)*4)):
-##   Source crystal cell (0,2) emits EAST.  Panel1 (1,2) straight.  Panel2 (2,2) elbow.  Panel3 (2,1) elbow.
-##   Altar cell (3,1) accepts from its WEST side.  Footprint x +/-9, z +/-7; flat ground y=0; panels are walkable inlays.
-## Side encoding: 0=N(-z) 1=E(+x) 2=S(+z) 3=W(-x). Orientation o = number of clockwise quarter turns from the base:
-##   straight base = N-S (period 2), elbow base = N-E. Initial orientations [0,1,2]; solutions [1|3, 3, 1] (validated).
+## Module-local layout (4 m cells; cell centre = ((col-1.5)*4, 0, (row-1.5)*4)):
+##   Source cell (0,2) emits EAST. Panels (1,2), (2,2), (2,1), (1,1) route around two bends.
+##   Altar cell (1,0) accepts from its SOUTH side. Panels are walkable inlays.
+##
+## Side encoding: 0=N(-z) 1=E(+x) 2=S(+z) 3=W(-x). Orientation o = clockwise quarter turns from the base.
+## Straight base = N-S (period 2), elbow base = N-E. Initial [0,0,0,2]; a solving layout is [1,3,2,0].
 ##
 ## Interface: setup(player, session), is_solved(), is_rotating(), get_orientations(), get_panel_kinds(),
 ## get_panel_interactable(i), rotate_panel(i) -> bool, trace(orientations) -> Dictionary,
-## validate_orientations() -> Dictionary (all 64 combos), signals solved / panel_rotated / flow_changed.
+## validate_orientations() -> Dictionary (all 256 combos), signals solved / panel_rotated / flow_changed.
 ## Session keys: puzzle_progress[&"energy_path"] (solved), artifact pickup id &"energy_artifact".
 
 const Kit := preload("res://scripts/objectives/objective_kit.gd")
@@ -35,11 +36,11 @@ const DIR_YAW: Array[float] = [0.0, -90.0, 180.0, 90.0]
 const CELL_SIZE := 4.0
 const SOURCE_CELL := Vector2i(0, 2)
 const SOURCE_OUT := E
-const ALTAR_CELL := Vector2i(3, 1)
-const ALTAR_IN := W
-const PANEL_CELLS: Array[Vector2i] = [Vector2i(1, 2), Vector2i(2, 2), Vector2i(2, 1)]
-const PANEL_KINDS: Array[String] = ["straight", "elbow", "elbow"]
-const INITIAL_ORIENTATIONS: Array[int] = [0, 1, 2]
+const ALTAR_CELL := Vector2i(1, 0)
+const ALTAR_IN := S
+const PANEL_CELLS: Array[Vector2i] = [Vector2i(1, 2), Vector2i(2, 2), Vector2i(2, 1), Vector2i(1, 1)]
+const PANEL_KINDS: Array[String] = ["straight", "elbow", "elbow", "elbow"]
+const INITIAL_ORIENTATIONS: Array[int] = [0, 0, 0, 2]
 const ROTATE_TIME := 0.22
 
 const COLOR_OFF := Color(0.16, 0.2, 0.26)
@@ -138,24 +139,30 @@ static func sides_of(kind: String, orient: int) -> Array[int]:
 	return [(base[0] + orient) % 4, (base[1] + orient) % 4]
 
 
-## Follows the energy from the source. Returns {powered: Array[bool], entries: Array[int], exits: Array[int],
-## prefix: int (number of consecutively powered panels), solved: bool (reaches the altar through its input side)}.
+## Follows the energy from the source. Returns {powered, entries, exits, prefix, solved}.
 static func trace(orientations: Array) -> Dictionary:
-	var powered: Array[bool] = [false, false, false]
-	var entries: Array[int] = [-1, -1, -1]
-	var exits: Array[int] = [-1, -1, -1]
+	var count := PANEL_CELLS.size()
+	var powered: Array[bool] = []
+	var entries: Array[int] = []
+	var exits: Array[int] = []
+	powered.resize(count)
+	entries.resize(count)
+	exits.resize(count)
+	powered.fill(false)
+	entries.fill(-1)
+	exits.fill(-1)
 	var cell := SOURCE_CELL
 	var dir := SOURCE_OUT
 	var prefix := 0
 	var reached := false
-	for _step in 6:
+	for _step in count + 1:
 		cell += DIR_CELL[dir]
 		var entry := (dir + 2) % 4
 		if cell == ALTAR_CELL:
 			reached = entry == ALTAR_IN
 			break
 		var index := PANEL_CELLS.find(cell)
-		if index < 0:
+		if index < 0 or index >= orientations.size():
 			break
 		var sides := sides_of(PANEL_KINDS[index], int(orientations[index]))
 		if not sides.has(entry):
@@ -174,27 +181,29 @@ static func _find_solutions() -> Array:
 	for a in 4:
 		for b in 4:
 			for c in 4:
-				if trace([a, b, c])["solved"]:
-					found.append([a, b, c])
+				for d in 4:
+					if trace([a, b, c, d])["solved"]:
+						found.append([a, b, c, d])
 	return found
 
 
-## Checks all 4*4*4 = 64 orientation combinations: the initial layout must be unsolved yet solvable. Returns
-## {total, solving: Array of [o1,o2,o3], initial, initial_solved, min_presses, valid}.
+## Checks all 4^4 = 256 orientation combinations.
 func validate_orientations() -> Dictionary:
 	var solutions := _find_solutions()
 	var min_presses := 999
 	for solution in solutions:
 		var presses := 0
-		for i in 3:
+		for i in INITIAL_ORIENTATIONS.size():
 			presses += (int(solution[i]) - INITIAL_ORIENTATIONS[i] + 4) % 4
 		min_presses = mini(min_presses, presses)
 	var initial_solved: bool = trace(INITIAL_ORIENTATIONS)["solved"]
 	return {
-		"total": 64, "solving": solutions, "initial": INITIAL_ORIENTATIONS.duplicate(),
+		"total": 256, "solving": solutions, "initial": INITIAL_ORIENTATIONS.duplicate(),
 		"initial_solved": initial_solved, "min_presses": min_presses,
 		"valid": not solutions.is_empty() and not initial_solved and min_presses > 0,
 	}
+
+
 
 
 # ------------------------------------------------------------------ flow / state
@@ -233,9 +242,7 @@ func _refresh_flow() -> Dictionary:
 			(half["chev_in"] as Node3D).visible = is_in
 			(half["chev_out"] as Node3D).visible = is_out
 	Kit.set_glow(_altar_stub_mat, COLOR_ON if result["solved"] else COLOR_OFF, 2.2 if result["solved"] else 0.0)
-	if _flow_label != null:
-		_flow_label.text = "Aliran energi: %d/%d panel%s" % [result["prefix"], _panels.size(), " - TERSAMBUNG" if result["solved"] else ""]
-		_flow_label.modulate = Color(0.5, 1.0, 0.7) if result["solved"] else Color(0.75, 0.9, 1.0)
+	_flow_label.text = "Aliran energi: %d/%d panel%s" % [result["prefix"], _panels.size(), " - TERSAMBUNG" if result["solved"] else ""]
 	flow_changed.emit(int(result["prefix"]), bool(result["solved"]))
 	return result
 
@@ -260,7 +267,7 @@ func _refresh_compass() -> void:
 	if _compass == null:
 		return
 	_compass.set_meta(&"done", _session != null and _session.is_collected(ARTIFACT_ID))
-	_compass.set_meta(&"hint", "Segel terbuka - ambil artefak di altar" if _solved else "Putar tiga panel batu (E) hingga energi dari kristal mengalir ke altar")
+	_compass.set_meta(&"hint", "Segel terbuka - ambil artefak di altar" if _solved else "Putar empat panel batu (E) untuk mengalirkan energi dari kristal ke altar")
 
 
 func _process(delta: float) -> void:
@@ -404,7 +411,7 @@ func _build_altar() -> void:
 	var stone := Kit.material(Color(0.5, 0.53, 0.48))
 	Kit.box_mesh(self, "AltarPlinth", pos + Vector3(0, 0.05, 0), Vector3(3.9, 0.1, 3.9), dark)
 	_altar_stub_mat = Kit.material(COLOR_OFF)
-	_strip(self, "AltarStub", W, 0.8, 2.0, _altar_stub_mat, 0.12).position += pos
+	_strip(self, "AltarStub", ALTAR_IN, 0.8, 2.0, _altar_stub_mat, 0.12).position += pos
 	var altar_pos := pos + Vector3(0.7, 0, 0)
 	Kit.cylinder_body(self, "AltarDais", altar_pos + Vector3(0, 0.2, 0), 1.4, 0.4, stone)
 	_artifact = ARTIFACT_SCENE.instantiate() as Node3D
@@ -426,7 +433,7 @@ func _build_altar() -> void:
 
 
 func _build_decor() -> void:
-	for pos in [Vector3(-9, 0, -5), Vector3(0, 0, -6.5), Vector3(9, 0, 4.5), Vector3(2, 0, 7)]:
+	for pos in [Vector3(-9, 0, -5), Vector3(9, 0, -6.5), Vector3(9, 0, 4.5), Vector3(2, 0, 7)]:
 		Kit.dungeon(self, "wall_broken", pos, 0.0 if absf(pos.z) > 5.0 else 90.0)
 		var yaw := 0.0 if absf(pos.z) > 5.0 else 90.0
 		Kit.box_body(self, "WallCollision", pos + Vector3(0, 1.25, 0), Vector3(3.8, 2.5, 0.9), null, yaw)
@@ -435,8 +442,6 @@ func _build_decor() -> void:
 		Kit.cylinder_body(self, "TrunkCollision", pos + Vector3(0, 2.0, 0), 0.45, 4.0)
 	for pos in [Vector3(-8, 0, 5.5), Vector3(8.5, 0, -6), Vector3(-1, 0, 6.5)]:
 		Kit.nature(self, "Rock_3_B_Color1", pos, pos.x * 31.0, 1.6)
-	Kit.dungeon(self, "rubble_half", Vector3(10, 0, 0.5), 200.0, 0.6)
-
 
 func _build_board() -> void:
 	var board := Node3D.new()
@@ -449,7 +454,7 @@ func _build_board() -> void:
 	Kit.box_body(board, "Slab", Vector3(0, 1.1, 0), Vector3(3.4, 2.2, 0.4), stone)
 	Kit.box_mesh(board, "Panel", Vector3(0, 1.15, 0.22), Vector3(3.0, 1.8, 0.04), dark)
 	Kit.label(board, "JALUR ENERGI", Vector3(0, 1.85, 0.26), 40, 0.006, Color(1.0, 0.9, 0.55))
-	Kit.label(board, "Putar 3 panel batu (E) agar energi\nmengalir dari Kristal ke Altar.\nUkiran LURUS atau SIKU; panah putih\n= arah aliran, garis biru = tersambung.", Vector3(0, 1.2, 0.26), 24, 0.0055, Color(0.85, 0.95, 1.0))
+	Kit.label(board, "Putar 4 panel batu (E) agar energi\nmengalir dari Kristal ke Altar.\nIkuti aliran melalui dua belokan.", Vector3(0, 1.2, 0.26), 24, 0.0055, Color(0.85, 0.95, 1.0))
 	Kit.label(board, "Tidak ada hukuman - coba sesukamu.", Vector3(0, 0.55, 0.26), 22, 0.005, Color(0.7, 0.8, 0.7))
 	for side in [-1.0, 1.0]:
 		Kit.box_mesh(board, "TorchStub", Vector3(side * 2.1, 0.5, 0.0), Vector3(0.3, 1.0, 0.3), stone)

@@ -199,32 +199,32 @@ func _stage_symbol_puzzle() -> void:
 	await _walk_to(symbol.to_global(Vector3(0, 0, 8)), 1.0, false)
 	var solution: Array = symbol.get_solution()
 	_say("pillar solution (symbol ids) = %s" % [solution])
-	var corners: Array[Vector3] = [Vector3(-2.7, 0, -2.7), Vector3(2.7, 0, -2.7), Vector3(2.7, 0, 2.7), Vector3(-2.7, 0, 2.7)]
+	var corners: Array[Vector3] = []
+	for i in 6:
+		var target := symbol.to_local(symbol.get_pillar_interactable(i).global_position)
+		corners.append(Vector3(target.x, 0.0, target.z).normalized() * 4.1)
 	var at := -1
 	for step in range(symbol.get_progress().size() if not symbol.is_solved() else solution.size(), solution.size()):
 		if _restart:
 			return
 		var id: int = solution[step]
-		# walk the square ring (clear of the seal in the middle and the pillar collision) to this pillar's corner
 		if at < 0:
 			await _walk_to(symbol.to_global(corners[2]), 0.7, false)
 			at = 2
-		var path: Array[int] = _ring_path(at, id)
-		for corner in path:
+		for corner in _ring_path(at, id):
 			await _walk_to(symbol.to_global(corners[corner]), 0.7, false)
 		at = id
 		var expect := step + 1
 		var item: Node3D = symbol.get_pillar_interactable(id)
-		await _interact(item, "pillar %d (step %d/4)" % [id, expect],
+		await _interact(item, "pillar %d (step %d/6)" % [id, expect],
 			func() -> bool: return symbol.get_progress().size() >= expect or symbol.is_solved())
-		await _wait(0.25)
 	if _restart:
 		return
 	if not symbol.is_solved():
-		await _fail("all four pillars pressed in order but the puzzle is not solved; progress=%s" % [symbol.get_progress()])
+		await _fail("six pillars pressed in order but puzzle is not solved; progress=%s" % [symbol.get_progress()])
 	_say("symbol puzzle solved")
 	await _shot("01-symbol-solved")
-	await _wait(1.4)  # seal fades (collision is already gone)
+	await _wait(1.4)
 	if _restart:
 		return
 	var artifact: Node3D = symbol.get_artifact()
@@ -232,8 +232,9 @@ func _stage_symbol_puzzle() -> void:
 	await _interact(artifact, "forest artifact", func() -> bool: return session.is_collected(&"forest_artifact"))
 	_say("forest_artifact collected")
 	await _shot("02-forest-artifact")
-	# leave the way we came in (south-east entrance), then the reverse spawn_symbol road in the next stage
-	await _walk_to(symbol.to_global(corners[2]), 0.8, false)
+	await _walk_to(symbol.to_global(Vector3(2.4, 0, 2.7)), 0.6, false)
+	await _walk_to(symbol.to_global(corners[2]), 0.7, false)
+	await _walk_to(symbol.to_global(Vector3(3.5, 0, 8)), 0.8, false)
 	await _walk_to(symbol.to_global(Vector3(0, 0, 8)), 1.0, false)
 	await _walk_to(symbol.to_global(Vector3(0, 0, 14)), 1.2, true)
 
@@ -324,7 +325,6 @@ func _stage_energy_puzzle() -> void:
 		return
 	# back out the north way, then the named energy_summit route to the summit's south entry (summit-local z +22)
 	if _flat(energy.to_local(player.global_position) - Vector3(0, 0, 0)).length() < 8.0:
-		await _walk_to(energy.to_global(Vector3(3.6, 0, -2.0)), 0.8, false)
 		await _walk_to(energy.to_global(Vector3(-3.5, 0, -2.5)), 1.0, false)
 		await _walk_to(energy.to_global(Vector3(-6.5, 0, -4.5)), 1.0, false)
 		await _walk_to(energy.to_global(Vector3(-6.5, 0, -12)), 1.2, true)
@@ -348,8 +348,8 @@ func _energy_puzzle_front(e_center: Vector3) -> void:
 	await _walk_to(energy.to_global(Vector3(-6.5, 0, -12)), 1.5, true)
 	await _walk_to(energy.to_global(Vector3(-6.5, 0, -4.5)), 1.0, false)
 	await _walk_to(energy.to_global(Vector3(-3.5, 0, -2.5)), 0.8, false)
-	var stands: Array[Vector3] = [Vector3(-2, 0, 0.6), Vector3(2, 0, 0.6), Vector3(3.6, 0, -2.0)]
-	for panel in 3:
+	var stands: Array[Vector3] = [Vector3(-2, 0, 2), Vector3(2, 0, 2), Vector3(2, 0, -2), Vector3(-2, 0, -2)]
+	for panel in stands.size():
 		await _walk_to(energy.to_global(stands[panel]), 0.5, false)
 		var item: Node3D = energy.get_panel_interactable(panel)
 		while true:
@@ -377,7 +377,6 @@ func _energy_puzzle_front(e_center: Vector3) -> void:
 	if _restart:
 		return
 	var artifact: Node3D = energy.get_artifact()
-	await _walk_to(energy.to_global(Vector3(4.6, 0, -2.0)), 0.4, false)
 	await _interact(artifact, "energy artifact", func() -> bool: return session.is_collected(&"energy_artifact"))
 	_say("energy_artifact collected")
 	await _shot("07-energy-artifact")
@@ -890,11 +889,12 @@ func _route_world(route: StringName, reverse: bool, from_center: Vector3, cut_fr
 
 func _ring_path(from_corner: int, to_corner: int) -> Array[int]:
 	var out: Array[int] = []
-	var forward := (to_corner - from_corner + 4) % 4
-	var step := 1 if forward <= 2 else -1
+	var count := 6
+	var forward := (to_corner - from_corner + count) % count
+	var step := 1 if forward <= count / 2 else -1
 	var at := from_corner
 	while at != to_corner:
-		at = (at + step + 4) % 4
+		at = (at + step + count) % count
 		out.append(at)
 	return out
 
@@ -904,23 +904,22 @@ func _ring_path(from_corner: int, to_corner: int) -> Array[int]:
 func _presses_needed(panel: int) -> int:
 	var current: Array = energy.get_orientations()
 	var best := 99
+	var target: Array = []
 	for a in 4:
 		for b in 4:
 			for c in 4:
-				var combo := [a, b, c]
-				if energy.trace(combo)["solved"]:
-					var cost := 0
-					for i in 3:
-						cost += (combo[i] - current[i] + 4) % 4
-					if cost < best:
-						best = cost
-						_target_orient = combo
+				for d in 4:
+					var combo := [a, b, c, d]
+					if energy.trace(combo)["solved"]:
+						var cost := 0
+						for i in current.size():
+							cost += (combo[i] - current[i] + 4) % 4
+						if cost < best:
+							best = cost
+							target = combo
 	if best == 99:
 		return 0
-	return (int(_target_orient[panel]) - int(current[panel]) + 4) % 4
-
-
-var _target_orient: Array = [0, 0, 0]
+	return (int(target[panel]) - int(current[panel]) + 4) % 4
 
 
 func _interact(node: Node3D, label: String, done: Callable) -> void:

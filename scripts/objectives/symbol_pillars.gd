@@ -1,8 +1,5 @@
 extends Node3D
-## Puzzle 01 - Pilar Simbol. Four pillars with distinct SHAPES (sphere, cube, triangle pyramid, ring); a stone relief
-## (always visible) shows the activation order. Correct order opens the seal over the artifact; a wrong pillar resets
-## the chain without penalty. Module-local layout: artifact/seal at the origin, pillars on a 6.5 m ring, relief stele
-## at the south-east entrance (+x,+z). Flat ground y=0, footprint within +/-12 m. No enemies live in this module.
+## Six-symbol ordering puzzle. Five readable fragments form a unique precedence chain; wrong presses reset and briefly seal the pillars.
 ##
 ## Interface: setup(player, session), is_solved(), get_solution(), get_progress(), reset_sequence(),
 ## get_pillar_interactable(symbol_id), signals solved / sequence_failed / pillar_activated.
@@ -17,22 +14,24 @@ signal pillar_activated(symbol_id: int, step: int)
 const SOLVED_KEY := &"symbol_pillars"
 const ARTIFACT_ID := &"forest_artifact"
 const ARTIFACT_SCENE := preload("res://scenes/world/artifact_pickup.tscn")
-const SYMBOL_NAMES: Array[String] = ["Lingkaran", "Kotak", "Segitiga", "Cincin"]
+const SYMBOL_NAMES: Array[String] = ["Lingkaran", "Kotak", "Segitiga", "Cincin", "Bintang", "Berlian"]
 const SYMBOL_COLORS: Array[Color] = [
-	Color(1.0, 0.6, 0.2), Color(0.35, 0.7, 1.0), Color(0.55, 0.95, 0.4), Color(0.95, 0.45, 0.95),
+	Color(1.0, 0.6, 0.2), Color(0.35, 0.7, 1.0), Color(0.55, 0.95, 0.4),
+	Color(0.95, 0.45, 0.95), Color(1.0, 0.85, 0.25), Color(0.35, 0.95, 0.85),
 ]
-## Where each symbol's pillar stands (index = symbol id).
+## Symbol ids and positions are stable; clues state the full precedence chain.
 const PILLAR_POSITIONS: Array[Vector3] = [
-	Vector3(-4.6, 0.0, -4.6), Vector3(4.6, 0.0, -4.6), Vector3(4.6, 0.0, 4.6), Vector3(-4.6, 0.0, 4.6),
+	Vector3(0, 0, -6.5), Vector3(5.63, 0, -3.25), Vector3(5.63, 0, 3.25),
+	Vector3(0, 0, 6.5), Vector3(-5.63, 0, 3.25), Vector3(-5.63, 0, -3.25),
 ]
 const STELE_POSITION := Vector3(8.2, 0.0, 8.2)
 const STELE_YAW := 45.0
 const SEAL_RADIUS := 1.35
 const SEAL_HEIGHT := 3.2
+const CLUE_LINKS: Array[Vector2i] = [Vector2i(4, 1), Vector2i(1, 5), Vector2i(5, 0), Vector2i(0, 3), Vector2i(3, 2)]
 
-## Correct activation order as symbol ids (0 Lingkaran, 1 Kotak, 2 Segitiga, 3 Cincin).
-@export var solution: Array[int] = [2, 0, 3, 1]
-
+## Correct activation order as symbol ids.
+@export var solution: Array[int] = [4, 1, 5, 0, 3, 2]
 var _player: Node3D
 var _session: Node
 var _solved := false
@@ -48,7 +47,10 @@ var _status_label: Label3D
 var _artifact: Node3D
 var _compass: Node3D
 var _spin := 0.0
+var _lock_remaining := 0.0
+const WRONG_LOCK_SECONDS := 2.5
 var _built := false
+
 
 
 func _ready() -> void:
@@ -95,18 +97,18 @@ func get_relief_interactable() -> Node3D:
 	return get_node_or_null(^"Stele/ReliefInteract") as Node3D
 
 
-## Clears the current chain (also what a wrong pillar does). No penalty of any kind.
+## Clears the current chain and its temporary lock. Used by puzzle reset/testing.
 func reset_sequence() -> void:
 	_progress.clear()
+	_lock_remaining = 0.0
 	for pillar in _pillars:
 		_set_pillar_lit(pillar, false)
 	_update_lamps()
 
-
 # ------------------------------------------------------------------ interaction
 
 func _can_press(_player: Node, pillar: Dictionary) -> bool:
-	return not _solved and not bool(pillar["lit"])
+	return not _solved and _lock_remaining <= 0.0 and not bool(pillar["lit"])
 
 
 func _press(pillar: Dictionary) -> bool:
@@ -129,13 +131,14 @@ func _press(pillar: Dictionary) -> bool:
 
 func _fail(pillar: Dictionary) -> void:
 	reset_sequence()
+	_lock_remaining = WRONG_LOCK_SECONDS
 	var mat: StandardMaterial3D = pillar["mat"]
 	Kit.set_glow(mat, Color(1.0, 0.15, 0.1), 3.0)
 	var light: OmniLight3D = pillar["light"]
 	light.light_color = Color(1.0, 0.15, 0.1)
 	light.light_energy = 2.0
 	Kit.play(self, Kit.SFX_ERROR)
-	_say("Urutan salah - ulangi dari awal. Periksa relief.", Color(1.0, 0.4, 0.3))
+	_say("Urutan salah - segel menutup 2,5 detik. Baca petunjuk.", Color(1.0, 0.4, 0.3))
 	var tween := create_tween()
 	tween.tween_interval(0.5)
 	tween.tween_callback(_clear_flash.bind(pillar))
@@ -206,13 +209,15 @@ func _refresh_compass() -> void:
 		return
 	var collected: bool = _session != null and _session.is_collected(ARTIFACT_ID)
 	_compass.set_meta(&"done", collected)
-	_compass.set_meta(&"hint", "Segel terbuka - ambil artefak di tengah reruntuhan" if _solved else "Baca relief batu di pintu masuk, lalu aktifkan keempat pilar sesuai urutannya")
+	_compass.set_meta(&"hint", "Segel terbuka - ambil artefak di tengah reruntuhan" if _solved else "Temukan lima ukiran relasional di sekitar pilar")
 
 
 func _process(delta: float) -> void:
 	_spin += delta
+	_lock_remaining = maxf(0.0, _lock_remaining - delta)
 	for pillar in _pillars:
 		(pillar["symbol_node"] as Node3D).rotation.y = _spin * 0.8
+	
 
 
 # ------------------------------------------------------------------ construction
@@ -225,7 +230,7 @@ func _build() -> void:
 	_lamp_mat_on = Kit.material(Color(1.0, 0.85, 0.3), 3.0)
 	_build_floor_and_ruins()
 	_build_seal_and_artifact()
-	for symbol_id in 4:
+	for symbol_id in SYMBOL_NAMES.size():
 		_build_pillar(symbol_id)
 	_build_stele()
 	_compass = Kit.compass_marker(self, "CompassMarker", Vector3(0, 1.0, 0), "Pilar Simbol", "Reruntuhan", "")
@@ -285,12 +290,21 @@ func _make_symbol_mesh(symbol_id: int, size: float) -> Mesh:
 			cone.height = 0.9 * size
 			cone.radial_segments = 3
 			return cone
-		_:
+		3:
 			var ring := TorusMesh.new()
 			ring.inner_radius = 0.2 * size
 			ring.outer_radius = 0.44 * size
 			return ring
-
+		4:
+			var star := PrismMesh.new()
+			star.size = Vector3(0.8, 0.9, 0.18) * size
+			return star
+		_:
+			var diamond := SphereMesh.new()
+			diamond.radius = 0.45 * size
+			diamond.height = 0.9 * size
+			diamond.radial_segments = 4
+			return diamond
 
 func _build_pillar(symbol_id: int) -> void:
 	var pos: Vector3 = PILLAR_POSITIONS[symbol_id]
@@ -320,8 +334,6 @@ func _build_pillar(symbol_id: int) -> void:
 	mesh_node.name = "Symbol"
 	mesh_node.mesh = _make_symbol_mesh(symbol_id, 1.0)
 	mesh_node.material_override = mat
-	if symbol_id == 3:
-		mesh_node.rotation_degrees.x = 70.0
 	symbol_node.add_child(mesh_node)
 	var light := OmniLight3D.new()
 	light.name = "Glow"
@@ -349,39 +361,28 @@ func _build_stele() -> void:
 	Kit.box_body(stele, "Slab", Vector3(0, 1.25, 0), Vector3(3.6, 2.5, 0.5), stone)
 	Kit.box_mesh(stele, "Cap", Vector3(0, 2.55, 0), Vector3(3.9, 0.2, 0.7), stone)
 	Kit.box_mesh(stele, "Panel", Vector3(0, 1.45, 0.26), Vector3(3.2, 1.55, 0.04), dark)
-	Kit.label(stele, "URUTAN AKTIVASI PILAR", Vector3(0, 2.15, 0.3), 36, 0.006, Color(1.0, 0.9, 0.55))
-	var count := solution.size()
-	for i in count:
-		var symbol_id: int = solution[i]
-		var x := (i - (count - 1) * 0.5) * 0.8
-		var holder := Node3D.new()
-		holder.position = Vector3(x, 1.55, 0.4)
-		stele.add_child(holder)
-		var mesh_node := MeshInstance3D.new()
-		mesh_node.mesh = _make_symbol_mesh(symbol_id, 0.75)
-		mesh_node.material_override = Kit.material(SYMBOL_COLORS[symbol_id], 0.9)
-		if symbol_id == 3:
-			mesh_node.rotation_degrees.x = 90.0
-		holder.add_child(mesh_node)
-		Kit.label(stele, str(i + 1), Vector3(x, 1.98, 0.3), 36, 0.006, Color.WHITE)
-		Kit.label(stele, SYMBOL_NAMES[symbol_id], Vector3(x, 1.08, 0.3), 24, 0.005, Color(0.85, 0.85, 0.8))
-		var lamp := MeshInstance3D.new()
-		var lamp_mesh := SphereMesh.new()
-		lamp_mesh.radius = 0.09
-		lamp_mesh.height = 0.18
-		lamp.mesh = lamp_mesh
-		lamp.material_override = _lamp_mat_off
-		lamp.position = Vector3(x, 0.78, 0.3)
-		stele.add_child(lamp)
-		_lamps.append(lamp)
-	for side in [-1.0, 1.0]:
-		Kit.box_mesh(stele, "TorchStub", Vector3(side * 2.2, 0.5, 0.0), Vector3(0.3, 1.0, 0.3), stone)
-		Kit.dungeon(stele, "torch_lit", Vector3(side * 2.2, 1.35, 0.0))
-	var names: PackedStringArray = []
-	for symbol_id in solution:
-		names.append(SYMBOL_NAMES[symbol_id])
-	var read := Kit.interactable(stele, "ReliefInteract", Vector3(0, 0.0, 1.3), "Baca relief: " + " > ".join(names), 1.4)
-	read.interact_callable = func(_p: Node) -> bool:
+	Kit.label(stele, "CARI 5 UKIRAN. SUSUNAN MENYAMBUNG.", Vector3(0, 2.05, 0.3), 24, 0.006, Color(1.0, 0.9, 0.55))
+	Kit.label(stele, "Tekan pilar menurut hubungan sebelum/sesudah.\nSalah: rangkaian reset dan segel terkunci 2,5 detik.", Vector3(0, 1.48, 0.3), 17, 0.005, Color(0.85, 0.85, 0.8))
+	for i in CLUE_LINKS.size():
+		var link: Vector2i = CLUE_LINKS[i]
+		var text := "%s harus sebelum %s" % [SYMBOL_NAMES[link.x], SYMBOL_NAMES[link.y]]
+		var angle := TAU * float(i) / float(CLUE_LINKS.size()) + PI * 0.25
+		var pos := Vector3(cos(angle) * 9.4, 0.0, sin(angle) * 9.4)
+		var clue := Node3D.new()
+		clue.name = "ClueStone%d" % (i + 1)
+		clue.position = pos
+		clue.rotation.y = atan2(-pos.x, -pos.z)
+		add_child(clue)
+		var clue_stone_mat := Kit.material(Color(0.42, 0.45, 0.4))
+		Kit.box_body(clue, "Stone", Vector3(0, 0.8, 0), Vector3(2.3, 1.6, 0.5), clue_stone_mat)
+		Kit.label(clue, "UKIRAN %d" % (i + 1), Vector3(0, 1.25, 0.27), 24, 0.005, Color(1.0, 0.9, 0.55))
+		var clue_interactable := Kit.interactable(clue, "ReadClue%d" % i, Vector3(0, 0, 0.9), "Baca ukiran %d: %s" % [i + 1, text], 1.0)
+		clue_interactable.interact_callable = func(_p: Node) -> bool:
+			_say(text, Color(1.0, 0.9, 0.55))
+			Kit.play(self, Kit.SFX_TICK)
+			return true
+	var relief_interactable := Kit.interactable(stele, "ReliefInteract", Vector3(0, 0.0, 1.3), "Baca relief: cari 5 ukiran relasional", 1.4)
+	relief_interactable.interact_callable = func(_p: Node) -> bool:
 		Kit.play(self, Kit.SFX_TICK)
-		_say("Urutan: " + " > ".join(names), Color(1.0, 0.9, 0.55))
+		_say("Temukan lima ukiran: setiap simbol sebelum simbol berikutnya.", Color(1.0, 0.9, 0.55))
 		return true

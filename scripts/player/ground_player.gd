@@ -104,6 +104,7 @@ const Damageable := preload("res://scripts/combat/damageable.gd")
 const DrinkAnimation := preload("res://scripts/player/drink_animation.gd")
 const SprintEffects := preload("res://scripts/player/player_sprint_effects.gd")
 const Vfx := preload("res://scripts/vfx/combat_vfx.gd")
+const GuardAppearance := preload("res://scripts/enemies/guard_appearance.gd")
 
 signal attack_started
 signal attack_finished
@@ -227,6 +228,7 @@ var _ray_query := PhysicsRayQueryParameters3D.new()
 
 func _ready() -> void:
 	_camera = get_node_or_null(camera_path) as Camera3D
+	GuardAppearance.apply_player(_model)
 	var errors := _build_library()
 	if _camera == null:
 		errors.append("camera_path tidak menunjuk Camera3D: '%s'" % camera_path)
