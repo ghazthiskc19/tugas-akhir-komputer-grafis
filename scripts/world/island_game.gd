@@ -16,6 +16,7 @@ const RANGED = preload("res://scenes/enemies/ranged_enemy.tscn")
 const QA_RUNNER := "res://scripts/tests/island_playthrough.gd"
 const SAVE = preload("res://scripts/world/island_save.gd")
 const LANDMARKS = preload("res://scripts/world/island_landmarks.gd")
+const ATMOSPHERE = preload("res://scripts/world/island_atmosphere.gd")
 const UI_THEME = preload("res://scripts/ui/ui_theme.gd")
 
 @export var island_seed: int = 42
@@ -95,6 +96,10 @@ func _ready() -> void:
 	landmarks.name = "Landmarks"
 	add_child(landmarks)
 	landmarks.build(terrain)
+	var atmosphere := ATMOSPHERE.new()
+	atmosphere.name = "Atmosphere"
+	add_child(atmosphere)
+	atmosphere.build(self, terrain)
 	if not pending_save.is_empty():
 		_restore_saved_player()
 	presentation = PRESENTATION.new()
@@ -249,6 +254,7 @@ func quit_run(exit_code: int = 0) -> void:
 	UI_THEME.release_resources()
 	var effects := tree.root.get_node_or_null(^"CombatVfxHub")
 	if effects != null:
+		await effects.release_audio()
 		effects.queue_free()
 	queue_free()
 	# Let queued UI/world/effect destruction finish while renderer/audio servers still exist.

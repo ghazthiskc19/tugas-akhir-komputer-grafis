@@ -84,6 +84,37 @@ void fragment() {
 """
 
 
+## Screen flash: edge vignette with a faint centre tint (keeps enemy telegraphs readable). Alpha-mixed, not additive:
+## additive red on the bright island ground saturates to yellow-white and stops reading as damage.
+const SCREEN_FLASH_TIME := 0.25
+## One pulse per gap: <= 2.5 flashes/s, under the 3 Hz photosensitivity guideline.
+const SCREEN_FLASH_GAP := 0.4
+const FLASH_SHADER := """
+shader_type canvas_item;
+render_mode unshaded;
+uniform vec4 tint : source_color = vec4(1.0, 0.15, 0.1, 1.0);
+uniform float intensity = 0.0;
+void fragment() {
+	vec2 p = UV * 2.0 - 1.0;
+	float edge = smoothstep(0.35, 1.3, length(p * vec2(0.85, 1.0)));
+	COLOR = vec4(tint.rgb, clamp((0.05 + 0.8 * edge) * intensity, 0.0, 0.8));
+}
+"""
+
+## Extra sounds layered on top of the presentation's own hit/block/hurt/death events (clip -> dB, pitch).
+const SOUND_VOICES := 4
+const SOUNDS := {
+	&"finisher": [
+		{"path": "res://assets/third_party/audio/rpg_sfx_rubberduck/stones_03.ogg", "db": -4.0, "pitch": 0.62},
+		{"path": "res://assets/third_party/audio/rpg_sfx_rubberduck/wood_03.ogg", "db": -8.0, "pitch": 0.72},
+	],
+	&"guard_break": [
+		{"path": "res://assets/third_party/kenney/rpg_audio/metalPot3.ogg", "db": -2.0, "pitch": 0.8},
+		{"path": "res://assets/third_party/audio/rpg_sfx_rubberduck/chain_02.ogg", "db": -5.0, "pitch": 0.9},
+	],
+}
+
+
 class Timed:
 	extends RefCounted
 	var node: MeshInstance3D
@@ -102,11 +133,25 @@ var _rings: Array[Timed] = []
 var _slash_next := 0
 var _ring_next := 0
 var _active_timed := 0
+var _flash_layer: CanvasLayer
+var _flash_rect: ColorRect
+var _flash_mat: ShaderMaterial
+var _flash_active := false
+var _flash_age := 0.0
+var _flash_strength := 1.0
+var _flash_started_ms := -100000
+var _voices: Array[AudioStreamPlayer] = []
+var _voice_next := 0
+var _sound_layers: Dictionary = {}
 
 
 # ----------------------------------------------------------------------------------------------- static API
 
 static var _hub: Node3D
+## Player preferences (Pengaturan > Guncangan kamera / Hit-stop); written by game_preferences.gd, read by camera and hit_stop.
+static var shake_scale := 1.0
+static var hit_stop_enabled := true
+static var _stop_token := 0
 
 
 ## Null when the hub is not yet in the tree (it joins one frame after the first call) or `from` is outside the tree.
@@ -174,6 +219,7 @@ static func poof(from: Node, pos: Vector3, tint := Color(0.7, 0.68, 0.7, 0.8)) -
 	burst(from, Kind.HEAL, pos, Vector3.UP, Color(0.75, 0.9, 1.0), 1.0)
 
 ## Camera shake (trauma 0..1, additive, decays). Falls off with distance when `at` is given. No-op without a shaking camera.
+## The player-facing intensity (Guncangan kamera slider, `shake_scale`) is applied by the camera, not here.
 static func shake(from: Node, amount: float, at := Vector3.INF) -> void:
 	if from == null or not from.is_inside_tree():
 		return
@@ -186,14 +232,57 @@ static func shake(from: Node, amount: float, at := Vector3.INF) -> void:
 	cam.call(&"add_shake", amount * falloff)
 
 
-## Brief time dip on a landed hit. Skipped headless so QA timing stays deterministic and while another stop is running.
+## Brief time dip on a landed hit. Skipped headless so QA timing stays deterministic, while another stop is running,
+## while paused and when the player turned hit-stop off. The restore timer ignores time scale; `reset_transients` also
+## restores it (pause, scene exit) and invalidates the pending timer.
 static func hit_stop(from: Node, duration: float, time_scale := 0.05) -> void:
-	if from == null or not from.is_inside_tree() or DisplayServer.get_name() == "headless":
+	if not hit_stop_enabled or from == null or not from.is_inside_tree() or DisplayServer.get_name() == "headless":
 		return
 	if Engine.time_scale < 1.0 or from.get_tree().paused:
 		return
 	Engine.time_scale = time_scale
-	from.get_tree().create_timer(duration, true, false, true).timeout.connect(func() -> void: Engine.time_scale = 1.0)
+	_stop_token += 1
+	var token := _stop_token
+	from.get_tree().create_timer(duration, true, false, true).timeout.connect(func() -> void:
+		if token == _stop_token:
+			Engine.time_scale = 1.0)
+
+
+## Puts back everything that must not outlive a gameplay moment: time scale and the screen flash.
+## Called when the game pauses and when the camera leaves the tree.
+static func reset_transients() -> void:
+	_stop_token += 1
+	Engine.time_scale = 1.0
+	if is_instance_valid(_hub) and _hub.has_method(&"clear_screen_flash"):
+		_hub.call(&"clear_screen_flash")
+
+
+## Short edge vignette + faint full-screen tint (<= SCREEN_FLASH_TIME real seconds, one pulse per SCREEN_FLASH_GAP so it
+## never strobes). `tint` red for damage, pale blue for a guard break.
+static func screen_flash(from: Node, tint: Color, strength := 1.0) -> void:
+	var hub := hub_for(from)
+	if hub != null:
+		hub._screen_flash(tint, strength)
+
+
+## Sword/stone layered body for a finisher plus pitch-varied clang for guard break (assets: kenney rpg_audio CC0,
+## rubberduck rpg_sfx CC0, already in the project). Skipped silently when the hub is not ready.
+static func sound(from: Node, id: StringName) -> void:
+	var hub := hub_for(from)
+	if hub != null:
+		hub._sound(id)
+
+
+## Shatter effect for a broken guard: white-blue ring, radial steel shards and a bright flash, clearly unlike a block spark.
+static func guard_break(from: Node, pos: Vector3, forward: Vector3) -> void:
+	var ground := Vector3(pos.x, 0.0, pos.z)
+	ring(from, ground + Vector3(0.0, 0.1, 0.0), 2.8, Color(0.75, 0.92, 1.0), 0.45, 0.22)
+	ring(from, pos, 1.6, Color(1.0, 1.0, 1.0), 0.3, 0.12)
+	burst(from, Kind.FLASH, pos, Vector3.UP, Color(0.85, 0.95, 1.0), 2.4)
+	burst(from, Kind.GLOW, pos, Vector3.UP, Color(0.6, 0.85, 1.0), 2.2)
+	burst(from, Kind.SPARK, pos, forward + Vector3.UP * 0.3, Color(0.8, 0.95, 1.0), 1.8)
+	burst(from, Kind.SPARK, pos, Vector3.UP, Color.WHITE, 1.5)
+	burst(from, Kind.DEBRIS, pos, Vector3.UP + forward * 0.4, Color(0.7, 0.85, 1.0), 1.1)
 
 
 
@@ -210,7 +299,45 @@ func build() -> void:
 	plane.size = Vector2(2.0, 2.0)
 	for i in RING_POOL:
 		_rings.append(_make_timed(plane, RING_SHADER))
+	_build_screen_flash()
+	_build_audio()
 	set_process(false)
+
+
+func _exit_tree() -> void:
+	# Never leave the game slowed if the tree is torn down mid hit-stop.
+	if _hub == self:
+		_stop_token += 1
+		Engine.time_scale = 1.0
+		_hub = null
+	# Playing voices/streams held past exit are reported as leaked instances.
+	for voice in _voices:
+		voice.stop()
+		voice.stream = null
+	_sound_layers.clear()
+
+
+## Shutdown: stop() only queues mixer-side deletion, so a sound still playing at exit is reported as a leaked playback.
+## Stop every voice, drop the streams, then give the mixer real time (bounded) to reclaim them. Awaited by Game.quit_run.
+func release_audio() -> void:
+	var refs: Array[WeakRef] = []
+	for layers: Array in _sound_layers.values():
+		for layer: Dictionary in layers:
+			refs.append(weakref(layer["stream"]))
+	for voice in _voices:
+		voice.stop()
+		voice.stream = null
+	_sound_layers.clear()
+	var deadline := Time.get_ticks_msec() + 1500
+	while Time.get_ticks_msec() < deadline:
+		var pending := false
+		for ref in refs:
+			if ref.get_ref() != null:
+				pending = true
+		if not pending:
+			return
+		OS.delay_msec(10)
+		await get_tree().process_frame
 
 
 func _process(delta: float) -> void:
@@ -221,8 +348,87 @@ func _process(delta: float) -> void:
 	for item in _rings:
 		if item.active:
 			_advance(item, delta, false)
+	if _flash_active:
+		# Wall clock: a hit-stop (time_scale ~0) must neither freeze nor stretch the flash beyond SCREEN_FLASH_TIME.
+		_flash_age = float(Time.get_ticks_msec() - _flash_started_ms) / 1000.0
+		var t := _flash_age / SCREEN_FLASH_TIME
+		if t >= 1.0:
+			clear_screen_flash()
+		else:
+			var env := t / 0.14 if t < 0.14 else pow(1.0 - (t - 0.14) / 0.86, 2.0)
+			_flash_mat.set_shader_parameter(&"intensity", _flash_strength * env)
+			_active_timed += 1
 	if _active_timed == 0:
 		set_process(false)
+
+
+func _screen_flash(tint: Color, strength: float) -> void:
+	var now := Time.get_ticks_msec()
+	if now - _flash_started_ms < int(SCREEN_FLASH_GAP * 1000.0):
+		return
+	_flash_started_ms = now
+	_flash_age = 0.0
+	_flash_strength = clampf(strength, 0.0, 1.0)
+	_flash_active = true
+	_flash_rect.visible = true
+	_flash_mat.set_shader_parameter(&"tint", tint)
+	_flash_mat.set_shader_parameter(&"intensity", 0.0)
+	set_process(true)
+
+
+func clear_screen_flash() -> void:
+	_flash_active = false
+	if _flash_rect != null:
+		_flash_rect.visible = false
+
+
+func _build_screen_flash() -> void:
+	_flash_layer = CanvasLayer.new()
+	_flash_layer.name = "ScreenFlash"
+	_flash_layer.layer = 0  # below the HUD/overlay layers (>= 1), above the 3D view
+	add_child(_flash_layer)
+	var shader := Shader.new()
+	shader.code = FLASH_SHADER
+	_flash_mat = ShaderMaterial.new()
+	_flash_mat.shader = shader
+	_flash_rect = ColorRect.new()
+	_flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_flash_rect.material = _flash_mat
+	_flash_rect.visible = false
+	_flash_layer.add_child(_flash_rect)
+
+
+func _ready() -> void:
+	# Needs the viewport, so it cannot run in build() (hub is not in the tree yet).
+	if _flash_rect != null:
+		_flash_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+
+func _build_audio() -> void:
+	for i in SOUND_VOICES:
+		var player := AudioStreamPlayer.new()
+		player.name = "Sfx%d" % i
+		add_child(player)
+		_voices.append(player)
+		# A finished voice keeps its playback object alive; drop it so no stream is held at shutdown.
+		player.finished.connect(func() -> void: player.stream = null)
+	for id in SOUNDS:
+		var layers: Array = []
+		for layer: Dictionary in SOUNDS[id]:
+			var stream := load(layer["path"]) as AudioStream
+			if stream != null:
+				layers.append({"stream": stream, "db": layer["db"], "pitch": layer["pitch"]})
+		_sound_layers[id] = layers
+
+
+func _sound(id: StringName) -> void:
+	for layer: Dictionary in _sound_layers.get(id, []):
+		var voice := _voices[_voice_next]
+		_voice_next = (_voice_next + 1) % SOUND_VOICES
+		voice.stream = layer["stream"]
+		voice.volume_db = layer["db"]
+		voice.pitch_scale = layer["pitch"] * randf_range(0.96, 1.04)
+		voice.play()
 
 
 func _advance(item: Timed, delta: float, is_slash: bool) -> void:

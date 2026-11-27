@@ -12,6 +12,7 @@ extends Node3D
 ## footprints, checkpoints, encounter pads and the shoreline. Spots that cannot be validated are simply skipped.
 
 const Kit := preload("res://scripts/objectives/objective_kit.gd")
+const BEAM_SHADER := "res://shaders/island/landmark_beam.gdshader"
 
 const ROUTES: Array[StringName] = [
 	&"spawn_symbol", &"spawn_energy", &"spawn_summit", &"symbol_summit",
@@ -125,8 +126,8 @@ func _make_materials() -> void:
 		"amber": Kit.material(Color(1.0, 0.7, 0.28), 1.6),
 		"cyan": Kit.material(Color(0.3, 0.9, 1.0), 1.8),
 		"red": Kit.material(Color(1.0, 0.25, 0.2), 1.6),
-		"flag": Kit.material(Color(0.15, 0.7, 0.75)),
-		"cloth": Kit.material(Color(0.6, 0.12, 0.12)),
+		"flag": Kit.material(Color(0.15, 0.7, 0.75), 0.35),
+		"cloth": Kit.material(Color(0.42, 0.08, 0.1), 0.25),
 	}
 	var acc := Kit.material(Color.WHITE)
 	acc.vertex_color_use_as_albedo = true
@@ -187,6 +188,32 @@ func _light(parent: Node, pos: Vector3, color: Color, energy: float, light_range
 	l.distance_fade_begin = 35.0
 	l.distance_fade_length = 15.0
 	parent.add_child(l)
+
+
+## Faint additive light shaft above a landmark (unshaded, animated by shader TIME): reads above the tree line from afar.
+func _beam(parent: Node3D, base_y: float, height: float, color: Color, phase := 0.0, intensity := 0.5) -> void:
+	if not ResourceLoader.exists(BEAM_SHADER):
+		return
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.8
+	mesh.bottom_radius = 1.1
+	mesh.height = height
+	mesh.radial_segments = 10
+	mesh.rings = 1
+	mesh.cap_top = false
+	mesh.cap_bottom = false
+	var mat := ShaderMaterial.new()
+	mat.shader = load(BEAM_SHADER)
+	mat.set_shader_parameter("beam_color", color)
+	mat.set_shader_parameter("intensity", intensity)
+	mat.set_shader_parameter("phase", phase)
+	var inst := MeshInstance3D.new()
+	inst.name = "Beam"
+	inst.mesh = mesh
+	inst.material_override = mat
+	inst.position = Vector3(0, base_y + height * 0.5, 0)
+	inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(inst)
 
 
 static func _yaw_facing(d: Vector3) -> float:
@@ -519,6 +546,9 @@ func _gate(root: Node3D, title: String) -> void:
 	_box(root, Vector3(-1.2, 3.3, 0), Vector3(0.12, 0.9, 0.12), "wood", Vector3(0, 0, 45))
 	_box(root, Vector3(1.2, 3.3, 0), Vector3(0.12, 0.9, 0.12), "wood", Vector3(0, 0, -45))
 	_box(root, Vector3(0, 2.75, 0), Vector3(0.9, 0.4, 0.06), "cloth")
+	for sx: float in [-2.4, 2.4]:
+		_box(root, Vector3(sx, 3.95, 0), Vector3(0.28, 0.34, 0.28), "amber")
+	_beam(root, 4.2, 14.0, Color(1.0, 0.85, 0.5), 0.0, 0.4)
 	_title(root, title, 5.2, Color(0.95, 0.95, 0.75))
 
 
@@ -533,6 +563,7 @@ func _totem(root: Node3D, title: String) -> void:
 	_box(root, Vector3(0, 5.9, 0), Vector3(2.6, 0.35, 0.5), "wood")
 	_box(root, Vector3(0, 6.35, 0), Vector3(0.5, 0.6, 0.5), "wood", Vector3(0, 45, 0))
 	_light(root, Vector3(0, 3.2, 1.4), Color(1.0, 0.72, 0.4), 0.6, 8.0)
+	_beam(root, 6.6, 16.0, Color(1.0, 0.75, 0.35), 1.3)
 	_title(root, title, 7.6, Color(1.0, 0.88, 0.6))
 
 
@@ -547,6 +578,7 @@ func _obelisk(root: Node3D, title: String) -> void:
 	_cyl(root, Vector3(-2.2, 0.5, 1.4), 0.4, 0.55, 1.0, "stone", 4, Vector3(8, 20, 70))
 	_box(root, Vector3(2.0, 0.3, -1.0), Vector3(1.2, 0.6, 0.9), "stone", Vector3(0, 30, 6))
 	_light(root, Vector3(0, 4.4, 0), Color(0.4, 0.9, 1.0), 0.7, 9.0)
+	_beam(root, 6.6, 18.0, Color(0.4, 0.9, 1.0), 2.6, 0.55)
 	_title(root, title, 7.6, Color(0.65, 0.95, 1.0))
 
 
@@ -558,6 +590,8 @@ func _spire(root: Node3D, title: String) -> void:
 		var h: float = d[2]
 		_cyl(root, p + Vector3(0, h * 0.5 - 0.4, 0), 0.0, d[1], h, "rock", 5, Vector3(0, 0, d[3]))
 	_cyl(root, Vector3(0.18, 7.35, 0), 0.0, 0.42, 1.3, "snow", 5, Vector3(0, 0, 3.0))
+	_cyl(root, Vector3(0.18, 8.15, 0), 0.0, 0.16, 0.5, "cyan", 5)
+	_beam(root, 8.5, 16.0, Color(0.75, 0.9, 1.0), 3.9, 0.45)
 	_title(root, title, 9.6, Color(0.85, 0.9, 1.0))
 
 
@@ -569,8 +603,11 @@ func _pylons(root: Node3D, title: String, half := 3.0) -> void:
 		_box(root, Vector3(sx, 5.95, 0), Vector3(1.4, 0.3, 1.4), "red")
 		_box(root, Vector3(sx, 6.4, 0), Vector3(0.5, 0.6, 0.5), "red", Vector3(0, 45, 0))
 		_light(root, Vector3(sx, 6.8, 0.6), Color(1.0, 0.3, 0.2), 0.8, 9.0)
-	_box(root, Vector3(0, 5.2, 0), Vector3(1.6, 1.6, 0.06), "cloth")
+	# Narrow hanging banner: the old 1.6 m flat red slab dominated the arena view.
+	_box(root, Vector3(0, 5.35, 0), Vector3(0.9, 1.5, 0.05), "cloth")
+	_box(root, Vector3(0, 4.55, 0), Vector3(1.0, 0.1, 0.08), "red")
 	_box(root, Vector3(0, 6.1, 0), Vector3(half * 2.0 - 1.0, 0.12, 0.12), "wood")
+	_beam(root, 7.0, 16.0, Color(1.0, 0.3, 0.2), 5.2, 0.45)
 	_title(root, title, 8.3, Color(1.0, 0.6, 0.5))
 
 
@@ -578,6 +615,7 @@ func _flagpole(root: Node3D, title: String) -> void:
 	_cyl(root, Vector3(0, 2.4, 0), 0.07, 0.1, 4.8, "wood", 6)
 	_box(root, Vector3(0.7, 4.2, 0), Vector3(1.4, 0.8, 0.04), "flag")
 	_box(root, Vector3(0, 0.15, 0), Vector3(0.9, 0.3, 0.9), "stone")
+	_beam(root, 5.0, 12.0, Color(0.5, 1.0, 0.9), 0.7, 0.4)
 	_title(root, title, 5.6, Color(0.7, 1.0, 0.95))
 
 

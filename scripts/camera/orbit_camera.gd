@@ -10,6 +10,7 @@ extends "res://scripts/camera/smooth_follow_camera.gd"
 
 const STICK_DEADZONE := 0.2
 const UI_THEME := preload("res://scripts/ui/ui_theme.gd")
+const Vfx := preload("res://scripts/vfx/combat_vfx.gd")
 
 @export_range(0.0, 89.0) var min_pitch_degrees := 20.0
 @export_range(0.0, 89.0) var max_pitch_degrees := 65.0
@@ -28,11 +29,19 @@ var _pitch := 0.0
 ## Jarak lengan yang diminta (target zoom). Subclass collision dapat menempatkan kamera lebih dekat.
 var _ideal_distance := 1.0
 var _focus := Vector3.ZERO
-## Guncangan: trauma ^2 * SHAKE_METERS geser frustum, meluruh SHAKE_DECAY per detik.
+## Guncangan: trauma^2 * SHAKE_METERS geser kamera (meter; ~4 px per 0,1 m pada jarak awal), roll SHAKE_ROLL_DEGREES,
+## meluruh SHAKE_DECAY per detik. Diskalakan Vfx.shake_scale (pengaturan pemain).
 const MAX_SHAKE := 1.0
-const SHAKE_DECAY := 2.2
-const SHAKE_METERS := 0.22
+const SHAKE_DECAY := 2.4
+const SHAKE_METERS := 0.9
+const SHAKE_ROLL_DEGREES := 3.5
+const SHAKE_FREQUENCY := 42.0
 var _shake := 0.0
+var _shake_clock := 0.0
+## Diagnostik (x/y = geser meter, z = kekuatan) frame terakhir; dipakai pengukuran tuning.
+var last_shake_offset := Vector3.ZERO
+var _base_basis := Basis.IDENTITY
+var _roll_applied := false
 
 var _arm_distance := 1.0
 var _captured := false
@@ -64,12 +73,14 @@ func _ready() -> void:
 	_place(0.0)
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 	_build_pause_ui()
+	_enable_shake_driver.call_deferred()
 	# Default: mouse tertangkap. Tidak membaca fokus di sini (race saat jendela dibuat);
 	# hilang fokus ditangani NOTIFICATION_WM_WINDOW_FOCUS_OUT.
 	resume_game()
 
 
 func _exit_tree() -> void:
+	Vfx.reset_transients()
 	_release_mouse()
 	if is_inside_tree():
 		get_tree().paused = false
@@ -122,6 +133,7 @@ func get_resume_button() -> Button:
 
 ## Menjeda SceneTree, menampilkan overlay, melepas mouse. Aman dipanggil berulang.
 func pause_game() -> void:
+	Vfx.reset_transients()
 	get_tree().paused = true
 	var opening := not _pause_panel.visible or _pause_panel.modulate.a < 1.0
 	_pause_panel.visible = true
@@ -255,29 +267,55 @@ func _zoom(amount: float) -> void:
 	set_zoom_distance(_ideal_distance + amount)
 
 
-## Tambah guncangan kamera (trauma 0..1, menumpuk, meluruh). Hanya menggeser frustum (h/v_offset), bukan posisi kamera.
+## Tambah guncangan kamera (trauma 0..1, menumpuk, meluruh). Menggeser kamera (h/v_offset, meter) dan memutar sedikit (roll).
 func add_shake(amount: float) -> void:
 	_shake = minf(_shake + amount, MAX_SHAKE)
 
 
+## Guncangan = noise halus (bukan acak per frame) dengan kekuatan trauma^2, dikali slider "Guncangan kamera".
 func _apply_shake(delta: float) -> void:
-	if _shake <= 0.0:
+	var intensity := Vfx.shake_scale
+	if _shake <= 0.0 or intensity <= 0.0:
+		_shake = maxf(_shake - SHAKE_DECAY * delta, 0.0)
 		h_offset = 0.0
 		v_offset = 0.0
+		if _roll_applied:
+			_roll_applied = false
+			global_basis = _base_basis
 		return
 	_shake = maxf(_shake - SHAKE_DECAY * delta, 0.0)
-	var strength := _shake * _shake * SHAKE_METERS
-	h_offset = randf_range(-1.0, 1.0) * strength
-	v_offset = randf_range(-1.0, 1.0) * strength
+	_shake_clock += delta
+	var strength := _shake * _shake * intensity
+	var t := _shake_clock * SHAKE_FREQUENCY
+	h_offset = _noise(t, 0.0) * strength * SHAKE_METERS
+	v_offset = _noise(t, 17.3) * strength * SHAKE_METERS * 0.8
+	_roll_applied = true
+	global_basis = _base_basis * Basis(Vector3.BACK, deg_to_rad(_noise(t, 41.7) * strength * SHAKE_ROLL_DEGREES))
+	last_shake_offset = Vector3(h_offset, v_offset, strength)
+
+
+## Dua sinus tak-selaras -> deret halus dalam [-1, 1] (tanpa alokasi).
+func _noise(t: float, seed_offset: float) -> float:
+	return 0.62 * sin(t + seed_offset) + 0.38 * sin(t * 2.37 + seed_offset * 1.9)
 
 
 func _process(delta: float) -> void:
 	if is_paused():
 		return
+	if is_physics_processing():
+		# Subclass (collision camera) places the camera in _physics_process; this frame loop only drives the shake.
+		_apply_shake(delta)
+		return
 	_update_stick(delta)
 	_follow_focus(delta)
 	_place(delta)
 	_apply_shake(delta)
+
+
+## The collision subclass turns _process off in its _ready; the shake needs it per rendered frame (physics ticks are coarser).
+func _enable_shake_driver() -> void:
+	if is_physics_processing() and not is_processing():
+		set_process(true)
 
 
 ## Stick: deadzone radial lalu skala ulang; device dengan defleksi terbesar yang dipakai.
@@ -323,7 +361,8 @@ func _place(delta: float) -> void:
 	var direction := _direction()
 	_arm_distance = _placement_distance(delta)
 	global_position = _focus + direction * _arm_distance
-	global_basis = Basis.looking_at(-direction, Vector3.UP)
+	_base_basis = Basis.looking_at(-direction, Vector3.UP)
+	global_basis = _base_basis
 
 
 ## Jarak kamera dari fokus. Subclass collision menimpa ini.

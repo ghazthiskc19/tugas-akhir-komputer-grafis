@@ -116,6 +116,12 @@ var _outline_mat: StandardMaterial3D
 var _fill_mat: StandardMaterial3D
 var _flash_mat: StandardMaterial3D
 var _flash_tween: Tween
+var _flinch_tween: Tween
+var _flinch_away := Vector3.BACK
+var _flinch_offset := 0.0
+var _flinch_lean := 0.0
+var _model_rest_position := Vector3.ZERO
+var _model_rest_basis := Basis.IDENTITY
 var _player: Node3D
 var _spawn_xform := Transform3D.IDENTITY
 var _state_time := 0.0
@@ -164,6 +170,8 @@ func _ready() -> void:
 	_health.health_changed.connect(_on_health_changed)
 	_health.dead.connect(_on_health_dead)
 	_model.scale = Vector3.ONE * float(cfg["model_scale"])
+	_model_rest_position = _model.position
+	_model_rest_basis = _model.basis
 	_skeleton = _model.find_child("Skeleton3D", true, false) as Skeleton3D
 	if _skeleton == null:
 		push_error("Enemy %s: Skeleton3D tidak ada di model" % name)
@@ -188,6 +196,8 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if _flash_tween != null:
 		_flash_tween.kill()
+	if _flinch_tween != null:
+		_flinch_tween.kill()
 	if _model == null or not is_instance_valid(_model):
 		return
 	for node in _model.find_children("*", "MeshInstance3D", true, false):
@@ -236,6 +246,7 @@ func reset_encounter() -> void:
 	_fired = false
 	if _flash_tween != null:
 		_flash_tween.kill()
+	_reset_flinch()
 	_flash_mat.albedo_color.a = 0.0
 	_hide_telegraph()
 	_current_clip = &""
@@ -763,7 +774,7 @@ func _vfx_strike() -> void:
 			Vfx.slash(self, global_position + Vector3(0.0, 1.3, 0.0) + forward * 0.3, yaw, reach * 0.65, 150.0,
 				Color(1.0, 0.72, 0.3), 0.3, 90.0 if _chain_step == 0 else 0.0, true)
 			Vfx.ground_impact(self, global_position + forward * reach * 0.7, 1.9, Color(1.0, 0.4, 0.15))
-			Vfx.shake(self, 0.3, global_position)
+			Vfx.shake(self, 0.65, global_position)
 
 
 func _vfx_muzzle() -> void:
@@ -813,6 +824,7 @@ func _on_health_dead() -> void:
 	_cancel_attack()
 	_set_state(State.DEAD)
 	_hide_telegraph()
+	_reset_flinch()
 	velocity = Vector3.ZERO
 	_aggro = false
 	_disable_collisions()
@@ -820,7 +832,7 @@ func _on_health_dead() -> void:
 	_anim.play(&"death", 0.1, 1.0)
 	_update_label()
 	Vfx.poof(self, global_position + Vector3(0.0, 0.9, 0.0))
-	Vfx.shake(self, 0.2, global_position)
+	Vfx.shake(self, 0.4, global_position)
 	if not _defeated_emitted:
 		_defeated_emitted = true
 		defeated.emit(enemy_id)
@@ -848,12 +860,46 @@ func _build_flash() -> void:
 		(mesh as MeshInstance3D).material_overlay = _flash_mat
 
 
-func _flash() -> void:
+func _flash(strength := 0.85, duration := 0.18) -> void:
 	if _flash_tween != null:
 		_flash_tween.kill()
-	_flash_mat.albedo_color = Color(1, 1, 1, 0.55)
+	_flash_mat.albedo_color = Color(1, 1, 1, strength)
 	_flash_tween = create_tween()
-	_flash_tween.tween_property(_flash_mat, "albedo_color:a", 0.0, 0.15)
+	_flash_tween.tween_property(_flash_mat, "albedo_color:a", 0.0, duration)
+
+
+## Presentation-only hit reaction (called by the player after a landed hit): the model snaps away from the attacker
+## and tilts back, then eases home. Collision, position, stagger and timing are untouched. A finisher hits harder.
+func react_hit(attacker_position: Vector3, strong: bool) -> void:
+	if state == State.DEAD or _model == null:
+		return
+	var away := global_position - attacker_position
+	away.y = 0.0
+	away = away.normalized() if away.length_squared() > 0.0001 else -_flat_forward()
+	_flinch_away = global_basis.inverse() * away
+	var scale_factor := 0.7 if archetype == "heavy" else 1.0
+	_flinch_offset = (0.45 if strong else 0.18) * scale_factor
+	_flinch_lean = deg_to_rad((20.0 if strong else 9.0) * scale_factor)
+	if strong:
+		_flash(1.0, 0.26)
+	if _flinch_tween != null:
+		_flinch_tween.kill()
+	_apply_flinch(1.0)
+	_flinch_tween = create_tween()
+	_flinch_tween.tween_method(_apply_flinch, 1.0, 0.0, 0.34 if strong else 0.24).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+
+
+func _apply_flinch(amount: float) -> void:
+	_model.position = _model_rest_position + _flinch_away * (_flinch_offset * amount)
+	_model.basis = Basis(Vector3.UP.cross(_flinch_away).normalized(), _flinch_lean * amount) * _model_rest_basis
+
+
+func _reset_flinch() -> void:
+	if _flinch_tween != null:
+		_flinch_tween.kill()
+	if _model != null and is_instance_valid(_model):
+		_model.position = _model_rest_position
+		_model.basis = _model_rest_basis
 
 
 func _update_label() -> void:

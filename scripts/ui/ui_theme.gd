@@ -281,6 +281,8 @@ static func hover_button(button: Button) -> void:
 	button.pivot_offset_ratio = Vector2(0.5, 0.5)
 	button.mouse_entered.connect(_hover.bind(button, true))
 	button.mouse_exited.connect(_hover.bind(button, false))
+	button.button_down.connect(_press.bind(button, true))
+	button.button_up.connect(_press.bind(button, false))
 
 
 static func _hover(button: Button, on: bool) -> void:
@@ -293,6 +295,18 @@ static func _hover(button: Button, on: bool) -> void:
 	var tween := button.create_tween().set_parallel().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tween.tween_property(button, "scale", Vector2(1.03, 1.03) if on_it else Vector2.ONE, HOVER_TIME)
 	tween.tween_property(button, "self_modulate", Color(1.15, 1.15, 1.15) if on_it else Color.WHITE, HOVER_TIME)
+	button.set_meta(&"hover_tween", tween)
+
+
+static func _press(button: Button, down: bool) -> void:
+	if not animated() or not button.is_inside_tree():
+		return
+	var old: Variant = button.get_meta(&"hover_tween") if button.has_meta(&"hover_tween") else null
+	if old is Tween:
+		(old as Tween).kill()
+	var target := 0.97 if down and not button.disabled else (1.03 if button.is_hovered() and not button.disabled else 1.0)
+	var tween := button.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(button, "scale", Vector2.ONE * target, HOVER_TIME * 0.6)
 	button.set_meta(&"hover_tween", tween)
 
 

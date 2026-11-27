@@ -10,6 +10,11 @@ const FIELDS := {
 }
 
 const UI_THEME := preload("res://scripts/ui/ui_theme.gd")
+const Vfx := preload("res://scripts/vfx/combat_vfx.gd")
+const FEEL_SECTION := "feel"
+const DEFAULT_CONFIG_PATH := "user://control_preferences.cfg"
+
+static var _feel_loaded := false
 
 @export var player_path: NodePath
 @export var camera_path: NodePath
@@ -29,6 +34,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_player = get_node(player_path)
 	_camera = get_node(camera_path) as Camera3D
+	load_feel(config_path)
 	_load_preferences()
 	_build_menu()
 	_apply_values()
@@ -117,6 +123,8 @@ func _build_menu() -> void:
 	_button(buttons,"Terapkan",apply_and_save)
 	_button(buttons,"Reset Default",reset_defaults)
 	_button(buttons,"Kembali",close_settings)
+	build_feel_rows(column)
+	column.move_child(column.get_child(column.get_child_count() - 1), _status.get_index())
 	_settings.hide()
 
 func _button(parent: Node, title: String, action: Callable) -> void:
@@ -165,9 +173,84 @@ func _apply_values() -> void:
 
 func apply_and_save() -> void:
 	var config := ConfigFile.new()
+	config.load(config_path)  # keep the other sections (feel) written by the live rows
 	for field: StringName in FIELDS:
 		_values[field] = _sliders[field].value
 		config.set_value("controls",field,_values[field])
 	_apply_values()
 	var error := config.save(config_path)
 	_status.text = "Tersimpan di perangkat ini. Kembali lalu Lanjutkan untuk mencoba." if error == OK else "Aktif, tetapi gagal menyimpan: %s" % error_string(error)
+
+
+# --- Combat feel (Guncangan kamera, Hit-stop): applied and saved immediately, read by camera/combat_vfx ------------------
+
+## Reads the saved feel values into combat_vfx's static settings once per run (defaults: shake 100 %, hit-stop on).
+static func load_feel(path := DEFAULT_CONFIG_PATH) -> void:
+	if _feel_loaded:
+		return
+	_feel_loaded = true
+	var config := ConfigFile.new()
+	if config.load(path) != OK:
+		return
+	var shake: Variant = config.get_value(FEEL_SECTION, "camera_shake", 1.0)
+	if typeof(shake) == TYPE_FLOAT or typeof(shake) == TYPE_INT:
+		Vfx.shake_scale = clampf(float(shake), 0.0, 1.0) if is_finite(float(shake)) else 1.0
+	var stop: Variant = config.get_value(FEEL_SECTION, "hit_stop", true)
+	if typeof(stop) == TYPE_BOOL:
+		Vfx.hit_stop_enabled = stop
+
+
+static func save_feel(path := DEFAULT_CONFIG_PATH) -> void:
+	var config := ConfigFile.new()
+	config.load(path)
+	config.set_value(FEEL_SECTION, "camera_shake", Vfx.shake_scale)
+	config.set_value(FEEL_SECTION, "hit_stop", Vfx.hit_stop_enabled)
+	config.save(path)
+
+
+## Builds the "Guncangan kamera" slider (0-100 %) and the "Hit-stop" toggle under `parent`; returns their container.
+static func build_feel_rows(parent: Control) -> VBoxContainer:
+	load_feel()
+	var box := VBoxContainer.new()
+	box.name = "CombatFeel"
+	box.add_theme_constant_override("separation", 6)
+	parent.add_child(box)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	box.add_child(row)
+	var caption := Label.new()
+	caption.text = "Guncangan kamera"
+	caption.add_theme_color_override("font_color", UI_THEME.MUTED)
+	caption.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(caption)
+	var slider := HSlider.new()
+	slider.name = "CameraShake"
+	slider.min_value = 0.0
+	slider.max_value = 100.0
+	slider.step = 5.0
+	slider.value = roundf(Vfx.shake_scale * 100.0)
+	slider.custom_minimum_size = Vector2(120.0, 24.0)
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	slider.focus_mode = Control.FOCUS_NONE
+	row.add_child(slider)
+	var pct := Label.new()
+	pct.custom_minimum_size.x = 56.0
+	pct.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	pct.add_theme_color_override("font_color", UI_THEME.MUTED)
+	pct.text = "%d%%" % roundi(slider.value)
+	row.add_child(pct)
+	slider.value_changed.connect(func(value: float) -> void:
+		Vfx.shake_scale = value / 100.0
+		pct.text = "%d%%" % roundi(value)
+		save_feel())
+	var stop := CheckButton.new()
+	stop.name = "HitStop"
+	stop.text = "Hit-stop (jeda singkat saat serangan kena)"
+	stop.button_pressed = Vfx.hit_stop_enabled
+	stop.focus_mode = Control.FOCUS_NONE
+	stop.toggled.connect(func(on: bool) -> void:
+		Vfx.hit_stop_enabled = on
+		save_feel())
+	box.add_child(stop)
+	return box

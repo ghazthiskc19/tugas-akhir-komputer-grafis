@@ -34,8 +34,23 @@ const SLIDE_PX := 18.0
 const TOAST_TOP := 208.0
 const BOSS_TOP := 88.0
 
+# Mixer dB targets, measured from the shipped clips' RMS levels.
+const SILENT_DB := -50.0
+const MUSIC_DB := -12.0
+const MUSIC_BOSS_DB := -11.0
+const FOREST_DB := 12.0
+const SEA_DB := -23.0
+const DUCK_PAUSE_MUSIC_DB := -7.0
+const DUCK_PAUSE_AMBIENCE_DB := -10.0
+const DUCK_BOSS_AMBIENCE_DB := -8.0
+const LOW_HP_RATIO := 0.3
+const LOW_STAMINA_RATIO := 0.25
+const TOAST_QUEUE_MAX := 3
+const ARTIFACT_SOURCES := {&"forest_artifact": "Pilar Simbol", &"energy_artifact": "Jalur Energi", &"summit_artifact": "Puncak"}
+
 const UiTheme := preload("res://scripts/ui/ui_theme.gd")
 const IslandMap := preload("res://scripts/ui/island_map.gd")
+const GamePreferences := preload("res://scripts/ui/game_preferences.gd")
 const MAP_RELEASE_ACTIONS: Array[StringName] = [&"move_forward", &"move_backward", &"move_left", &"move_right", &"sprint", &"attack", &"block", &"dodge", &"potion", &"interact"]
 const ARTIFACT_ORDER: Array[StringName] = [&"forest_artifact", &"energy_artifact", &"summit_artifact"]
 const ARTIFACT_ICONS := {&"forest_artifact": &"artifact_forest", &"energy_artifact": &"artifact_energy", &"summit_artifact": &"artifact_summit"}
@@ -123,6 +138,32 @@ var _shown_potions := -1
 var _shown_artifacts := -1
 var _shown_puzzles := -1
 
+# HUD feedback state
+var _vignette: TextureRect
+var _hp_ghost: Ghost
+var _st_ghost: Ghost
+var _boss_ghost: Ghost
+var _objective_head: Label
+var _potion_icon: TextureRect
+var _toast_sub: Label
+var _toast_queue: Array[Dictionary] = []
+var _toast_active := false
+var _alert_time := 0.0
+var _hp_ratio := 1.0
+var _hurt_level := 0.0
+var _hp_hit := 0.0
+var _hp_heal := 0.0
+var _st_prev := -1.0
+var _st_flash := 0.0
+var _st_denied := 0.0
+var _music_level := SILENT_DB
+var _music_target := SILENT_DB
+var _music_goal_db := MUSIC_DB
+var _music_pending: AudioStream
+var _pause_duck := 0.0
+var _boss_duck := 0.0
+var _ambience_in := 0.0
+
 # state
 var _targets: Array[Dictionary] = []
 var _target_timer := 0.0
@@ -157,6 +198,37 @@ var _prev_action: StringName = &"idle"
 var _rng := RandomNumberGenerator.new()
 
 
+## Damage trail behind a bar fill. Drops hold briefly before draining toward the real value.
+class Ghost extends ColorRect:
+	const HOLD := 0.35
+	var shown := 1.0
+	var hold := 0.0
+	var _last := 1.0
+	func _init(tint: Color) -> void:
+		color = tint
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hide()
+	func track(bar: ProgressBar, ratio: float, delta: float, rate: float) -> void:
+		if ratio >= shown:
+			shown = ratio
+			hold = HOLD
+		else:
+			if ratio < _last:
+				hold = HOLD
+			if hold > 0.0:
+				hold -= delta
+			else:
+				shown = maxf(ratio, shown - rate * delta)
+		_last = ratio
+		if shown - ratio < 0.004:
+			hide()
+			return
+		var w := bar.size.x
+		var x0 := 13.0 + (w - 13.0) * ratio if ratio > 0.0 else 0.0
+		var x1 := 13.0 + (w - 13.0) * shown
+		position = Vector2(x0, 4.0)
+		size = Vector2(maxf(x1 - x0, 1.0), maxf(bar.size.y - 8.0, 2.0))
+		show()
 class Compass extends Control:
 	var cardinals: Array = []  ## [angle to the view axis, letter]
 	var markers: Array = []  ## [angle, label, distance, color, icon id]
@@ -211,7 +283,7 @@ class Compass extends Control:
 				continue
 			var text: String = "%s %dm" % [String(m[1]).left(14), m[2]]
 			var tw := body.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12).x
-			var left := clampf(x - tw * 0.5, 8.0, w - tw - 8.0)
+			var left := clampf(x - tw * 0.5, 18.0, w - tw - 18.0)
 			var overlaps := false
 			for r in taken:
 				if left < r.y + 6.0 and left + tw > r.x - 6.0:
@@ -310,19 +382,50 @@ func set_run_options(seed_value: int, procedural: bool) -> void:
 	run_procedural = procedural
 
 
-## Short on-screen message; icon_id is an UiTheme.icon id (optional).
-func toast(text: String, seconds := 3.0, icon_id: StringName = &"") -> void:
+## Queued toast; milestones add a muted second line and larger icon without replacing each other.
+func toast(text: String, seconds := 3.0, icon_id: StringName = &"", subtitle := "", big := false) -> void:
 	_ensure_built()
-	_toast_label.text = text
+	var item := {"text": text, "seconds": seconds, "icon": icon_id, "sub": subtitle, "big": big}
+	if not _toast_active:
+		_toast_show(item)
+		return
+	if _toast_queue.is_empty() and _toast_label.text == text and _toast_sub.text == subtitle:
+		_toast_show(item)
+		return
+	_toast_queue.append(item)
+	while _toast_queue.size() > TOAST_QUEUE_MAX:
+		_toast_queue.pop_front()
+	if _toast_tween != null:
+		_toast_tween.kill()
+	_toast_tween = create_tween()
+	_toast_tween.tween_interval(0.9)
+	_toast_tween.tween_property(_toast_panel, "modulate:a", 0.0, 0.25)
+	_toast_tween.tween_callback(_toast_done)
+
+
+func _toast_show(item: Dictionary) -> void:
+	var big: bool = item["big"]
+	var icon_id: StringName = item["icon"]
+	_toast_label.text = item["text"]
+	_toast_label.add_theme_font_size_override("font_size", UiTheme.SIZE_HEADING if big else UiTheme.SIZE_BODY)
+	_toast_label.add_theme_color_override("font_color", UiTheme.GOLD if big else UiTheme.TEXT)
+	if big:
+		_toast_label.add_theme_font_override("font", UiTheme.title_font())
+	else:
+		_toast_label.remove_theme_font_override("font")
+	_toast_sub.text = item["sub"]
+	_toast_sub.visible = item["sub"] != ""
 	_toast_icon.texture = UiTheme.icon(icon_id) if icon_id != &"" else null
 	_toast_icon.visible = icon_id != &""
-	var entering := not _toast_panel.visible or _toast_panel.modulate.a < 1.0
+	var px := 52.0 if big else 32.0
+	_toast_icon.custom_minimum_size = Vector2(px, px)
+	var entering := not _toast_active or _toast_panel.modulate.a < 1.0
+	_toast_active = true
 	_toast_panel.show()
 	if _toast_tween != null:
 		_toast_tween.kill()
 	_toast_tween = create_tween()
 	if entering and UiTheme.animated():
-		# Drops in from slightly above while fading in; both strip offsets move together so its size holds.
 		_toast_panel.modulate.a = 0.0
 		_toast_tween.set_parallel().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		_toast_tween.tween_property(_toast_panel, "modulate:a", 1.0, 0.25)
@@ -331,9 +434,18 @@ func toast(text: String, seconds := 3.0, icon_id: StringName = &"") -> void:
 	else:
 		_toast_panel.modulate.a = 1.0
 		_slide_strip(0.0, _toast_panel, TOAST_TOP)
-	_toast_tween.tween_interval(seconds)
+	_toast_tween.tween_interval(float(item["seconds"]))
 	_toast_tween.tween_property(_toast_panel, "modulate:a", 0.0, 0.6)
-	_toast_tween.tween_callback(_toast_panel.hide)
+	_toast_tween.tween_callback(_toast_done)
+	if big:
+		_pop(_toast_icon, UiTheme.GOLD.lightened(0.4), 1.5)
+
+
+func _toast_done() -> void:
+	_toast_active = false
+	_toast_panel.hide()
+	if not _toast_queue.is_empty():
+		_toast_show(_toast_queue.pop_front())
 
 
 ## Registers (or replaces) the clip for an audio event, e.g. register_sfx(&"puzzle_solved", "res://....ogg", -4.0).
@@ -526,6 +638,25 @@ func _build_hud() -> void:
 	_hud.add_child(_flash)
 	_flash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
+	var vignette_gradient := Gradient.new()
+	vignette_gradient.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
+	vignette_gradient.colors = PackedColorArray([Color(UiTheme.HP, 0.0), Color(UiTheme.HP, 0.0), Color(UiTheme.HP, 0.58)])
+	var vignette_texture := GradientTexture2D.new()
+	vignette_texture.gradient = vignette_gradient
+	vignette_texture.fill = GradientTexture2D.FILL_RADIAL
+	vignette_texture.fill_from = Vector2(0.5, 0.5)
+	vignette_texture.fill_to = Vector2(1.0, 0.5)
+	vignette_texture.width = 256
+	vignette_texture.height = 256
+	_vignette = TextureRect.new()
+	_vignette.texture = vignette_texture
+	_vignette.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_vignette.stretch_mode = TextureRect.STRETCH_SCALE
+	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_vignette.modulate.a = 0.0
+	_hud.add_child(_vignette)
+	_vignette.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
 	# Vitals cluster (top-left): HP, stamina, potion + puzzle, artifact slots, objective.
 	var stats := _hud_panel()
 	_hud.add_child(stats)
@@ -537,13 +668,16 @@ func _build_hud() -> void:
 	var hp_row := HBoxContainer.new()
 	hp_row.add_theme_constant_override("separation", 8)
 	hp_row.add_child(_icon_rect(&"hp", 24.0, UiTheme.HP.lightened(0.2)))
-	_hp_bar = _bar(&"HpBar", 24.0, 232.0)
+	_hp_bar = _bar(&"HpBar", 24.0, 264.0)
 	_hp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hp_row.add_child(_hp_bar)
 	_hp_label = _outlined(_label("", UiTheme.SIZE_SMALL, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER), 3)
 	_hp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_hp_bar.add_child(_hp_label)
 	_hp_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_hp_ghost = Ghost.new(Color(1.0, 0.88, 0.58, 0.9))
+	_hp_bar.add_child(_hp_ghost)
+	_hp_bar.move_child(_hp_ghost, 0)
 	col.add_child(hp_row)
 
 	var st_row := HBoxContainer.new()
@@ -552,12 +686,16 @@ func _build_hud() -> void:
 	_st_bar = _bar(&"StaminaBar", 16.0)
 	_st_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_st_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_st_ghost = Ghost.new(Color(1.0, 0.95, 0.8, 0.85))
+	_st_bar.add_child(_st_ghost)
+	_st_bar.move_child(_st_ghost, 0)
 	st_row.add_child(_st_bar)
 	col.add_child(st_row)
 
 	var items := HBoxContainer.new()
 	items.add_theme_constant_override("separation", 8)
-	items.add_child(_icon_rect(&"potion", 24.0, Color("9ED2FF")))
+	_potion_icon = _icon_rect(&"potion", 24.0, Color("9ED2FF"))
+	items.add_child(_potion_icon)
 	_potion_label = _label("", UiTheme.SIZE_BODY)
 	items.add_child(_potion_label)
 	_potion_key = _key_cap(24.0)
@@ -592,10 +730,18 @@ func _build_hud() -> void:
 	var flag := _icon_rect(&"objective", 24.0, UiTheme.GOLD)
 	flag.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	goal.add_child(flag)
-	_objective_label = _label("", 16)
+	var goal_text := VBoxContainer.new()
+	goal_text.add_theme_constant_override("separation", 2)
+	goal.add_child(goal_text)
+	_objective_head = _outlined(_label("", UiTheme.SIZE_BODY, UiTheme.GOLD), 2)
+	_objective_head.custom_minimum_size.x = 232.0
+	_objective_head.clip_text = true
+	_objective_head.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	goal_text.add_child(_objective_head)
+	_objective_label = _label("", UiTheme.SIZE_SMALL + 1)
 	_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_objective_label.custom_minimum_size.x = 232.0
-	goal.add_child(_objective_label)
+	goal_text.add_child(_objective_label)
 	col.add_child(goal)
 
 	_compass = Compass.new()
@@ -634,9 +780,15 @@ func _build_hud() -> void:
 	toast_box.add_child(toast_row)
 	_toast_icon = _icon_rect(&"objective", 32.0, UiTheme.GOLD)
 	toast_row.add_child(_toast_icon)
-	_toast_label = _label("", UiTheme.SIZE_BODY, UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER)
-	_toast_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	toast_row.add_child(_toast_label)
+	var toast_col := VBoxContainer.new()
+	toast_col.add_theme_constant_override("separation", 0)
+	toast_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	toast_row.add_child(toast_col)
+	_toast_label = _label("", UiTheme.SIZE_BODY, UiTheme.TEXT, HORIZONTAL_ALIGNMENT_LEFT)
+	toast_col.add_child(_toast_label)
+	_toast_sub = _label("", UiTheme.SIZE_SMALL, UiTheme.MUTED, HORIZONTAL_ALIGNMENT_LEFT)
+	_toast_sub.hide()
+	toast_col.add_child(_toast_sub)
 	_toast_panel = _centered_strip(toast_box, true, TOAST_TOP)
 	_toast_panel.hide()
 
@@ -815,7 +967,12 @@ func _read_block(block: Dictionary) -> Dictionary:
 func _build_menu() -> void:
 	_menu_panel = _overlay_root(true)
 	var box := _framed_column(_menu_panel, 440.0)
-	box.add_child(_title("THE LOST ISLAND"))
+	var pretitle := _label("THE", UiTheme.SIZE_BODY, UiTheme.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	pretitle.add_theme_font_override("font", UiTheme.title_font())
+	box.add_child(pretitle)
+	var heading := _title("LOST ISLAND")
+	heading.add_theme_font_size_override("font_size", 56)
+	box.add_child(heading)
 	var tagline := _label("Terdampar. Temukan tiga artefak. Bangunkan sang penjaga.", UiTheme.SIZE_SMALL, UiTheme.MUTED, HORIZONTAL_ALIGNMENT_CENTER)
 	box.add_child(tagline)
 	box.add_child(UiTheme.divider())
@@ -951,6 +1108,8 @@ func _hook_pause_panel() -> void:
 	var box := resume.get_parent()
 	var row := _volume_row(box)
 	box.move_child(row, resume.get_index() + 1)
+	var feel := GamePreferences.build_feel_rows(box)
+	box.move_child(feel, row.get_index() + 1)
 	var save := Button.new()
 	save.text = "Simpan Progres"
 	save.icon = UiTheme.icon(&"save")
@@ -959,7 +1118,7 @@ func _hook_pause_panel() -> void:
 	save.pressed.connect(_on_save_pressed)
 	UiTheme.hover_button(save)
 	box.add_child(save)
-	box.move_child(save, row.get_index() + 1)
+	box.move_child(save, feel.get_index() + 1)
 	_pause_status = _label("", UiTheme.SIZE_SMALL, UiTheme.MUTED, HORIZONTAL_ALIGNMENT_CENTER)
 	_pause_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_pause_status.custom_minimum_size.x = 240.0
@@ -1396,11 +1555,20 @@ func _on_attack_hit(target: Node, _amount: int) -> void:
 		_hit_tween.tween_property(_hit_mark, "modulate:a", 0.0, 0.22 if dead else 0.14)
 
 
-func _on_damage_taken(_amount: int, blocked: bool) -> void:
+func _on_damage_taken(amount: int, blocked: bool) -> void:
 	play_event(&"block_hit" if blocked else &"hurt")
-	_flash.color = Color(UiTheme.HP, 0.0 if blocked else 0.35)
+	if blocked:
+		_st_flash = 1.0
+		return
+	_hurt_level = clampf(0.32 + float(amount) / 90.0, 0.32, 0.55)
+	_hp_hit = 1.0
+	_flash.color = Color(UiTheme.HP, 0.08)
 	var tween := create_tween()
-	tween.tween_property(_flash, "color:a", 0.0, 0.35)
+	tween.tween_property(_flash, "color:a", 0.0, 0.3)
+func _on_action_refused(action: StringName) -> void:
+	play_event(&"error")
+	if action == &"dodge" or action == &"block":
+		_st_denied = 1.0
 
 
 func _on_player_died() -> void:
@@ -1410,9 +1578,6 @@ func _on_player_died() -> void:
 		_boss_active = false
 		_music_to(MUSIC_EXPLORE)
 
-
-func _on_action_refused(_action: StringName) -> void:
-	play_event(&"error")
 
 
 func _on_potion_drunk(healed: int) -> void:
@@ -1468,6 +1633,8 @@ func _on_boss_completed() -> void:
 # ======================================================================================================================
 
 func _process(delta: float) -> void:
+	_update_mix(delta)
+	_update_alert(delta)
 	if _map_open:
 		if _overlay_open or _camera_pause_visible():
 			_close_map(false)
@@ -1484,6 +1651,7 @@ func _process(delta: float) -> void:
 		return
 	_run_time += delta
 	_update_resources()
+	_update_alert(delta)
 	_update_prompt()
 	_update_compass(delta)
 	_poll_timer += delta
@@ -1510,6 +1678,7 @@ func _update_resources() -> void:
 		var hp_max := int(health.max_health)
 		_hp_bar.max_value = hp_max
 		_hp_bar.value = cur
+		_hp_ratio = float(cur) / maxf(float(hp_max), 1.0)
 		if cur != _shown_hp or hp_max != _shown_hp_max:
 			_shown_hp = cur
 			_shown_hp_max = hp_max
@@ -1535,6 +1704,36 @@ func _update_resources() -> void:
 		_shown_puzzles = puzzles
 		_puzzle_label.text = "%d/%d" % [puzzles, PUZZLE_KEYS.size()]
 
+
+
+func _update_alert(delta: float) -> void:
+	_alert_time += delta
+	_hurt_level = maxf(0.0, _hurt_level - delta * 1.8)
+	_st_flash = maxf(0.0, _st_flash - delta * 4.0)
+	_st_denied = maxf(0.0, _st_denied - delta * 3.0)
+	var pulse := 0.0
+	if _hp_ratio > 0.0 and _hp_ratio <= LOW_HP_RATIO:
+		var severity := 1.0 if _hp_ratio <= 0.15 else 0.55
+		pulse = severity * (0.05 + 0.12 * (0.5 + 0.5 * sin(_alert_time * TAU * 0.9)))
+	_vignette.modulate.a = maxf(_hurt_level * 0.72, pulse)
+	var stamina_ratio: float = _st_bar.value / maxf(_st_bar.max_value, 1.0)
+	var tint := Color(1.0, 0.5, 0.45) if stamina_ratio < LOW_STAMINA_RATIO else Color.WHITE
+	if _st_flash > 0.0:
+		tint = tint.lerp(Color(1.7, 1.7, 1.7), _st_flash * 0.8)
+	if _st_denied > 0.0:
+		tint = tint.lerp(Color(2.0, 0.3, 0.3), _st_denied)
+	_st_bar.self_modulate = tint
+
+
+func _pop(control: Control, tint: Color, scale_to: float) -> void:
+	if not UiTheme.animated() or not control.is_inside_tree():
+		return
+	control.pivot_offset = control.get_combined_minimum_size() * 0.5
+	control.scale = Vector2.ONE * scale_to
+	control.modulate = tint
+	var tween := control.create_tween().set_parallel()
+	tween.tween_property(control, "scale", Vector2.ONE, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(control, "modulate", Color.WHITE, 0.55)
 
 func _update_prompt() -> void:
 	var prompt: String = _interactor.get_prompt() if _interactor != null else ""
@@ -1734,7 +1933,10 @@ func _update_compass(delta: float) -> void:
 	_compass.cardinals = cardinals
 	_compass.markers = markers
 	_compass.queue_redraw()
-	_objective_label.text = _objective_text(nearest, nearest_d)
+	var parts := _objective_parts(nearest, nearest_d)
+	_objective_head.text = parts[0]
+	_objective_label.text = parts[1]
+	_objective_label.visible = parts[1] != ""
 
 
 ## Compass icon for a target: its artifact art, the gate guardian, the pier, else a flag.
@@ -1748,23 +1950,22 @@ func _marker_icon(label: String, id: StringName) -> StringName:
 	return &"objective"
 
 
-func _objective_text(nearest: Dictionary, dist: float) -> String:
+func _objective_parts(nearest: Dictionary, dist: float) -> Array:
 	if _completed:
-		return ""
+		return ["", ""]
 	if _boss_active:
-		return "Kalahkan Penjaga Gerbang. Baca telegraph, hindari, lalu serang."
+		return ["Kalahkan Penjaga Gerbang", "Baca telegraph, hindari, lalu serang."]
 	var artifacts: int = _session.count_kind(&"artifact") if _session != null else 0
-	var lines: Array[String] = []
-	if not nearest.is_empty():
-		var text: String = nearest["hint"] if nearest["hint"] != "" else "Menuju %s" % nearest["label"]
-		if nearest["region"] != "":
-			text += " (%s)" % nearest["region"]
-		lines.append("%s — %d m" % [text, int(dist)])
-	elif artifacts < ARTIFACTS_NEEDED:
-		lines.append("Jelajahi pulau, selesaikan puzzle, cari artefak.")
-	else:
-		lines.append("Semua artefak terkumpul. Menuju gerbang.")
-	return "\n".join(lines)
+	if nearest.is_empty():
+		return ["Jelajahi pulau", "Selesaikan puzzle dan cari artefak."] if artifacts < ARTIFACTS_NEEDED else ["Artefak lengkap", "Menuju gerbang."]
+	var hint: String = nearest["hint"] if nearest["hint"] != "" else "Menuju %s" % nearest["label"]
+	if nearest["region"] != "":
+		hint += " (%s)" % nearest["region"]
+	return ["%s — %d m" % [nearest["label"], int(dist)], hint]
+
+
+func _objective_text(nearest: Dictionary, _dist: float) -> String:
+	return _objective_parts(nearest, 10.0)[1]
 
 
 func _hide_debug_labels() -> void:
@@ -1820,11 +2021,19 @@ func _poll_session() -> void:
 	if artifacts > _base_artifacts:
 		play_event(&"artifact")
 		var found_icon := &"artifact_forest"
+		var found_from := ""
 		for id in ARTIFACT_ORDER:
 			if _session.is_collected(id) and not _announced.has(id):
 				_announced[id] = true
 				found_icon = ARTIFACT_ICONS[id]
-		toast("Artefak %d/%d ditemukan" % [artifacts, ARTIFACTS_NEEDED], 3.5, found_icon)
+				match id:
+					&"forest_artifact":
+						found_from = "Pilar Simbol"
+					&"energy_artifact":
+						found_from = "Jalur Energi"
+					&"summit_artifact":
+						found_from = "Puncak"
+		toast("Artefak %d/%d ditemukan" % [artifacts, ARTIFACTS_NEEDED], 3.5, found_icon, "Ditemukan di " + found_from, true)
 		if artifacts >= ARTIFACTS_NEEDED:
 			toast("Ketiga artefak terkumpul. Gerbang menunggu.", 4.5, &"boss")
 		_refresh_targets()
@@ -1918,9 +2127,10 @@ func _build_audio() -> void:
 	_music = AudioStreamPlayer.new()
 	_music.name = "Music"
 	_music.volume_db = -12.0
+	_music.volume_db = SILENT_DB
 	add_child(_music)
-	_forest = _loop_player("AmbienceForest", AMBIENCE_FOREST, -14.0)
-	_sea = _loop_player("AmbienceSea", AMBIENCE_SEA, -16.0)
+	_forest = _loop_player("AmbienceForest", AMBIENCE_FOREST, FOREST_DB)
+	_sea = _loop_player("AmbienceSea", AMBIENCE_SEA, SEA_DB)
 	_register_defaults()
 	_music_to(MUSIC_EXPLORE)
 
@@ -1928,7 +2138,7 @@ func _build_audio() -> void:
 func _loop_player(node_name: String, path: String, db: float) -> AudioStreamPlayer:
 	var p := AudioStreamPlayer.new()
 	p.name = node_name
-	p.volume_db = db
+	p.volume_db = SILENT_DB
 	add_child(p)
 	var stream := _load_stream(path)
 	if stream != null:
@@ -1968,16 +2178,34 @@ func _music_to(path: String) -> void:
 	var stream := _load_stream(path)
 	if stream == null:
 		return
-	if _music_tween != null:
-		_music_tween.kill()
-	_music_tween = create_tween()
-	var boss := path != MUSIC_EXPLORE
+	_music_goal_db = MUSIC_DB if path == MUSIC_EXPLORE else MUSIC_BOSS_DB
 	if _music.playing:
-		_music_tween.tween_property(_music, "volume_db", -50.0, 0.6)
-	_music_tween.tween_callback(func() -> void:
+		_music_pending = stream
+		_music_target = SILENT_DB
+	else:
+		_music_pending = null
 		_music.stream = stream
-		_music.play())
-	_music_tween.tween_property(_music, "volume_db", -9.0 if boss else -12.0, 1.0)
+		_music.play()
+		_music_target = _music_goal_db
+
+
+func _update_mix(delta: float) -> void:
+	if _quitting or _music == null:
+		return
+	_music_level = move_toward(_music_level, _music_target, (75.0 if _music_target < _music_level else 30.0) * delta)
+	if _music_pending != null and _music_level <= SILENT_DB + 1.0:
+		_music.stream = _music_pending
+		_music_pending = null
+		_music.play()
+		_music_target = _music_goal_db
+	var pause_mix := 1.0 if get_tree().paused or _map_open else 0.0
+	_pause_duck = move_toward(_pause_duck, pause_mix, delta / 0.35)
+	_boss_duck = move_toward(_boss_duck, 1.0 if _boss_active else 0.0, delta / 1.2)
+	_ambience_in = move_toward(_ambience_in, 1.0, delta / 3.0)
+	var ambience_db := (1.0 - _ambience_in) * 40.0 + DUCK_PAUSE_AMBIENCE_DB * _pause_duck + DUCK_BOSS_AMBIENCE_DB * _boss_duck
+	_music.volume_db = _music_level + DUCK_PAUSE_MUSIC_DB * _pause_duck
+	_forest.volume_db = maxf(FOREST_DB + ambience_db, SILENT_DB)
+	_sea.volume_db = maxf(SEA_DB + ambience_db, SILENT_DB)
 
 
 func _seq(prefix: String, first: int, last: int, suffix: String, digits := 2) -> Array:

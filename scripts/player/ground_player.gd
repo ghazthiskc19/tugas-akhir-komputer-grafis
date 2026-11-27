@@ -387,6 +387,7 @@ func receive_damage(amount: int) -> bool:
 		return false
 	if _dodging and _dodge_time < dodge_iframes:
 		return false
+	var was_blocking := _blocking
 	var blocked := _blocking
 	if blocked:
 		var impact := maxf(8.0, float(amount) * 0.8)
@@ -405,7 +406,7 @@ func receive_damage(amount: int) -> bool:
 	if not _health.apply_damage(final_amount):
 		return false
 	damage_taken.emit(final_amount, blocked)
-	_vfx_damage(blocked)
+	_vfx_damage(blocked, was_blocking and _block_broken)
 	return true
 
 
@@ -641,6 +642,9 @@ func _update_block(want: bool, delta: float) -> void:
 			_block_broken = true
 			_block_refused_latch = true
 			action_refused.emit(&"block")
+			Vfx.guard_break(self, global_position + Vector3(0.0, 1.1, 0.0) + _vfx_forward() * 0.35, _vfx_forward())
+			Vfx.shake(self, 0.55)
+			Vfx.sound(self, &"guard_break")
 
 
 var _block_refused_latch := false
@@ -791,25 +795,40 @@ func _vfx_swing() -> void:
 
 func _vfx_hit(area: Node) -> void:
 	var finisher := _combo_step >= ATTACK_STEPS.size() - 1
-	Vfx.shake(self, 0.4 if finisher else 0.2)
-	Vfx.hit_stop(self, 0.08 if finisher else 0.04)
+	Vfx.shake(self, 0.75 if finisher else 0.45)
+	Vfx.hit_stop(self, 0.14 if finisher else 0.07)
+	if finisher:
+		Vfx.sound(self, &"finisher")
+	var victim := area.get_parent()
+	if victim != null and victim.has_method(&"react_hit"):
+		victim.call(&"react_hit", global_position, finisher)
 	Vfx.hit_spark(self, _hurtbox_center(area), _vfx_forward() + Vector3.UP * 0.3, finisher,
 		Vfx.GOLD if finisher else Color(1.0, 0.92, 0.6))
 
 
-func _vfx_damage(blocked: bool) -> void:
+func _vfx_damage(blocked: bool, broke := false) -> void:
 	var forward := _vfx_forward()
 	var chest := global_position + Vector3(0.0, 1.1, 0.0) + forward * 0.35
-	if blocked:
+	if broke:
+		# Guard shatter: unlike a block spark (small, steel) this is a wide white-blue burst with the strongest shake.
+		Vfx.guard_break(self, chest, forward)
+		Vfx.shake(self, 1.0)
+		Vfx.hit_stop(self, 0.12)
+		Vfx.sound(self, &"guard_break")
+		Vfx.screen_flash(self, Color(0.55, 0.85, 1.0) if blocked else Vfx.HURT_RED, 0.8)
+		if not blocked:
+			Vfx.burst(self, Vfx.Kind.SPARK, chest, forward + Vector3.UP * 0.5, Vfx.HURT_RED, 1.1)
+	elif blocked:
 		Vfx.hit_spark(self, chest, forward + Vector3.UP * 0.2, false, Vfx.STEEL)
-		Vfx.shake(self, 0.22)
+		Vfx.shake(self, 0.32)
 		Vfx.ring(self, global_position + Vector3(0.0, 0.08, 0.0), 1.0, Vfx.STEEL, 0.25, 0.14)
 	else:
 		Vfx.burst(self, Vfx.Kind.FLASH, chest, Vector3.UP, Color(1.0, 0.45, 0.35), 1.1)
 		Vfx.burst(self, Vfx.Kind.SPARK, chest, forward + Vector3.UP * 0.5, Vfx.HURT_RED, 1.1)
 		Vfx.burst(self, Vfx.Kind.GLOW, chest, Vector3.UP, Vfx.HURT_RED, 0.9)
-		Vfx.shake(self, 0.5)
-		Vfx.hit_stop(self, 0.05)
+		Vfx.shake(self, 0.85)
+		Vfx.hit_stop(self, 0.09)
+		Vfx.screen_flash(self, Vfx.HURT_RED, 0.9)
 
 
 func _vfx_heal() -> void:
