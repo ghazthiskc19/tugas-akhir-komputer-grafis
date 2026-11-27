@@ -173,6 +173,29 @@ static func poof(from: Node, pos: Vector3, tint := Color(0.7, 0.68, 0.7, 0.8)) -
 	burst(from, Kind.GLOW, pos, Vector3.UP, Color(1.0, 0.9, 0.7), 1.2)
 	burst(from, Kind.HEAL, pos, Vector3.UP, Color(0.75, 0.9, 1.0), 1.0)
 
+## Camera shake (trauma 0..1, additive, decays). Falls off with distance when `at` is given. No-op without a shaking camera.
+static func shake(from: Node, amount: float, at := Vector3.INF) -> void:
+	if from == null or not from.is_inside_tree():
+		return
+	var cam := from.get_viewport().get_camera_3d()
+	if cam == null or not cam.has_method(&"add_shake"):
+		return
+	var falloff := 1.0
+	if at != Vector3.INF:
+		falloff = clampf(1.0 - cam.global_position.distance_to(at) / 40.0, 0.0, 1.0)
+	cam.call(&"add_shake", amount * falloff)
+
+
+## Brief time dip on a landed hit. Skipped headless so QA timing stays deterministic and while another stop is running.
+static func hit_stop(from: Node, duration: float, time_scale := 0.05) -> void:
+	if from == null or not from.is_inside_tree() or DisplayServer.get_name() == "headless":
+		return
+	if Engine.time_scale < 1.0 or from.get_tree().paused:
+		return
+	Engine.time_scale = time_scale
+	from.get_tree().create_timer(duration, true, false, true).timeout.connect(func() -> void: Engine.time_scale = 1.0)
+
+
 
 # ------------------------------------------------------------------------------------------------- instance
 

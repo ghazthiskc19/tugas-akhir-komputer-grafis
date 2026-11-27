@@ -638,7 +638,7 @@ func _steer(dir: Vector3) -> Vector3:
 	var space := get_world_3d().direct_space_state
 	var origin := global_position + Vector3.UP * 0.6
 	var query := PhysicsRayQueryParameters3D.new()
-	query.collision_mask = WORLD_MASK | 8
+	query.collision_mask = WORLD_MASK | 8 | 16
 	query.exclude = [get_rid()]
 	var push := Vector3.ZERO
 	var blocked_center := false
@@ -763,6 +763,7 @@ func _vfx_strike() -> void:
 			Vfx.slash(self, global_position + Vector3(0.0, 1.3, 0.0) + forward * 0.3, yaw, reach * 0.65, 150.0,
 				Color(1.0, 0.72, 0.3), 0.3, 90.0 if _chain_step == 0 else 0.0, true)
 			Vfx.ground_impact(self, global_position + forward * reach * 0.7, 1.9, Color(1.0, 0.4, 0.15))
+			Vfx.shake(self, 0.3, global_position)
 
 
 func _vfx_muzzle() -> void:
@@ -819,6 +820,7 @@ func _on_health_dead() -> void:
 	_anim.play(&"death", 0.1, 1.0)
 	_update_label()
 	Vfx.poof(self, global_position + Vector3(0.0, 0.9, 0.0))
+	Vfx.shake(self, 0.2, global_position)
 	if not _defeated_emitted:
 		_defeated_emitted = true
 		defeated.emit(enemy_id)

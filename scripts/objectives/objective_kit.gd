@@ -4,7 +4,8 @@ extends RefCounted
 ## Use via `const Kit := preload("res://scripts/objectives/objective_kit.gd")`.
 
 const WORLD_LAYER := 1
-## Enemy bodies live on layer 8 and collide with it; the player (mask 1) ignores it. Used for enemy-only guards.
+## Enemy-only guards live on layer 8 (enemies collide, the player ignores it). Enemy bodies themselves are layer 16:
+## the player collides with them (mask 17) while enemies ignore the player's layer, so they cannot be shoved.
 const ENEMY_ONLY_LAYER := 8
 
 const DUNGEON := "res://assets/third_party/kaykit/dungeon/%s.gltf"

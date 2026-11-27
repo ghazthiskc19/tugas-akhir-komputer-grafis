@@ -589,6 +589,7 @@ func _try_dodge(direction: Vector3) -> bool:
 	_since_stamina_spend = 0.0
 	_blocking = false
 	_dodging = true
+	collision_mask = 1  # Dodge passes through enemy bodies (layer 16); walls still block.
 	_dodge_time = 0.0
 	var facing := Basis(Vector3.UP, rotation.y)
 	_dodge_dir = direction.normalized() if direction != Vector3.ZERO else -(facing * Vector3.BACK)
@@ -673,6 +674,7 @@ var _last_stamina := -1.0
 
 func _end_dodge() -> void:
 	_dodging = false
+	collision_mask = 17
 	_dodge_time = 0.0
 	_tree.set(PARAM_DODGE, AnimationNodeOneShot.ONE_SHOT_REQUEST_ABORT)
 
@@ -789,6 +791,8 @@ func _vfx_swing() -> void:
 
 func _vfx_hit(area: Node) -> void:
 	var finisher := _combo_step >= ATTACK_STEPS.size() - 1
+	Vfx.shake(self, 0.4 if finisher else 0.2)
+	Vfx.hit_stop(self, 0.08 if finisher else 0.04)
 	Vfx.hit_spark(self, _hurtbox_center(area), _vfx_forward() + Vector3.UP * 0.3, finisher,
 		Vfx.GOLD if finisher else Color(1.0, 0.92, 0.6))
 
@@ -798,11 +802,14 @@ func _vfx_damage(blocked: bool) -> void:
 	var chest := global_position + Vector3(0.0, 1.1, 0.0) + forward * 0.35
 	if blocked:
 		Vfx.hit_spark(self, chest, forward + Vector3.UP * 0.2, false, Vfx.STEEL)
+		Vfx.shake(self, 0.22)
 		Vfx.ring(self, global_position + Vector3(0.0, 0.08, 0.0), 1.0, Vfx.STEEL, 0.25, 0.14)
 	else:
 		Vfx.burst(self, Vfx.Kind.FLASH, chest, Vector3.UP, Color(1.0, 0.45, 0.35), 1.1)
 		Vfx.burst(self, Vfx.Kind.SPARK, chest, forward + Vector3.UP * 0.5, Vfx.HURT_RED, 1.1)
 		Vfx.burst(self, Vfx.Kind.GLOW, chest, Vector3.UP, Vfx.HURT_RED, 0.9)
+		Vfx.shake(self, 0.5)
+		Vfx.hit_stop(self, 0.05)
 
 
 func _vfx_heal() -> void:

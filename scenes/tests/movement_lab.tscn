@@ -168,7 +168,7 @@ text = "DINDING UJI"
 [node name="Player" type="CharacterBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 4)
 collision_layer = 2
-collision_mask = 1
+collision_mask = 17
 script = ExtResource("1_player")
 camera_path = NodePath("../Camera3D")
 

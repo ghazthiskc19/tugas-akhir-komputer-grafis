@@ -28,6 +28,11 @@ var _pitch := 0.0
 ## Jarak lengan yang diminta (target zoom). Subclass collision dapat menempatkan kamera lebih dekat.
 var _ideal_distance := 1.0
 var _focus := Vector3.ZERO
+## Guncangan: trauma ^2 * SHAKE_METERS geser frustum, meluruh SHAKE_DECAY per detik.
+const MAX_SHAKE := 1.0
+const SHAKE_DECAY := 2.2
+const SHAKE_METERS := 0.22
+var _shake := 0.0
 
 var _arm_distance := 1.0
 var _captured := false
@@ -250,12 +255,29 @@ func _zoom(amount: float) -> void:
 	set_zoom_distance(_ideal_distance + amount)
 
 
+## Tambah guncangan kamera (trauma 0..1, menumpuk, meluruh). Hanya menggeser frustum (h/v_offset), bukan posisi kamera.
+func add_shake(amount: float) -> void:
+	_shake = minf(_shake + amount, MAX_SHAKE)
+
+
+func _apply_shake(delta: float) -> void:
+	if _shake <= 0.0:
+		h_offset = 0.0
+		v_offset = 0.0
+		return
+	_shake = maxf(_shake - SHAKE_DECAY * delta, 0.0)
+	var strength := _shake * _shake * SHAKE_METERS
+	h_offset = randf_range(-1.0, 1.0) * strength
+	v_offset = randf_range(-1.0, 1.0) * strength
+
+
 func _process(delta: float) -> void:
 	if is_paused():
 		return
 	_update_stick(delta)
 	_follow_focus(delta)
 	_place(delta)
+	_apply_shake(delta)
 
 
 ## Stick: deadzone radial lalu skala ulang; device dengan defleksi terbesar yang dipakai.
