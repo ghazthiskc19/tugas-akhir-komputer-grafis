@@ -209,6 +209,8 @@ Shader/material/lighting/air/efek dipoles setelah gameplay inti stabil, sesuai p
 
 Jalankan `scenes/tests/adventure_lab.tscn` dengan **F6** (arena prototipe terpisah, bukan pulau penuh; pulau ada di [Memainkan The Lost Island](#memainkan-the-lost-island-level-1)). Arena tetap ini menggabungkan combo, defense, potion, tiga musuh, pickup dan checkpoint.
 
+**Combat Arena (playtest).** Buka `scenes/tests/combat_arena.tscn` lalu **F6**. Pakai pemain, kamera, musuh, dan Gatekeeper asli Pulau 1 di arena terpisah. Tekan **1** duel melee, **2** heavy + ranged, **3** campuran, **4** Gatekeeper (artefak sudah terpasang; tekan E di altar). **F5** mengulang stage dengan HP/stamina/potion (3) penuh. HUD menampilkan waktu, jumlah kena, blok, damage diterima, potion dipakai dan kematian untuk membandingkan revisi. Hanya cek headless: stage terbentuk, clear/boss menang tercatat; rasa main belum dinilai manusia.
+
 Baseline default fast-paced: **WASD** 6 m/s, **Shift tahan** sprint 9 m/s + jejak debu, **Alt** dodge, **LMB** combo, **RMB tahan** block, **Q** potion, **E** interaksi, **Space** lompat, **Esc** jeda. Sprint tanpa drain stamina tambahan; block/dodge memakai stamina. Default swing **0,2 s** mencakup playback penuh dan timing hit/combo. Serangan tanpa slowdown dan rotasi bebas.
 
 Checkpoint tidak memberi heal gratis. Respawn memulihkan HP/stamina, mempertahankan potion tersisa, artefak/pickup yang sudah diambil dan musuh yang sudah mati selama sesi. **Batch diterima pengguna pada 22 November 2026.** Progres, batas verifikasi dan urutan berikutnya dicatat di [Session Handoff](docs/implementation/SESSION_HANDOFF.md).
