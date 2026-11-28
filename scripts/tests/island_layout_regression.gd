@@ -3,6 +3,7 @@ extends SceneTree
 ##   godot --headless --path . --script res://scripts/tests/island_layout_regression.gd
 const T := preload("res://scripts/world/island_terrain.gd")
 const L := preload("res://scripts/world/island_layout.gd")
+const P := preload("res://scripts/world/central_passage.gd")
 const SEEDS := [0, 1, 2, 3, 5, 11, 17, 23, 42, 64, 99, 123, 256, 777, 1024, 20261117]
 
 var failures := 0
@@ -51,8 +52,28 @@ func _init() -> void:
 		_check_side(s, t2)
 		print("seed %d: swapped=%s symbol.x=%.1f fallback=%s" % [s, t2.layout["swapped"], t2.layout["anchors"][&"symbol"].x, t2.used_fallback])
 		t2.free()
+	_check_passage()
 	print("island_layout_regression: %d failure(s)" % failures)
 	quit(1 if failures > 0 else 0)
+
+
+## Central causeway: walls + sealed gate must exist for the baseline and procedural layouts, and the flood-fill proof must show no
+## side-stepping (closed passage is a sealed pocket), a working doorway, a free mouth and reachable branches.
+func _check_passage() -> void:
+	var cases: Array = [[20261122, false], [42, true], [7, true], [777, true], [20261117, true], [1, true], [99, true]]
+	for c: Array in cases:
+		var t: Node3D = T.new()
+		t.configure(c[0], c[1])
+		t.generate_data()
+		var plan: Dictionary = P.plan(t)
+		check(bool(plan["ok"]), "passage plan seed %d procedural %s: %s" % [c[0], c[1], plan["errors"]])
+		if bool(plan["ok"]):
+			var v: Dictionary = P.verify_topology(t, plan)
+			check(v["sealed"] and v["opens"] and v["mouth_free"] and v["branches"], "passage topology seed %d: %s" % [c[0], v])
+			print("passage seed %d: run %d samples, interior cells %d" % [c[0], (plan["left"] as Array).size(), v["interior_cells"]])
+		t.free()
+
+
 
 
 func _check_side(s: int, t: Node3D) -> void:

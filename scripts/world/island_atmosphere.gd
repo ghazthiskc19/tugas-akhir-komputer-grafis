@@ -12,10 +12,11 @@ const TERRAIN_SHADER := "res://shaders/island/island_terrain.gdshader"
 const STONE_SHADER := "res://shaders/island/island_stone.gdshader"
 const SHORE_RES := 256
 const SHORE_RANGE := 6.0
-const CLOUD_COUNT := 14
 const MOTE_COUNT := 90
+const SKY_SHADER := "res://shaders/island/island_sky.gdshader"
+const CANOPY_SHADER := "res://shaders/island/canopy_blob.gdshader"
+const FOG_COLOR := Color(0.72, 0.81, 0.86)
 
-var _clouds: Node3D
 var _noise_tex: Texture2D
 
 
@@ -29,15 +30,9 @@ func build(rig: Node, terrain: Node3D) -> void:
 	_build_shore(terrain)
 	_detail_terrain(terrain)
 	_sway_foliage(terrain)
+	_build_canopy_clusters(terrain)
 	_stone_decoration(rig, terrain)
-	_limit_decoration_range(terrain)
-	_build_clouds(terrain)
 	_build_motes(rig)
-
-
-func _process(delta: float) -> void:
-	if _clouds != null:
-		_clouds.rotation.y += delta * 0.004
 
 
 # ---- Sky / fog / grade -----------------------------------------------------------------------------------------------
@@ -47,15 +42,10 @@ func _build_environment(rig: Node) -> void:
 		holder = WorldEnvironment.new()
 		holder.name = "WorldEnvironment"
 		rig.add_child(holder)
-	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.27, 0.5, 0.84)
-	sky_mat.sky_horizon_color = Color(0.78, 0.87, 0.94)
-	sky_mat.sky_curve = 0.14
-	sky_mat.ground_horizon_color = Color(0.74, 0.76, 0.68)
-	sky_mat.ground_bottom_color = Color(0.5, 0.46, 0.34)
-	sky_mat.ground_curve = 0.06
-	sky_mat.sun_angle_max = 22.0
-	sky_mat.sun_curve = 0.12
+	var sky_mat := ShaderMaterial.new()
+	sky_mat.shader = load(SKY_SHADER) as Shader
+	sky_mat.set_shader_parameter("horizon_color", FOG_COLOR)
+	sky_mat.set_shader_parameter("ground_color", FOG_COLOR)
 	var sky := Sky.new()
 	sky.sky_material = sky_mat
 	sky.radiance_size = Sky.RADIANCE_SIZE_64
@@ -66,32 +56,34 @@ func _build_environment(rig: Node) -> void:
 	# Flat cool-neutral fill (sky-derived ambient is a strong blue in Compatibility and greys the sand and foliage).
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.9, 0.93, 1.0)
-	env.ambient_light_energy = 0.36
+	env.ambient_light_energy = 0.4
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_white = 6.0
 	env.tonemap_exposure = 0.95
-	# Distance fog veils far terrain and lets the horizon dissolve into the sky/sea palette.
-	# Depth mode's start/end are easier to tune against camera distance than density.
+	# Depth fog: combat range (< ~35 m) stays clear, the island dissolves into the haze by ~130 m. fog_density
+	# scales the depth-mode result; 1.0 is set explicitly rather than relying on the engine default.
+	# The sky shader's horizon uses the same colour, so far terrain/sea and sky share one seam.
 	env.fog_enabled = true
 	env.fog_mode = Environment.FOG_MODE_DEPTH
-	env.fog_light_color = Color(0.72, 0.81, 0.86)
+	env.fog_light_color = FOG_COLOR
 	env.fog_light_energy = 1.0
-	env.fog_depth_begin = 75.0
-	env.fog_depth_end = 330.0
-	env.fog_depth_curve = 1.15
-	env.fog_sky_affect = 0.25
-	env.fog_aerial_perspective = 0.16
-	env.fog_sun_scatter = 0.12
+	env.fog_density = 1.0
+	env.fog_depth_begin = 35.0
+	env.fog_depth_end = 130.0
+	env.fog_depth_curve = 1.5
+	env.fog_sky_affect = 0.0
+	env.fog_aerial_perspective = 0.0
+	env.fog_sun_scatter = 0.0
 	env.adjustment_enabled = true
 	env.adjustment_contrast = 1.08
-	env.adjustment_saturation = 1.12
+	env.adjustment_saturation = 1.15
 	env.glow_enabled = true
 	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
-	env.glow_intensity = 0.55
+	env.glow_intensity = 0.5
 	env.glow_strength = 0.9
 	env.glow_bloom = 0.0
-	env.glow_hdr_threshold = 0.92
+	env.glow_hdr_threshold = 1.0
 	env.glow_hdr_scale = 2.0
 	holder.environment = env
 
@@ -205,20 +197,6 @@ func _stone_decoration(rig: Node, terrain: Node3D) -> void:
 			cache[key] = sm
 		g.material_override = cache[key]
 
-
-## Foliage/loose decor fades before the fog reaches its dense far range; no geometry or gameplay is removed.
-func _limit_decoration_range(terrain: Node3D) -> void:
-	var deco := terrain.get_node_or_null(^"Decoration")
-	if deco == null:
-		return
-	for node in deco.find_children("*", "GeometryInstance3D", true, false):
-		var instance := node as GeometryInstance3D
-		instance.visibility_range_begin = 195.0
-		instance.visibility_range_begin_margin = 35.0
-		instance.visibility_range_end = 300.0
-		instance.visibility_range_end_margin = 45.0
-		instance.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
-
 ## Wind sway for trees and bushes. They are MultiMeshes sharing one palette material, so one ShaderMaterial per class
 ## (tall / low) is applied as material_override: zero extra draw calls.
 func _sway_foliage(terrain: Node3D) -> void:
@@ -258,45 +236,61 @@ func _foliage_material(shader: Shader, texture: Texture2D, inv_height: float, am
 	mat.set_shader_parameter("amplitude", amplitude)
 	return mat
 
-
-# ---- Ambient motion --------------------------------------------------------------------------------------------------
-## Flat low-poly clouds on a slowly turning ring around the island (one MultiMesh, unshaded, no shadows).
-func _build_clouds(terrain: Node3D) -> void:
+## Grouped canopies: a few low-poly leaf clumps around the crown of existing trees (placement, collision and tree
+## seed untouched; clump offsets use their own deterministic RNG). One extra MultiMesh, no shadows.
+func _build_canopy_clusters(terrain: Node3D) -> void:
+	var deco := terrain.get_node_or_null(^"Decoration")
+	if deco == null or not ResourceLoader.exists(CANOPY_SHADER):
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(terrain.get("active_seed")) * 131 + 17
+	var xforms: Array[Transform3D] = []
+	for child in deco.get_children():
+		var mmi := child as MultiMeshInstance3D
+		if mmi == null or mmi.multimesh == null or mmi.multimesh.mesh == null:
+			continue
+		if not mmi.multimesh.mesh.resource_name.begins_with("Tree_"):
+			continue
+		var box := mmi.multimesh.mesh.get_aabb()
+		var count := mmi.multimesh.visible_instance_count
+		if count < 0:
+			count = mmi.multimesh.instance_count
+		for i in count:
+			var t := mmi.global_transform * mmi.multimesh.get_instance_transform(i)
+			if rng.randf() > 0.65:
+				continue
+			var to_local_xform := global_transform.affine_inverse()
+			var blobs := 1 + int(rng.randf() < 0.5) + int(rng.randf() < 0.25)
+			for b in blobs:
+				var ang := rng.randf() * TAU
+				var reach := box.size.x * rng.randf_range(0.18, 0.34)
+				var local := Vector3(cos(ang) * reach, box.end.y * rng.randf_range(0.62, 0.9), sin(ang) * reach)
+				var r := box.size.x * rng.randf_range(0.16, 0.26)
+				var bas := Basis.from_scale(Vector3(r, r * rng.randf_range(0.7, 0.95), r)).rotated(Vector3.UP, rng.randf() * TAU)
+				# Tree-local clump placed through the full instance transform (scale, rotation), then into this node's space.
+				xforms.append(to_local_xform * (t * Transform3D(bas, local)))
+	if xforms.is_empty():
+		return
 	var sphere := SphereMesh.new()
 	sphere.radius = 1.0
 	sphere.height = 2.0
-	sphere.radial_segments = 8
+	sphere.radial_segments = 7
 	sphere.rings = 4
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Color(1.0, 1.0, 1.0)
-	mat.disable_fog = true
-	var rng := RandomNumberGenerator.new()
-	rng.seed = int(terrain.get("active_seed")) * 31 + 7
+	var mat := ShaderMaterial.new()
+	mat.shader = load(CANOPY_SHADER) as Shader
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.mesh = sphere
-	mm.instance_count = CLOUD_COUNT * 3
-	var k := 0
-	for c in CLOUD_COUNT:
-		var ang := rng.randf() * TAU
-		var radius := rng.randf_range(150.0, 330.0)
-		var centre := Vector3(cos(ang) * radius, rng.randf_range(85.0, 120.0), sin(ang) * radius)
-		var size := rng.randf_range(16.0, 30.0)
-		for puff in 3:
-			var off := Vector3(float(puff - 1) * size * 0.9, rng.randf_range(-1.5, 1.5), rng.randf_range(-4.0, 4.0))
-			var s := size * (1.0 if puff == 1 else rng.randf_range(0.6, 0.8))
-			var basis := Basis.from_scale(Vector3(s * 1.6, s * 0.32, s * 0.9)).rotated(Vector3.UP, ang)
-			mm.set_instance_transform(k, Transform3D(basis, centre + off.rotated(Vector3.UP, ang)))
-			k += 1
+	mm.instance_count = xforms.size()
+	for i in xforms.size():
+		mm.set_instance_transform(i, xforms[i])
 	var inst := MultiMeshInstance3D.new()
-	inst.name = "Clouds"
+	inst.name = "CanopyClusters"
 	inst.multimesh = mm
 	inst.material_override = mat
 	inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	inst.extra_cull_margin = 400.0
 	add_child(inst)
-	_clouds = inst
+
 
 
 ## Pollen / dust motes that follow the camera but stay in world space, so movement reads as depth.

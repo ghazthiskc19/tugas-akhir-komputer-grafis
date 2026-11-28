@@ -27,6 +27,8 @@ Dokumen ini mendefinisikan kapan sebuah area dianggap "dipoles". Pulau 2/3 baru 
 ## Standar area (per pulau)
 - **Visual dunia:** pencahayaan konsisten, tidak ada objek melayang/tembus, landmark terbaca dari jauh, tiap biome punya identitas. Fog membantu menyatukan horizon dan jarak tanpa mengaburkan rute, landmark, telegraph, atau clue.
 - **Navigasi/puzzle:** arah ke objektif dan jalur keluar dapat ditemukan; clue puzzle terbaca dari sudut pandang normal; indikator progres menjelaskan apa yang sudah terhubung/aktif.
+- **Shortcut:** akses lintas cabang harus punya syarat objektif yang terlihat dan pulih dari progres save; jalan pulang tidak boleh menjebak pemain. Bukan kewajiban membunuh semua penjaga.
+- **Vegetasi:** pohon dekat pemain selalu terlihat; jangan memakai visibility range pada pusat satu MultiMesh se-pulau untuk menghilangkan tiap pohon. Kanopi tambahan harus mengikuti transform asset dan tidak menghalangi telegraph.
 - **Audio:** musik per konteks, mixer seimbang, tidak ada klik/pop saat transisi.
 - **UI:** semua layar terbaca di 1280×720, tidak ada teks terpotong/tumpang tindih.
 - **Performa:** target median frame ≤ 16,7 ms di 1280×720; baseline historis Pulau 1 16,65 ms dan 584 draw call. Gate perf untuk batch saat ini belum diukur; jangan menganggap baseline lama sebagai hasil baru.

@@ -19,6 +19,8 @@ const TEAL := Color(0.15, 0.95, 0.85)
 const RIM_GUARD := Color(0.35, 0.95, 0.9)
 const RIM_PLAYER := Color(1.0, 0.78, 0.38)
 const RIM_BOSS := Color(1.0, 0.45, 0.15)
+## Windup shifts the guard rim from teal toward amber so the incoming strike reads against teal idle/chase.
+const RIM_ALERT := Color(1.0, 0.62, 0.28)
 const OUTLINE_GUARD := Color(0.03, 0.07, 0.08)
 const OUTLINE_PLAYER := Color(0.09, 0.05, 0.03)
 const OUTLINE_BOSS := Color(0.06, 0.03, 0.02)
@@ -58,9 +60,12 @@ class Driver:
 			glow.set_shader_parameter(&"energy", value)
 		for halo in halos:
 			halo.set_shader_parameter(&"energy", value)
-		var rim := lerpf(0.45, 1.7, clampf((value - RUNE_IDLE) / 3.0, 0.0, 1.0))
+		var alert := clampf((value - RUNE_CHASE) / 2.35, 0.0, 1.0)
+		var rim := lerpf(0.5, 1.8, clampf((value - RUNE_IDLE) / 3.0, 0.0, 1.0))
+		var rim_color := RIM_GUARD.lerp(RIM_ALERT, alert * 0.7)
 		for toon in toons:
 			toon.set_shader_parameter(&"rim_energy", rim)
+			toon.set_shader_parameter(&"rim_color", rim_color)
 
 	func set_dissolve(value: float) -> void:
 		for toon in toons:
@@ -88,7 +93,9 @@ class Driver:
 			&"active":
 				tween.tween_method(set_energy, 4.2, 1.0, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 			&"recovery":
-				tween.tween_method(set_energy, maxf(energy, 1.0), RUNE_IDLE, 0.5)
+				# Dip below idle: dim runes mark the vulnerable recovery window, then idle glow returns.
+				tween.tween_method(set_energy, maxf(energy, 1.0), 0.3, 0.2).set_ease(Tween.EASE_OUT)
+				tween.tween_method(set_energy, 0.3, RUNE_IDLE, 0.4)
 			&"stagger":
 				tween.tween_method(set_energy, 0.15, RUNE_CHASE, 0.45).set_ease(Tween.EASE_OUT)
 			&"chase":

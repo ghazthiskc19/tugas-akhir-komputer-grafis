@@ -33,7 +33,7 @@ void vertex() {
 		VERTEX += NORMAL * wave * sway * hang;
 	}
 	float dist = length((MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz);
-	VERTEX += NORMAL * width * clamp(dist / 7.0, 0.7, 2.5);
+	VERTEX += NORMAL * width * clamp(dist / 7.0, 0.8, 3.0);
 	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }
 

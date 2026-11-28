@@ -73,7 +73,7 @@ void fragment() {
 	}
 	vec3 base = texture(palette, UV).rgb * albedo_color.rgb;
 	float luma = dot(base, vec3(0.299, 0.587, 0.114));
-	base = mix(base, tone.rgb * (0.7 + 0.7 * luma), stone_mix) * albedo_gain;
+	base = mix(base, tone.rgb * (0.66 + 0.8 * luma), stone_mix) * albedo_gain;
 	ALBEDO = base;
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;

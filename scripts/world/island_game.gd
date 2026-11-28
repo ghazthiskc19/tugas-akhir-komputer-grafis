@@ -18,6 +18,7 @@ const SAVE = preload("res://scripts/world/island_save.gd")
 const LANDMARKS = preload("res://scripts/world/island_landmarks.gd")
 const ATMOSPHERE = preload("res://scripts/world/island_atmosphere.gd")
 const UI_THEME = preload("res://scripts/ui/ui_theme.gd")
+const PASSAGE = preload("res://scripts/world/central_passage.gd")
 
 @export var island_seed: int = 42
 @export var procedural: bool = true
@@ -28,6 +29,7 @@ var terrain: Node3D
 var boss: Node3D
 var presentation: CanvasLayer
 var objectives: Node3D
+var passage: Node3D
 var pending_save: Dictionary = {}
 var _run_active := false
 var _replacing := false
@@ -92,6 +94,10 @@ func _ready() -> void:
 		potion.position = config["position"]
 		terrain.add_child(potion)
 	_build_encounters()
+	passage = PASSAGE.new()
+	passage.name = "CentralPassage"
+	add_child(passage)
+	passage.build(terrain, session, island_seed)
 	var landmarks := LANDMARKS.new()
 	landmarks.name = "Landmarks"
 	add_child(landmarks)
