@@ -141,15 +141,15 @@ func _build_encounters() -> void:
 	var enemies := Node3D.new()
 	enemies.name = "Enemies"
 	add_child(enemies)
-	# Three mixed packs: introductory melee pressure, then ranged support and a heavy anchor.
-	# Keep tuning local to the island; labs retain their baseline archetype contracts.
+	# Encounter composition is staged in the layout: melee-only introduction, single-ranged mixed pack, then heavy anchor.
+	# Keep combat tuning local to the island; labs retain their baseline archetype contracts.
 	var scenes := {"standard": STANDARD, "heavy": HEAVY, "ranged": RANGED}
 	var tuning := {
-		"standard": {"move_speed": 4.4, "damage": 26, "detect_range": 14.0,
+		"standard": {"move_speed": 4.4, "damage": 26, "detect_range": 10.0, "leash_range": 16.0,
 			"windup": 0.5, "recovery": 0.45, "cooldown": 0.45, "walk_anim_speed": 1.7},
-		"heavy": {"move_speed": 3.1, "damage": 42, "detect_range": 14.0,
+		"heavy": {"move_speed": 3.1, "damage": 42, "detect_range": 10.0, "leash_range": 16.0,
 			"windup": 0.9, "recovery": 0.85, "cooldown": 0.7, "walk_anim_speed": 1.2},
-		"ranged": {"move_speed": 3.6, "damage": 22,
+		"ranged": {"move_speed": 3.6, "damage": 22, "detect_range": 11.0, "leash_range": 17.0,
 			"windup": 0.7, "recovery": 0.5, "cooldown": 0.85, "walk_anim_speed": 1.5},
 	}
 	for config: Dictionary in terrain.layout["encounters"]:

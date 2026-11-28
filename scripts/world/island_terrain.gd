@@ -387,6 +387,9 @@ func validate_layout() -> Dictionary:
 					max_dev = maxf(max_dev, absf(height_at(c.x + sx * (float(d[1]) - 2.0), c.y + sz * (float(d[2]) - 2.0))))
 		var blocked := 0
 		for o in _obstacles:
+			# Authored flank cover belongs inside its own encounter arena; route, spawn and flood checks still apply.
+			if o.get("cover_pad", &"") == name:
+				continue
 			if _pad_dist_one(d, o["pos"].x, o["pos"].y) < float(o["r"]) + PAD_SOLID_MARGIN:
 				blocked += 1
 		rep["pads"][name] = {"max_height_dev": max_dev, "flat_radius_x": d[1], "flat_radius_z": d[2], "obstacles_in_clearance": blocked}
@@ -892,6 +895,27 @@ func _clear_for(p: Vector2, r: float, route_margin: float, pad_margin: float, mi
 			return false
 	return normal_at(p.x, p.y).y >= min_ny
 
+func _clear_for_encounter_cover(p: Vector2, r: float, encounter_pad: StringName) -> bool:
+	if absf(p.x) > HALF - 6.0 or absf(p.y) > HALF - 6.0:
+		return false
+	var gi := clampi(roundi((p.x + HALF) / CELL), 0, N - 1)
+	var gj := clampi(roundi((p.y + HALF) / CELL), 0, N - 1)
+	if _s[gj * N + gi] < 6.0 or _route_d[gj * N + gi] - 0.9 < r + ROUTE_CLEAR_HALF_WIDTH + 0.5:
+		return false
+	for name: StringName in layout["pads"]:
+		if name == encounter_pad:
+			continue
+		var d: Array = layout["pads"][name]
+		if LAYOUT.pad_dist(d, p.x, p.y) < r + PAD_SOLID_MARGIN + 0.5:
+			return false
+	var dock: Vector3 = anchor_positions[&"dock_start"]
+	if absf(p.x - dock.x) < 8.0 + r and p.y < dock.z + 4.0:
+		return false
+	for fp: Rect2 in _footprints.values():
+		if fp.grow(r + SUMMIT_KEEPOUT_MARGIN).has_point(p):
+			return false
+	return normal_at(p.x, p.y).y >= 0.8
+
 
 func _cell_free(occupied: Dictionary, p: Vector2, size: float) -> bool:
 	var key := Vector2i(floori(p.x / size), floori(p.y / size))
@@ -1013,25 +1037,26 @@ func _place_trail_markers(rng: RandomNumberGenerator, occupied: Dictionary) -> v
 
 
 func _place_cover_rocks(rng: RandomNumberGenerator, occupied: Dictionary) -> void:
-	# Side cover beside the centre-route encounter pads (15 m off the centreline): outside the 6 m clearance
-	# corridor and outside every pad, so they give ranged-fight cover without blocking the path.
+	# Search flank slots on curved routes rather than silently losing cover when a single slot is unsuitable.
 	for e: StringName in layout["enc_pads"]:
 		var c: Vector3 = anchor_positions[e]
 		var tdir: Vector2 = layout["enc_dirs"][e]
 		var ndir := Vector2(tdir.y, -tdir.x)
 		for side in [-1.0, 1.0]:
-			for dz in [-3.5, 3.5]:
-				var p: Vector2 = Vector2(c.x, c.z) + ndir * 15.0 * float(side) + tdir * float(dz)
-				var scale := rng.randf_range(3.2, 4.2)
-				var model := ROCKS_BIG[rng.randi() % ROCKS_BIG.size()]
-				var yaw := rng.randf() * TAU
-				var r := 0.28 * scale
-				if not _clear_for(p, r, ROUTE_CLEAR_HALF_WIDTH + 0.5, PAD_SOLID_MARGIN + 0.5, 6.0, 0.8):
-					continue
-				if not _cell_free(occupied, p, 5.0):
-					continue
-				_add_instance(FOREST + model + "_Color1.gltf", p, scale, yaw)
-				_obstacles.append({"pos": p, "r": r, "kind": &"rock", "h": 0.5 * scale})
+			var placed := 0
+			for lateral in [8.5, 9.5]:
+				for along in [-3.5, 3.5, 0.0]:
+					if placed >= 2:
+						break
+					var p: Vector2 = Vector2(c.x, c.z) + ndir * float(lateral) * float(side) + tdir * float(along)
+					var scale := rng.randf_range(3.2, 4.2)
+					var r := 0.28 * scale
+					if not _clear_for_encounter_cover(p, r, e) or not _cell_free(occupied, p, 5.0):
+						continue
+					var model := ROCKS_BIG[rng.randi() % ROCKS_BIG.size()]
+					_add_instance(FOREST + model + "_Color1.gltf", p, scale, rng.randf() * TAU)
+					_obstacles.append({"pos": p, "r": r, "kind": &"rock", "h": 0.5 * scale, "cover_pad": e})
+					placed += 1
 
 
 func _place_ruins(rng: RandomNumberGenerator) -> void:

@@ -77,24 +77,24 @@ const ENERGY_HALF := Vector2(9.0, 7.0)
 const ENCOUNTER_PADS: Array[StringName] = [&"encounter_standard", &"encounter_heavy", &"encounter_ranged", &"encounter_4", &"encounter_5"]
 const ENCOUNTER_PAD_RADIUS := 10.0
 
-## Per pack: [member id suffix, archetype, local offset]; all offsets stay inside the 10 m flat encounter pad.
+## Per pack: [member id suffix, archetype, local offset]; x is lateral to enc_dirs, y follows the route.
+## The first encounter is a melee-only introduction; ranged pressure arrives in the second pack and the heavy anchor in the third.
 const PACKS := [
-	[["guard", "standard", Vector2(0, 0)], ["flanker", "standard", Vector2(-4, -2)], ["archer", "ranged", Vector2(4, -5)]],
-	[["heavy", "heavy", Vector2(0, 0)], ["flanker", "standard", Vector2(4, 2)], ["archer", "ranged", Vector2(-4, -2)]],
-	[["ranged", "ranged", Vector2(0, 0)], ["guard", "standard", Vector2(-4, 3)], ["flanker", "standard", Vector2(4, -2)]],
-	[["heavy", "heavy", Vector2(0, 0)], ["archer", "ranged", Vector2(-4, 3)], ["guard", "standard", Vector2(4, -2)]],
-	[["guard", "standard", Vector2(0, 0)], ["archer", "ranged", Vector2(4, 3)], ["archer_b", "ranged", Vector2(-4, -2)]],
+	[["guard", "standard", Vector2(0, 0)], ["flanker", "standard", Vector2(-3, -2)]],
+	[["guard", "standard", Vector2(0, 0)], ["flanker", "standard", Vector2(3, 2)], ["archer", "ranged", Vector2(-3, -2)]],
+	[["heavy", "heavy", Vector2(0, 0)], ["ranged", "ranged", Vector2(-3, 3)], ["guard", "standard", Vector2(3, -2)]],
+	[["heavy", "heavy", Vector2(0, 0)], ["archer", "ranged", Vector2(-3, 3)], ["guard", "standard", Vector2(3, -2)]],
+	[["guard", "standard", Vector2(0, 0)], ["archer", "ranged", Vector2(3, 3)]],
 ]
 const BASELINE_ENCOUNTERS := [
 	[&"grassland_guard", "standard", Vector3(0, 0, 48), &"encounter_standard"],
-	[&"grassland_flanker", "standard", Vector3(-4, 0, 46), &"encounter_standard"],
-	[&"grassland_archer", "ranged", Vector3(4, 0, 43), &"encounter_standard"],
-	[&"grassland_heavy", "heavy", Vector3(0, 0, 25), &"encounter_heavy"],
-	[&"midland_flanker", "standard", Vector3(4, 0, 27), &"encounter_heavy"],
-	[&"midland_archer", "ranged", Vector3(-4, 0, 23), &"encounter_heavy"],
-	[&"crossroads_ranged", "ranged", Vector3(0, 0, 5), &"encounter_ranged"],
-	[&"crossroads_guard", "standard", Vector3(-4, 0, 8), &"encounter_ranged"],
-	[&"crossroads_flanker", "standard", Vector3(4, 0, 3), &"encounter_ranged"],
+	[&"grassland_flanker", "standard", Vector3(-3, 0, 46), &"encounter_standard"],
+	[&"midland_flanker", "standard", Vector3(3, 0, 27), &"encounter_heavy"],
+	[&"midland_archer", "ranged", Vector3(-3, 0, 23), &"encounter_heavy"],
+	[&"midland_guard", "standard", Vector3(0, 0, 25), &"encounter_heavy"],
+	[&"grassland_heavy", "heavy", Vector3(0, 0, 5), &"encounter_ranged"],
+	[&"crossroads_ranged", "ranged", Vector3(-3, 0, 8), &"encounter_ranged"],
+	[&"crossroads_guard", "standard", Vector3(3, 0, 3), &"encounter_ranged"],
 ]
 const BASELINE_POTIONS := [Vector3(3, 0, 83), Vector3(-48, 0, 0), Vector3(44, 0, 0)]
 const BASELINE_CAMP := Vector3(-3, 0, 83)
@@ -329,9 +329,11 @@ static func _try_generate(rng: RandomNumberGenerator, swapped: bool) -> Dictiona
 	for g in enc_pads.size():
 		for m in PACKS[g]:
 			var off: Vector2 = m[2]
+			var tangent: Vector2 = enc_dirs[enc_pads[g]]
+			var lateral := Vector2(-tangent.y, tangent.x)
 			encounters.append({
 				"id": StringName("pack%d_%s" % [g, m[0]]), "archetype": m[1],
-				"position": _v3(enc_pos[g] + off), "pad": enc_pads[g],
+				"position": _v3(enc_pos[g] + lateral * off.x + tangent * off.y), "pad": enc_pads[g],
 			})
 	var potions: Array = [
 		{"id": &"island_potion_0", "position": _v3(spawn + Vector2(3, -2))},

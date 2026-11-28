@@ -31,6 +31,7 @@ Catatan komitmen serangan: musuh standar dan ranged tidak ter-stagger oleh pukul
 - **Navigasi/puzzle:** arah ke objektif dan jalur keluar dapat ditemukan; clue puzzle terbaca dari sudut pandang normal; indikator progres menjelaskan apa yang sudah terhubung/aktif.
 - **Shortcut:** akses lintas cabang harus punya syarat objektif yang terlihat dan pulih dari progres save; jalan pulang tidak boleh menjebak pemain. Bukan kewajiban membunuh semua penjaga.
 - **Vegetasi:** pohon dekat pemain selalu terlihat; jangan memakai visibility range pada pusat satu MultiMesh se-pulau untuk menghilangkan tiap pohon. Kanopi tambahan harus mengikuti transform asset dan tidak menghalangi telegraph.
+- **Encounter:** tingkatkan tekanan lewat komposisi dan posisi, bukan buff HP/damage. Pack pembuka mengajarkan melee; pack campuran punya maksimal satu ranged dan cover yang benar-benar memutus tembakan. Jarak aggro/leash harus memberi ruang mundur tanpa otomatis menarik pack berikutnya; formasi mengikuti arah rute.
 - **Audio:** musik per konteks, mixer seimbang, tidak ada klik/pop saat transisi.
 - **UI:** semua layar terbaca di 1280×720, tidak ada teks terpotong/tumpang tindih.
 - **Performa:** target median frame ≤ 16,7 ms di 1280×720; baseline historis Pulau 1 16,65 ms dan 584 draw call. Gate perf untuk batch saat ini belum diukur; jangan menganggap baseline lama sebagai hasil baru.

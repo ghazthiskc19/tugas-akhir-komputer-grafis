@@ -18,6 +18,7 @@ func check(ok: bool, msg: String) -> void:
 func _init() -> void:
 	var base := L.baseline()
 	check(L.validate(base).is_empty(), "baseline layout valid: %s" % [L.validate(base)])
+	_check_encounter_pacing(base)
 	var seen := {}
 	for s in SEEDS:
 		var l := L.generate(s, L.seed_swaps_sides(s))
@@ -33,6 +34,7 @@ func _init() -> void:
 		for e in l["encounters"]:
 			kinds[e["archetype"]] = true
 		check(kinds.size() == 3, "seed %d mixes standard/heavy/ranged" % s)
+		_check_encounter_pacing(l)
 	check(seen.size() >= SEEDS.size() - 2, "layouts genuinely differ across seeds (%d distinct)" % seen.size())
 	# Full terrain validity (heightfield, routes, flood, dock) for a few seeds.
 	for s in [42, 777, 20261117]:
@@ -55,6 +57,39 @@ func _init() -> void:
 	_check_passage()
 	print("island_layout_regression: %d failure(s)" % failures)
 	quit(1 if failures > 0 else 0)
+
+func _check_encounter_pacing(layout: Dictionary) -> void:
+	var by_pad := {}
+	for encounter: Dictionary in layout["encounters"]:
+		if not by_pad.has(encounter["pad"]):
+			by_pad[encounter["pad"]] = []
+		by_pad[encounter["pad"]].append(encounter)
+	for pad: StringName in layout["enc_pads"]:
+		var pack: Array = by_pad.get(pad, [])
+		var ranged := 0
+		var heavy := 0
+		for member: Dictionary in pack:
+			ranged += int(member["archetype"] == "ranged")
+			heavy += int(member["archetype"] == "heavy")
+		check(ranged <= 1, "%s has at most one ranged enemy" % pad)
+		if pad == layout["enc_pads"][0]:
+			check(heavy == 0 and ranged == 0, "%s is a melee-only introduction" % pad)
+		if pad == layout["enc_pads"][1]:
+			check(heavy == 0 and ranged == 1, "%s stages a single ranged support before heavy anchor" % pad)
+		if pad == layout["enc_pads"][2]:
+			check(heavy == 1, "%s introduces one heavy anchor" % pad)
+			var tangent: Vector2 = layout["enc_dirs"][pad]
+			var lateral := Vector2(-tangent.y, tangent.x)
+			var center: Vector3 = layout["anchors"][pad]
+			var ranged_member: Dictionary = {}
+			for member: Dictionary in pack:
+				if member["archetype"] == "ranged":
+					ranged_member = member
+			if not ranged_member.is_empty():
+				var offset := Vector2(ranged_member["position"].x - center.x, ranged_member["position"].z - center.z)
+				check(absf(offset.dot(lateral)) <= 4.0 and absf(offset.dot(tangent)) <= 4.0
+					and offset.length() >= 2.5 and offset.length() <= 5.5,
+					"ranged member sits beside the approach lane within the encounter pad")
 
 
 ## Central causeway: walls + sealed gate must exist for the baseline and procedural layouts, and the flood-fill proof must show no
