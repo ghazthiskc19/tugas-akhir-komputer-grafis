@@ -24,6 +24,8 @@ Dokumen ini mendefinisikan kapan sebuah area dianggap "dipoles". Pulau 2/3 baru 
 | Slam boss / heavy | ground impact + debu | guncangan jauh-dekat | boom |
 | Musuh mati | poof | guncangan ringan | death |
 
+Catatan komitmen serangan: musuh standar dan ranged tidak ter-stagger oleh pukulan non-fatal selama seluruh rantai serangan (windup, active, jeda antar-hit, recovery); flash/flinch, suara, dan damage HP tetap berlaku, kematian tetap membatalkan serangan. Heavy tidak berubah (windup/active kebal, recovery tetap ter-stagger).
+
 ## Standar area (per pulau)
 - **Visual dunia:** pencahayaan konsisten, tidak ada objek melayang/tembus, landmark terbaca dari jauh, tiap biome punya identitas. Fog membantu menyatukan horizon dan jarak tanpa mengaburkan rute, landmark, telegraph, atau clue.
 - **Navigasi/puzzle:** arah ke objektif dan jalur keluar dapat ditemukan; clue puzzle terbaca dari sudut pandang normal; indikator progres menjelaskan apa yang sudah terhubung/aktif.

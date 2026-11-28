@@ -48,7 +48,10 @@ func _main() -> void:
 	await _test_commit()
 	await _test_block()
 	await _test_dodge_contact()
-	for interruption in ["reset", "stagger", "death"]:
+	for kind in ["standard", "ranged"]:
+		await _test_hit_commitment(kind)
+	await _test_heavy_recovery_stagger()
+	for interruption in ["reset", "death"]:
 		await _test_cancel(interruption)
 	await _test_dead_player()
 	await _test_leash()
@@ -261,6 +264,39 @@ func _test_dodge_contact() -> void:
 		"dodge: immunity is not carried into the separately warned followup")
 
 
+func _test_hit_commitment(kind: String) -> void:
+	await _new_case(kind, 7.0 if kind == "ranged" else 1.3)
+	var health: Node = _enemy.get_node("Health")
+	var max_hp: int = health.current_health
+	_start()
+	_check(await _until(func(): return _enemy.get_state_name() == &"windup", 3.0), kind + ": hit test starts a real attack")
+	health.apply_damage(1)
+	_check(_enemy.get_state_name() == &"windup", kind + ": nonlethal hit does not interrupt windup")
+	_check(await _until(func(): return _enemy.get_state_name() == &"active", 2.0), kind + ": hit test reaches active")
+	health.apply_damage(1)
+	_check(_enemy.get_state_name() == &"active", kind + ": nonlethal hit does not interrupt active window")
+	_check(await _until(func(): return _enemy.get_state_name() == &"recovery" and _enemy.has_pending_followup(), 2.0),
+		kind + ": hit test reaches inter-hit pause")
+	health.apply_damage(1)
+	_check(_enemy.get_state_name() == &"recovery", kind + ": nonlethal hit does not interrupt inter-hit pause")
+	_check(await _until(_first_combo_finished, 8.0), kind + ": hit chain still reaches full recovery")
+	var expected := 3 if kind == "ranged" else 2
+	_check(_count(&"stagger") == 0 and _count(&"active") == expected,
+		kind + ": nonlethal hits never stagger and the whole chain completes")
+	_check(health.current_health == max_hp - 3, kind + ": hits still deal their HP damage")
+
+
+func _test_heavy_recovery_stagger() -> void:
+	await _new_case("heavy", 2.2)
+	_start()
+	_check(await _until(func(): return _enemy.get_state_name() == &"windup", 3.0), "heavy: hit test starts a real attack")
+	_enemy.get_node("Health").apply_damage(1)
+	_check(_enemy.get_state_name() == &"windup", "heavy: windup still resists a nonlethal hit")
+	_check(await _until(func(): return _enemy.get_state_name() == &"recovery", 3.0), "heavy: reaches recovery")
+	_enemy.get_node("Health").apply_damage(1)
+	_check(_enemy.get_state_name() == &"stagger", "heavy: recovery stagger is unchanged")
+
+
 func _test_cancel(interruption: String) -> void:
 	await _new_case("ranged", 10.0)
 	_start()
@@ -268,10 +304,6 @@ func _test_cancel(interruption: String) -> void:
 		interruption + ": first aimed bolt is genuinely airborne")
 	if interruption == "death":
 		_enemy.get_node("Health").apply_damage(999)
-	elif interruption == "stagger":
-		_enemy.get_node("Health").apply_damage(1)
-		_check(_enemy.get_state_name() == &"stagger", "stagger: ranged attack really interrupted")
-		_enemy.set_physics_process(false) # Freeze fresh acquisition, not projectile physics.
 	else:
 		_enemy.reset_encounter()
 		_check(_enemy.get_state_name() == &"idle", "reset: encounter is idle immediately")

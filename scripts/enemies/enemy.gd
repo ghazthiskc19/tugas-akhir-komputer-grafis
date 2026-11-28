@@ -39,8 +39,8 @@ const ARCHETYPES := {
 		"damage": 12, "hit_width": 1.6, "hit_height": 1.5, "hit_length": 2.0,
 		"track_until": 0.72, "windup_turn_rate": 3.0,
 		"chain_count": 2, "chain_gap": 0.14, "followup_windup": 0.36,
-		"stagger_time": 0.45, "stagger_interrupts_windup": true, "stagger_interrupts_active": true,
-		"stagger_immunity": 0.4,
+		"stagger_time": 0.45, "stagger_interrupts_windup": false, "stagger_interrupts_active": false,
+		"stagger_interrupts_recovery": false, "stagger_immunity": 0.4,
 		"model_scale": 1.0, "walk_anim_speed": 1.2,
 		"strike": Vector2(0.35, 0.6),
 		"telegraph_windup": Color(1.0, 0.75, 0.1, 0.55), "telegraph_active": Color(1.0, 0.12, 0.05, 0.8),
@@ -60,7 +60,7 @@ const ARCHETYPES := {
 		"closing_speed": 3.8, "closing_distance": 3.5, "approach_speed": 2.6,
 		"sweep_width": 4.4, "sweep_length": 2.8,
 		"stagger_time": 0.3, "stagger_interrupts_windup": false, "stagger_interrupts_active": false,
-		"stagger_immunity": 0.8,
+		"stagger_interrupts_recovery": true, "stagger_immunity": 0.8,
 		"model_scale": 1.25, "walk_anim_speed": 0.8,
 		"strike": Vector2(0.45, 0.65),
 		"telegraph_windup": Color(1.0, 0.45, 0.0, 0.55), "telegraph_active": Color(0.9, 0.0, 0.0, 0.85),
@@ -80,8 +80,8 @@ const ARCHETYPES := {
 		"muzzle_height": 1.3, "muzzle_forward": 0.6,
 		"track_until": 0.78, "windup_turn_rate": 5.0,
 		"chain_count": 3, "chain_gap": 0.16, "followup_windup": 0.38,
-		"stagger_time": 0.5, "stagger_interrupts_windup": true, "stagger_interrupts_active": true,
-		"stagger_immunity": 0.4,
+		"stagger_time": 0.5, "stagger_interrupts_windup": false, "stagger_interrupts_active": false,
+		"stagger_interrupts_recovery": false, "stagger_immunity": 0.4,
 		"model_scale": 1.0, "walk_anim_speed": 1.1,
 		"strike": Vector2(0.45, 0.6),
 		"telegraph_windup": Color(0.2, 0.75, 1.0, 0.6), "telegraph_active": Color(1.0, 0.2, 0.1, 0.85),
@@ -807,6 +807,10 @@ func _on_health_changed(current: int, maximum: int) -> void:
 				return
 		State.ACTIVE:
 			if not cfg["stagger_interrupts_active"]:
+				return
+		State.RECOVERY:
+			# Inter-hit pauses and the closing recovery belong to the committed chain.
+			if not cfg["stagger_interrupts_recovery"]:
 				return
 		State.STAGGER:
 			return
